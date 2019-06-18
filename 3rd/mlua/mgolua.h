@@ -3,6 +3,8 @@
 #include "lauxlib.h"
 #include <stdint.h>
 
+#define GOLUA_PANIC_MSG_WARAPPER "golua_panic_msg_warapper"
+
 typedef int (*lua_GOWrapperCaller) (lua_State *L, unsigned int wrapperid, int top);
 
 int mlua_get_lib_version();
@@ -15,10 +17,16 @@ size_t mlua_getgostate(lua_State* L);
 
 int mlua_loadfile(lua_State *L, const char *filename);
 
+int mlua_loadbuffer(lua_State *L, const char *buffer, size_t sz, const char* name);
+
 void mlua_push_go_wrapper(lua_State* L, unsigned int wrapperid);
 
 int mlua_pcall(lua_State* L, int nargs, int nresults, int errfunc);
 
-int mlua_tointeger (lua_State *L, int idx);
+lua_Integer mlua_tointeger(lua_State *L, int idx);
+
+lua_Number mlua_tonumber(lua_State *L, int idx);
+
+const char *mlua_tostring(lua_State *L, int idx);
 
 void luaopen_mlua(lua_State *L);

@@ -80,6 +80,13 @@ const (
 	LUA_LOADLIBNAME   = C.LUA_LOADLIBNAME
 )
 
+type LuaStackEntry struct {
+	_name string
+	_source string
+	_short_source string
+	_current_line int
+}
+
 var goStates map[uintptr]*State
 var goStatesMutex sync.Mutex
 
@@ -141,10 +148,7 @@ func (L *State) getFreeIndex() (index uint, ok bool) {
 
 //returns the registered function id
 func (L *State) register(f interface{}) uint {
-	//fmt.Printf("Registering %v\n")
 	index, ok := L.getFreeIndex()
-	//fmt.Printf("\tfreeindex: index = %v, ok = %v\n", index, ok)
-	//if not ok, then we need to add new index by extending the slice
 	if !ok {
 		index = uint(len(L._registry))
 		//reallocate backing array if necessary
@@ -177,11 +181,94 @@ func (L *State) PushGoFunction(f LuaGoFunction) {
 	C.mlua_push_go_wrapper(L._s, C.uint(fid))
 }
 
+// lua_gettop
+func (L *State) GetTop() int {
+		return int(C.lua_gettop(L._s))
+}
+
+// lua_insert
+func (L *State) Insert(index int) {
+	C.lua_rotate(L._s, C.int(index), C.int(1))
+}
+
+// lua_remove
+func (L *State) Remove(index int) {
+	C.lua_rotate(L._s, C.int(index), C.int(-1))
+	C.lua_pop(L._s, C.int(1))
+}
+
 // lua_setglobal
 func (L *State) SetGlobal(name string) {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
 	C.lua_setglobal(L._s, Cname)
+}
+
+// lua_getglobal
+func（L *State） GetGlobal(name string) {
+	Cname := C.CString(nae)
+	defer C.free(unsafe.Pointer(Cname))
+	C.lua_getglobal(L._s, Cname)
+}
+
+// lua_tostring
+func (L *State) ToString(index int) string {
+	var size C.size_t
+	r := C.lua_tolstring(L._s, C.int(index), &size)
+	return C.GoStringN(r, C.int(size))
+}
+
+// luaL_tolstring
+func (L *State) ToBytes(index int) []byte {
+	var size C.size_t
+	b := C.lua_tolstring(L._s, index, &size)
+	return C.GoBytes(unsafe.Pointer(b), C.int(size))
+}
+
+// lua_tointeger
+func (L *State) ToInteger(index int) int {
+	return int(C.mlua_tointeger(L._s, index))
+}
+
+// lua_tonumber
+func (L *State) ToNumber(index int) float64 {
+	return float64(C.mlua_tonumber(L._s, C.int(index)))
+}
+
+// lua_pcall
+func (L *State) pcall(nargs, nresults, errfunc int) {
+	return int(C.mlua_pcall(L._s, C.int(nargs), C.int(nresults), C.int(errfunc)))
+}
+
+func (L *State) call_ex(nargs int, nresults int, catch bool) (err error){
+	if catch {
+		defer func() {
+			if err2 := recover(); err2 != nil {
+				if _, ok := err2.(error); ok {
+					err = err2.(error)
+				}
+				return
+			}
+		}()
+	}
+
+	L.GetGlobal(C.GOLUA_PANIC_MSG_WARAPPER)
+	erridx := L.GetTop() - nargs - 1
+	L.Insert(erridx)
+	r := L.pcall(nargs, nresults, erridx)
+	L.Remove(erridx)
+	if r != 0 {
+		err = &LuaError{r, L.ToString(-1), L.StackTrace()}
+		if !catch {
+			panic(err)
+		}
+	}
+	return
+}
+
+// lua_call
+func (L *State) Call(nargs, nresults int) (err error) {
+	return L.call_ex(nargs, nresults, true)
 }
 
 // Registers a Go function as a global variable
@@ -200,4 +287,30 @@ func NewStateAlloc(f Alloc) *State {
 func (L *State) Close() {
 	unregisterGoState(L)
 	C.lua_close(L._s)
+}
+
+func (L *State) StackTrace() []LuaStackEntry {
+	r := []LuaStackEntry{}
+	var d C.lua_Debug
+	Sln := C.CString(Sln)
+	defer C.free(unsafe.Pointer(Sln))
+
+	for depth := 0; C.lua_getstack(L._s, C.int(depth), &d) > 0; depth++ {
+		C.lua_getinfo(L._s, Sln, &d)
+		ssb := make([]byte, C.LUA_IDSIZE)
+		for i:= 0;i < C.LUA_IDSIZE; i++ {
+			ssb[i] = byte(d.short_src[i])
+			if ssb[i] == 0 {
+				ssb = ssb[:i]
+				break
+			}
+		}
+		ss := string(ssb)
+		r = append(r, LuaStackEntry{C.GoString(d.name), C.GoString(d.source), ss, int(d.currentline)})
+	}
+	return r
+}
+
+func (L *State) NewError(msg string) *LuaError {
+	return &LuaError{0, msg, L.StackTrace()}
 }

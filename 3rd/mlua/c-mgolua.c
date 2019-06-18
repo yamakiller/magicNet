@@ -4,6 +4,8 @@
 #include "_cgo_export.h"
 #include <stdio.h>
 
+#define GOLUA_PANIC_MSG_WARAPPER "golua_panic_msg_warapper"
+
 static int tag = 0;
 static const char *const hooknames[] = {"call", "return", "line", "count", "tail return"};
 static int hook_index = -1;
@@ -67,6 +69,10 @@ size_t mlua_getgostate(lua_State* L)
 
 int mlua_loadfile(lua_State *L, const char *filename) {
 	return luaL_loadfile(L, filename);
+}
+
+mlua_loadbuffer(lua_State *L, const char *buffer, size_t sz, const char* name){
+	return luaL_loadbuffer(L, buffer, sz, name);
 }
 
 
@@ -136,12 +142,26 @@ void mlua_push_go_wrapper(lua_State* L, unsigned int wrapperid){
 	lua_pushcclosure(L, go_function_wrapper_wrapper, 2);
 }
 
+int panic_msg_warapper(lua_State *L){
+	size_t gostateindex = mlua_getgostate(L);
+  golua_panic_msg_func(gostateindex, (char*)lua_tolstring(L, -, NULL));
+	return 0;
+}
+
 int mlua_pcall(lua_State* L, int nargs, int nresults, int errfunc){
 	return lua_pcallk(L, nargs, nresults, errfunc, 0, NULL);
 }
 
-int mlua_tointeger (lua_State *L, int idx) {
-	return (int)lua_tointeger(L, idx);
+lua_Integer mlua_tointeger (lua_State *L, int idx) {
+	return lua_tointeger(L, idx);
+}
+
+lua_Number mlua_tonumber(lua_State *L, int idx) {
+	return lua_tonumber(L, idx);
+}
+
+const char *mlua_tostring(lua_State *L, int idx) {
+	return lua_tostring(L, idx);
 }
 
 static const luaL_Reg mlualib[] = {
@@ -153,4 +173,5 @@ void luaopen_mlua(lua_State *L) {
   luaL_openlibs(L);
 	luaL_newlib(L, mlualib);
 	lua_setglobal(L, "mlua");
+	lua_register(L, GOLUA_PANIC_MSG_WARAPPER, &panic_msg_warapper);
 }
