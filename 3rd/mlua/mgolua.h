@@ -3,7 +3,7 @@
 #include "lauxlib.h"
 #include <stdint.h>
 
-#define GOLUA_PANIC_MSG_WARAPPER "golua_panic_msg_warapper"
+#define GOLUA_PANIC_MSG_WARAPPER "golua_panicmsg_warapper"
 
 typedef int (*lua_GOWrapperCaller) (lua_State *L, unsigned int wrapperid, int top);
 
@@ -28,5 +28,7 @@ lua_Integer mlua_tointeger(lua_State *L, int idx);
 lua_Number mlua_tonumber(lua_State *L, int idx);
 
 const char *mlua_tostring(lua_State *L, int idx);
+
+int mlua_getmetatable(lua_State *L, const char *k);
 
 void luaopen_mlua(lua_State *L);

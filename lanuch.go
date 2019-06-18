@@ -17,13 +17,8 @@ func test3(L *mlua.State) int {
 
 func main() {
 	L := mlua.NewState()
-	defer L.Close()
 	L.OpenLibs()
-	fmt.Print("ddddddddd\n")
-	L.Register("test2", test2)
-	L.Register("test3", test3)
 
-	//L.PushGoFunction(test2)
-	L.DoString("test2() test3() test2()")
-	fmt.Print("end\n")
+	var ispass bool
+	fmt.Scanln(&ispass)
 }

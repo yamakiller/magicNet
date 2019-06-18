@@ -4,7 +4,7 @@
 #include "_cgo_export.h"
 #include <stdio.h>
 
-#define GOLUA_PANIC_MSG_WARAPPER "golua_panic_msg_warapper"
+#define GOLUA_PANIC_MSG_WARAPPER "golua_panicmsg_warapper"
 
 static int tag = 0;
 static const char *const hooknames[] = {"call", "return", "line", "count", "tail return"};
@@ -75,6 +75,21 @@ mlua_loadbuffer(lua_State *L, const char *buffer, size_t sz, const char* name){
 	return luaL_loadbuffer(L, buffer, sz, name);
 }
 
+lua_Integer mlua_tointeger (lua_State *L, int idx) {
+	return lua_tointeger(L, idx);
+}
+
+lua_Number mlua_tonumber(lua_State *L, int idx) {
+	return lua_tonumber(L, idx);
+}
+
+const char *mlua_tostring(lua_State *L, int idx) {
+	return lua_tostring(L, idx);
+}
+
+int mlua_getmetatable(lua_State *L, const char *k) {
+	return lua_getfield(L, LUA_REGISTRYINDEX, k);
+}
 
 static void call_ret_hook(lua_State *L) {
 	lua_Debug ar;
@@ -136,32 +151,21 @@ static int go_function_wrapper_wrapper(lua_State *L) {
 	}
 }
 
-void mlua_push_go_wrapper(lua_State* L, unsigned int wrapperid){
+void mlua_push_go_wrapper(lua_State* L, unsigned int wrapperid) {
 	lua_pushinteger(L, wrapperid);
 	lua_pushboolean(L, 0);
 	lua_pushcclosure(L, go_function_wrapper_wrapper, 2);
 }
 
-int panic_msg_warapper(lua_State *L){
+int panic_msg_warapper(lua_State *L) {
 	size_t gostateindex = mlua_getgostate(L);
-  golua_panic_msg_func(gostateindex, (char*)lua_tolstring(L, -, NULL));
+  //golua_panicmsg_gofunction(gostateindex, (char*)lua_tolstring(L, -1, NULL));
+	golua_panicmsg_gofunction(gostateindex, (char*)lua_tostring(L, -1));
 	return 0;
 }
 
 int mlua_pcall(lua_State* L, int nargs, int nresults, int errfunc){
 	return lua_pcallk(L, nargs, nresults, errfunc, 0, NULL);
-}
-
-lua_Integer mlua_tointeger (lua_State *L, int idx) {
-	return lua_tointeger(L, idx);
-}
-
-lua_Number mlua_tonumber(lua_State *L, int idx) {
-	return lua_tonumber(L, idx);
-}
-
-const char *mlua_tostring(lua_State *L, int idx) {
-	return lua_tostring(L, idx);
 }
 
 static const luaL_Reg mlualib[] = {

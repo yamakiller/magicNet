@@ -15,7 +15,6 @@ package mlua
 #include "mgolua.h"
 */
 import "C"
-
 import (
 	"sync"
 	"unsafe"
@@ -81,8 +80,8 @@ const (
 )
 
 type LuaStackEntry struct {
-	_name string
-	_source string
+	_name         string
+	_source       string
 	_short_source string
 	_current_line int
 }
@@ -128,19 +127,16 @@ func (L *State) addFreeIndex(i uint) {
 		copy(newSlice, L._freeIndices)
 		L._freeIndices = newSlice
 	}
-	//reslice
+
 	L._freeIndices = L._freeIndices[0 : freelen+1]
 	L._freeIndices[freelen] = i
 }
 
 func (L *State) getFreeIndex() (index uint, ok bool) {
 	freelen := len(L._freeIndices)
-	//if there exist entries in the freelist
 	if freelen > 0 {
 		i := L._freeIndices[freelen-1] //get index
-		//fmt.Printf("Free indices before: %v\n", L.freeIndices)
-		L._freeIndices = L._freeIndices[0 : freelen-1] //'pop' index from list
-		//fmt.Printf("Free indices after: %v\n", L.freeIndices)
+		L._freeIndices = L._freeIndices[0 : freelen-1]
 		return i, true
 	}
 	return 0, false
@@ -183,7 +179,12 @@ func (L *State) PushGoFunction(f LuaGoFunction) {
 
 // lua_gettop
 func (L *State) GetTop() int {
-		return int(C.lua_gettop(L._s))
+	return int(C.lua_gettop(L._s))
+}
+
+// lua_pop
+func (L *State) Pop(n int) {
+	C.lua_settop(L._s, C.int(-n-1))
 }
 
 // lua_insert
@@ -194,7 +195,54 @@ func (L *State) Insert(index int) {
 // lua_remove
 func (L *State) Remove(index int) {
 	C.lua_rotate(L._s, C.int(index), C.int(-1))
-	C.lua_pop(L._s, C.int(1))
+	L.Pop(1)
+}
+
+// lua_pushboolean
+func (L *State) PushBoolean(b bool) {
+	var bint int
+	if b {
+		bint = 1
+	} else {
+		bint = 0
+	}
+	C.lua_pushboolean(L._s, C.int(bint))
+}
+
+// lua_pushstring
+func (L *State) PushString(str string) {
+	Cstr := C.CString(str)
+	defer C.free(unsafe.Pointer(Cstr))
+	C.lua_pushlstring(L._s, Cstr, C.size_t(len(str)))
+}
+
+func (L *State) PushBytes(b []byte) {
+	C.lua_pushlstring(L._s, (*C.char)(unsafe.Pointer(&b[0])), C.size_t(len(b)))
+}
+
+// lua_pushinteger
+func (L *State) PushInteger(n int64) {
+	C.lua_pushinteger(L._s, C.lua_Integer(n))
+}
+
+// lua_pushnil
+func (L *State) PushNil() {
+	C.lua_pushnil(L._s)
+}
+
+// lua_pushnumber
+func (L *State) PushNumber(n float64) {
+	C.lua_pushnumber(L._s, C.lua_Number(n))
+}
+
+// lua_pushthread
+func (L *State) PushThread() (isMain bool) {
+	return C.lua_pushthread(L._s) != 0
+}
+
+// lua_pushvalue
+func (L *State) PushValue(index int) {
+	C.lua_pushvalue(L._s, C.int(index))
 }
 
 // lua_setglobal
@@ -205,8 +253,8 @@ func (L *State) SetGlobal(name string) {
 }
 
 // lua_getglobal
-func（L *State） GetGlobal(name string) {
-	Cname := C.CString(nae)
+func (L *State) GetGlobal(name string) {
+	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
 	C.lua_getglobal(L._s, Cname)
 }
@@ -221,13 +269,13 @@ func (L *State) ToString(index int) string {
 // luaL_tolstring
 func (L *State) ToBytes(index int) []byte {
 	var size C.size_t
-	b := C.lua_tolstring(L._s, index, &size)
+	b := C.lua_tolstring(L._s, C.int(index), &size)
 	return C.GoBytes(unsafe.Pointer(b), C.int(size))
 }
 
 // lua_tointeger
 func (L *State) ToInteger(index int) int {
-	return int(C.mlua_tointeger(L._s, index))
+	return int(C.mlua_tointeger(L._s, C.int(index)))
 }
 
 // lua_tonumber
@@ -236,11 +284,11 @@ func (L *State) ToNumber(index int) float64 {
 }
 
 // lua_pcall
-func (L *State) pcall(nargs, nresults, errfunc int) {
+func (L *State) pcall(nargs, nresults, errfunc int) int {
 	return int(C.mlua_pcall(L._s, C.int(nargs), C.int(nresults), C.int(errfunc)))
 }
 
-func (L *State) call_ex(nargs int, nresults int, catch bool) (err error){
+func (L *State) call_ex(nargs int, nresults int, catch bool) (err error) {
 	if catch {
 		defer func() {
 			if err2 := recover(); err2 != nil {
@@ -292,13 +340,13 @@ func (L *State) Close() {
 func (L *State) StackTrace() []LuaStackEntry {
 	r := []LuaStackEntry{}
 	var d C.lua_Debug
-	Sln := C.CString(Sln)
+	Sln := C.CString("Sln")
 	defer C.free(unsafe.Pointer(Sln))
 
 	for depth := 0; C.lua_getstack(L._s, C.int(depth), &d) > 0; depth++ {
 		C.lua_getinfo(L._s, Sln, &d)
 		ssb := make([]byte, C.LUA_IDSIZE)
-		for i:= 0;i < C.LUA_IDSIZE; i++ {
+		for i := 0; i < C.LUA_IDSIZE; i++ {
 			ssb[i] = byte(d.short_src[i])
 			if ssb[i] == 0 {
 				ssb = ssb[:i]
