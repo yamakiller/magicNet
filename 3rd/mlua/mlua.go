@@ -86,36 +86,9 @@ type LuaStackEntry struct {
 	_current_line int
 }
 
-var goStates map[uintptr]*State
-var goStatesMutex sync.Mutex
-
-func init() {
-	goStates = make(map[uintptr]*State, 16)
-}
-
-func registerGoState(L *State) {
-	goStatesMutex.Lock()
-	defer goStatesMutex.Unlock()
-	L._Index = uintptr(unsafe.Pointer(L))
-	goStates[L._Index] = L
-}
-
-func unregisterGoState(L *State) {
-	goStatesMutex.Lock()
-	defer goStatesMutex.Unlock()
-	delete(goStates, L._Index)
-}
-
-func getGoState(gohandle uintptr) *State {
-	goStatesMutex.Lock()
-	defer goStatesMutex.Unlock()
-	return goStates[gohandle]
-}
-
 func newState(L *C.lua_State) *State {
 	newstate := &State{L, 0, make([]interface{}, 0, 8), make([]uint, 0, 8)}
-	registerGoState(newstate)
-	C.mlua_setgostate(L, C.size_t(newstate._Index))
+	C.mlua_setgostate(L, unsafe.Pointer(newstate))
 	return newstate
 }
 
@@ -333,7 +306,6 @@ func NewStateAlloc(f Alloc) *State {
 
 // lua_close
 func (L *State) Close() {
-	unregisterGoState(L)
 	C.lua_close(L._s)
 }
 

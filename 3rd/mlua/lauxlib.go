@@ -165,11 +165,25 @@ func (L *State) CheckType(narg int, t LuaValType) {
 	C.luaL_checktype(L._s, C.int(narg), C.int(t))
 }
 
+// luaL_testudata
+func (L *State) TestUData(narg int, tname string) unsafe.Pointer {
+	Ctname := C.CString(tname)
+	defer C.free(unsafe.Pointer(Ctname))
+	return unsafe.Pointer(C.luaL_testudata(L._s, C.int(narg), Ctname))
+}
+
 // luaL_checkudata
 func (L *State) CheckUdata(narg int, tname string) unsafe.Pointer {
 	Ctname := C.CString(tname)
 	defer C.free(unsafe.Pointer(Ctname))
 	return unsafe.Pointer(C.luaL_checkudata(L._s, C.int(narg), Ctname))
+}
+
+// luaL_error
+func (L *State) LError(sfmt string, v ...interface{}) int {
+	Cerror := C.CString(fmt.Sprintf(sfmt, v...))
+	defer C.free(unsafe.Pointer(Cerror))
+	return int(C.luaL_error(L._s, Cerror))
 }
 
 // luaL_len

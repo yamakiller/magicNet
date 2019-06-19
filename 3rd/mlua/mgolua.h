@@ -5,15 +5,16 @@
 
 #define GOLUA_PANIC_MSG_WARAPPER "golua_panicmsg_warapper"
 
+
 typedef int (*lua_GOWrapperCaller) (lua_State *L, unsigned int wrapperid, int top);
 
 int mlua_get_lib_version();
 
 lua_State* mlua_newstate(void* goallocf);
 
-void mlua_setgostate(lua_State *L, size_t gohandle);
+void mlua_setgostate(lua_State *L, void *goluaState);
 
-size_t mlua_getgostate(lua_State* L);
+void* mlua_getgostate(lua_State* L);
 
 int mlua_loadfile(lua_State *L, const char *filename);
 

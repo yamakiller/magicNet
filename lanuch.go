@@ -19,6 +19,8 @@ func main() {
 	L := mlua.NewState()
 	L.OpenLibs()
 
+	L.Register("test2", test2)
+
 	var ispass bool
 	fmt.Scanln(&ispass)
 }
