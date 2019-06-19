@@ -36,6 +36,8 @@ int mlua_error(lua_State *L, const char *fmt);
 
 void mlua_replace(lua_State *L, int idx);
 
+void mlua_pushglobaltable(lua_State *L);
+
 int mlua_getmetatable(lua_State *L, const char *k);
 
 int mlua_buffersize();

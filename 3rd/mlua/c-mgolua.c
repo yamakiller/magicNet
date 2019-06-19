@@ -106,6 +106,10 @@ void mlua_replace(lua_State *L, int idx) {
 	lua_replace(L, idx);
 }
 
+void mlua_pushglobaltable(lua_State *L) {
+	lua_pushglobaltable(L);
+}
+
 int mlua_pcall(lua_State* L, int nargs, int nresults, int errfunc){
 	return lua_pcallk(L, nargs, nresults, errfunc, 0, NULL);
 }

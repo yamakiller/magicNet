@@ -112,7 +112,7 @@ func (L *State) IsNumber(index int) bool { return C.lua_isnumber(L._s, C.int(ind
 func (L *State) IsString(index int) bool { return C.lua_isstring(L._s, C.int(index)) == 1 }
 
 // lua_iscfunction
-func (L *State) IsCFunction(index int) bool { return C.lua_iscfunction(L._s, C.int(index)) == 1 }
+func (L *State) IsFunction(index int) bool { return C.lua_iscfunction(L._s, C.int(index)) == 1 }
 
 // lua_istable
 func (L *State) IsTable(index int) bool {

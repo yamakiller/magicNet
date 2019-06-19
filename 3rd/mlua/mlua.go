@@ -412,6 +412,11 @@ func (L *State) SetAllocF(f Alloc) {
 	C.mlua_setallocf(L._s, unsafe.Pointer(&f))
 }
 
+// lua_pushglobaltable
+func (L *State) PushGlobalTable() {
+	C.mlua_pushglobaltable(L._s)
+}
+
 // lua_pcall
 func (L *State) pcall(nargs, nresults, errfunc int) int {
 	return int(C.mlua_pcall(L._s, C.int(nargs), C.int(nresults), C.int(errfunc)))
