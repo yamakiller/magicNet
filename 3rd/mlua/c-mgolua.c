@@ -26,10 +26,14 @@ lua_State* mlua_newstate(void* goallocf) {
   return lua_newstate(&go_alloc_wrapper, goallocf);
 }
 
+void mlua_setallocf(lua_State* L, void* goallocf) {
+	lua_setallocf(L, &go_alloc_wrapper, goallocf);
+}
+
 void mlua_setgostate(lua_State* L, void *goluaState)
 {
 	lua_pushlightuserdata(L,(void*)&go_state_registry_key);
-	lua_pushlightuserdata(L, goluaState;
+	lua_pushlightuserdata(L, goluaState);
 	lua_settable(L, LUA_REGISTRYINDEX);
 }
 
@@ -94,6 +98,14 @@ int panic_msg_warapper(lua_State *L) {
 	return 0;
 }
 
+int mlua_error(lua_State *L, const char *fmt) {
+	return luaL_error(L, fmt);
+}
+
+void mlua_replace(lua_State *L, int idx) {
+	lua_replace(L, idx);
+}
+
 int mlua_pcall(lua_State* L, int nargs, int nresults, int errfunc){
 	return lua_pcallk(L, nargs, nresults, errfunc, 0, NULL);
 }
@@ -102,4 +114,8 @@ int mlua_pcall(lua_State* L, int nargs, int nresults, int errfunc){
 void luaopen_mlua(lua_State *L) {
   luaL_openlibs(L);
 	lua_register(L, GOLUA_PANIC_MSG_WARAPPER, &panic_msg_warapper);
+}
+
+int mlua_buffersize() {
+	return LUAL_BUFFERSIZE;
 }

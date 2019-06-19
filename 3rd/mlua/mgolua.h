@@ -12,6 +12,8 @@ int mlua_get_lib_version();
 
 lua_State* mlua_newstate(void* goallocf);
 
+void mlua_setallocf(lua_State* L, void* goallocf);
+
 void mlua_setgostate(lua_State *L, void *goluaState);
 
 void* mlua_getgostate(lua_State* L);
@@ -30,6 +32,12 @@ lua_Number mlua_tonumber(lua_State *L, int idx);
 
 const char *mlua_tostring(lua_State *L, int idx);
 
+int mlua_error(lua_State *L, const char *fmt);
+
+void mlua_replace(lua_State *L, int idx);
+
 int mlua_getmetatable(lua_State *L, const char *k);
+
+int mlua_buffersize();
 
 void luaopen_mlua(lua_State *L);

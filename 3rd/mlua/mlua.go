@@ -16,7 +16,7 @@ package mlua
 */
 import "C"
 import (
-	"sync"
+	"fmt"
 	"unsafe"
 )
 
@@ -87,7 +87,7 @@ type LuaStackEntry struct {
 }
 
 func newState(L *C.lua_State) *State {
-	newstate := &State{L, 0, make([]interface{}, 0, 8), make([]uint, 0, 8)}
+	newstate := &State{L, make([]interface{}, 0, 8), make([]uint, 0, 8)}
 	C.mlua_setgostate(L, unsafe.Pointer(newstate))
 	return newstate
 }
@@ -145,6 +145,31 @@ func (L *State) unregister(fid uint) {
 	}
 }
 
+// lua_absindex
+func (L *State) AbsIndex(index int) int {
+	return int(C.lua_absindex(L._s, C.int(index)))
+}
+
+// lua_copy
+func (L *State) Copy(fromindex int, toindex int) {
+	C.lua_copy(L._s, C.int(fromindex), C.int(toindex))
+}
+
+// lua_checkstack
+func (L *State) CheckStack(n int) int {
+	return int(C.lua_checkstack(L._s, C.int(n)))
+}
+
+// lua_type
+func (L *State) Type(index int) int {
+	return int(C.lua_type(L._s, C.int(index)))
+}
+
+// lua_typename
+func (L *State) TypeName(tp int) string {
+	return C.GoString(C.lua_typename(L._s, C.int(tp)))
+}
+
 func (L *State) PushGoFunction(f LuaGoFunction) {
 	fid := L.register(f)
 	C.mlua_push_go_wrapper(L._s, C.uint(fid))
@@ -153,6 +178,11 @@ func (L *State) PushGoFunction(f LuaGoFunction) {
 // lua_gettop
 func (L *State) GetTop() int {
 	return int(C.lua_gettop(L._s))
+}
+
+// lua_settop
+func (L *State) SetTop(index int) {
+	C.lua_settop(L._s, C.int(index))
 }
 
 // lua_pop
@@ -169,6 +199,11 @@ func (L *State) Insert(index int) {
 func (L *State) Remove(index int) {
 	C.lua_rotate(L._s, C.int(index), C.int(-1))
 	L.Pop(1)
+}
+
+// lua_replace
+func (L *State) Replace(index int) {
+	C.mlua_replace(L._s, C.int(index))
 }
 
 // lua_pushboolean
@@ -254,6 +289,127 @@ func (L *State) ToInteger(index int) int {
 // lua_tonumber
 func (L *State) ToNumber(index int) float64 {
 	return float64(C.mlua_tonumber(L._s, C.int(index)))
+}
+
+// lua_rawlen
+func (L *State) RawLen(index int) uint {
+	return uint(C.lua_rawlen(L._s, C.int(index)))
+}
+
+// lua_topointe
+func (L *State) ToPointer(index int) unsafe.Pointer {
+	return unsafe.Pointer(C.lua_topointer(L._s, C.int(index)))
+}
+
+// lua_rawequal
+func (L *State) RawEqual(index1 int, index2 int) int {
+	return int(C.lua_rawequal(L._s, C.int(index1), C.int(index2)))
+}
+
+// lua_gettable
+func (L *State) GetTable(index int) int {
+	return int(C.lua_gettable(L._s, C.int(index)))
+}
+
+// lua_getfield
+func (L *State) GetField(index int, k string) int {
+	Ck := C.CString(k)
+	defer C.free(unsafe.Pointer(Ck))
+	return int(C.lua_getfield(L._s, C.int(index), Ck))
+}
+
+// lua_geti
+func (L *State) GetI(index int, n int64) int {
+	return int(C.lua_geti(L._s, C.int(index), C.lua_Integer(n)))
+}
+
+// lua_rawget
+func (L *State) RawGet(index int) int {
+	return int(C.lua_rawget(L._s, C.int(index)))
+}
+
+// lua_rawgeti
+func (L *State) RawGetI(index int, n int64) int {
+	return int(C.lua_rawgeti(L._s, C.int(index), C.lua_Integer(n)))
+}
+
+// lua_rawgetp
+func (L *State) RawGetP(index int, p unsafe.Pointer) int {
+	return int(C.lua_rawgetp(L._s, C.int(index), p))
+}
+
+// lua_getmetatable
+func (L *State) GetMetaTable(objindex int) int {
+	return int(C.lua_getmetatable(L._s, C.int(objindex)))
+}
+
+// lua_getuservalue
+func (L *State) GetUserValue(index int) int {
+	return int(C.lua_getuservalue(L._s, C.int(index)))
+}
+
+// lua_settable
+func (L *State) SetTable(index int) {
+	C.lua_settable(L._s, C.int(index))
+}
+
+// lua_setfield
+func (L *State) SetField(index int, k string) {
+	Ck := C.CString(k)
+	defer C.free(unsafe.Pointer(Ck))
+	C.lua_setfield(L._s, C.int(index), Ck)
+}
+
+// lua_seti
+func (L *State) SetI(index int, n int64) {
+	C.lua_seti(L._s, C.int(index), C.lua_Integer(n))
+}
+
+// lua_rawset
+func (L *State) RawSet(index int) {
+	C.lua_rawset(L._s, C.int(index))
+}
+
+// lua_rawseti
+func (L *State) RawSetI(index int, n int64) {
+	C.lua_rawseti(L._s, C.int(index), C.lua_Integer(n))
+}
+
+// lua_rawsetp
+func (L *State) RawSetP(index int, p unsafe.Pointer) {
+	C.lua_rawsetp(L._s, C.int(index), p)
+}
+
+// lua_setmetatable
+func (L *State) SetMetaTable(objindex int) {
+	C.lua_setmetatable(L._s, C.int(objindex))
+}
+
+//lua_setuservalue
+func (L *State) SetUserValue(index int) {
+	C.lua_setuservalue(L._s, C.int(index))
+}
+
+// lua_gc
+func (L *State) Gc(what int, data int) int {
+	return int(C.lua_gc(L._s, C.int(what), C.int(data)))
+}
+
+// luaL_error
+func (L *State) Error(sfmt string, v ...interface{}) int {
+	Cerror := C.CString(fmt.Sprintf(sfmt, v...))
+	defer C.free(unsafe.Pointer(Cerror))
+	return int(C.mlua_error(L._s, Cerror))
+}
+
+// lua_concat
+func (L *State) Concat(n int) {
+	C.lua_concat(L._s, C.int(n))
+}
+
+// lua_setallocf
+func (L *State) SetAllocF(f Alloc) {
+	C.mlua_setallocf(L._s, unsafe.Pointer(&f))
 }
 
 // lua_pcall

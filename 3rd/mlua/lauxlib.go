@@ -16,6 +16,8 @@ type LuaError struct {
 	_stack_trace []LuaStackEntry
 }
 
+type LuaBuffer = C.luaL_Buffer
+
 func (err *LuaError) Error() string {
 	return err._message
 }
@@ -109,6 +111,9 @@ func (L *State) IsNumber(index int) bool { return C.lua_isnumber(L._s, C.int(ind
 // lua_isstring
 func (L *State) IsString(index int) bool { return C.lua_isstring(L._s, C.int(index)) == 1 }
 
+// lua_iscfunction
+func (L *State) IsCFunction(index int) bool { return C.lua_iscfunction(L._s, C.int(index)) == 1 }
+
 // lua_istable
 func (L *State) IsTable(index int) bool {
 	return LuaValType(C.lua_type(L._s, C.int(index))) == LUA_TTABLE
@@ -127,11 +132,16 @@ func (L *State) NewTable() {
 	C.lua_createtable(L._s, 0, 0)
 }
 
+// lua_newuserdata
+func (L *State) NewUserData(sz uint) unsafe.Pointer {
+	return unsafe.Pointer(C.lua_newuserdata(L._s, C.size_t(sz)))
+}
+
 // lua_newthread
 func (L *State) NewThread() *State { //TODO: should have same lists as parent
 	//		but may complicate gc
 	s := C.lua_newthread(L._s)
-	return &State{s, 0, nil, nil}
+	return &State{s, nil, nil}
 }
 
 // lua_next
@@ -179,13 +189,6 @@ func (L *State) CheckUdata(narg int, tname string) unsafe.Pointer {
 	return unsafe.Pointer(C.luaL_checkudata(L._s, C.int(narg), Ctname))
 }
 
-// luaL_error
-func (L *State) LError(sfmt string, v ...interface{}) int {
-	Cerror := C.CString(fmt.Sprintf(sfmt, v...))
-	defer C.free(unsafe.Pointer(Cerror))
-	return int(C.luaL_error(L._s, Cerror))
-}
-
 // luaL_len
 func (L *State) Len(index int) int {
 	return int(C.luaL_len(L._s, C.int(index)))
@@ -204,6 +207,20 @@ func (L *State) GSub(s string, p string, r string) string {
 	}()
 
 	return C.GoString(C.luaL_gsub(L._s, Cs, Cp, Cr))
+}
+
+// luaL_getsubtable
+func (L *State) GetSubTable(index int, fname string) int {
+	Cfname := C.CString(fname)
+	defer C.free(unsafe.Pointer(Cfname))
+	return int(C.luaL_getsubtable(L._s, C.int(index), Cfname))
+}
+
+// luaL_traceback
+func (L *State) TraceBack(L1 *State, msg string, level int) {
+	Cmsg := C.CString(msg)
+	defer C.free(unsafe.Pointer(Cmsg))
+	C.luaL_traceback(L._s, L1._s, Cmsg, C.int(level))
 }
 
 // luaL_getmetafield
@@ -284,4 +301,52 @@ func NewState() *State {
 // luaL_openlibs
 func (L *State) OpenLibs() {
 	C.luaL_openlibs(L._s)
+}
+
+// luaL_buffinit
+func (L *State) BuffInit(b *LuaBuffer) {
+	C.luaL_buffinit(L._s, b)
+}
+
+// luaL_addlstring
+func (L *State) AddLString(b *LuaBuffer, s unsafe.Pointer, sz uint) {
+	C.luaL_addlstring(b, (*C.char)(s), C.size_t(sz))
+}
+
+// luaL_addstring
+func (L *State) AddString(b *LuaBuffer, s string) {
+	Cs := C.CString(s)
+	defer C.free(unsafe.Pointer(Cs))
+
+	C.luaL_addstring(b, Cs)
+}
+
+// luaL_addvalue
+func (L *State) AddValue(b *LuaBuffer) {
+	C.luaL_addvalue(b)
+}
+
+// luaL_pushresult
+func (L *State) PushResult(b *LuaBuffer) {
+	C.luaL_pushresult(b)
+}
+
+// luaL_pushresultsize
+func (L *State) PushResultSize(b *LuaBuffer, sz uint) {
+	C.luaL_pushresultsize(b, C.size_t(sz))
+}
+
+// luaL_buffinitsize
+func (L *State) BuffInitSize(b *LuaBuffer, sz uint) unsafe.Pointer {
+	return unsafe.Pointer(C.luaL_buffinitsize(L._s, b, C.size_t(sz)))
+}
+
+// luaL_prepbuffsize
+func (L *State) PrepBuffSize(b *LuaBuffer, sz uint) unsafe.Pointer {
+	return unsafe.Pointer(C.luaL_prepbuffsize(b, C.size_t(sz)))
+}
+
+// luaL_prepbuffer
+func (L *State) PrepBuffer(b *LuaBuffer) unsafe.Pointer {
+	return unsafe.Pointer(C.luaL_prepbuffsize(b, C.size_t(C.mlua_buffersize())))
 }

@@ -20,8 +20,6 @@ type LuaGoFunction func(L *State) int
 type State struct {
 	_s *C.lua_State
 
-	_Index uintptr
-
 	_registry []interface{}
 
 	_freeIndices []uint
@@ -34,7 +32,7 @@ func golua_call_allocf(fp uintptr, ptr uintptr, osize uint, nsize uint) uintptr 
 
 //export golua_call_gofunction
 func golua_call_gofunction(L unsafe.Pointer, fid uint) int {
-	L1 = (*State)(L)
+	L1 := (*State)(L)
 	if fid < 0 {
 		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
 	}
@@ -44,7 +42,7 @@ func golua_call_gofunction(L unsafe.Pointer, fid uint) int {
 
 //export golua_panicmsg_gofunction
 func golua_panicmsg_gofunction(L unsafe.Pointer, z *C.char) {
-	L1 = (*State)L
+	L1 := (*State)(L)
 	s := C.GoString(z)
 
 	panic(&LuaError{LUA_ERRERR, s, L1.StackTrace()})
