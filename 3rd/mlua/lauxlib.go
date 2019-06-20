@@ -7,6 +7,7 @@ package mlua
 //#include "mgolua.h"
 import "C"
 import (
+	"reflect"
 	"unsafe"
 )
 
@@ -111,8 +112,8 @@ func (L *State) IsNumber(index int) bool { return C.lua_isnumber(L._s, C.int(ind
 // lua_isstring
 func (L *State) IsString(index int) bool { return C.lua_isstring(L._s, C.int(index)) == 1 }
 
-// lua_iscfunction
-func (L *State) IsFunction(index int) bool { return C.lua_iscfunction(L._s, C.int(index)) == 1 }
+// lua_iscfunction -> LuaGFunction
+func (L *State) IsGFunction(index int) bool { return C.lua_iscfunction(L._s, C.int(index)) == 1 }
 
 // lua_istable
 func (L *State) IsTable(index int) bool {
@@ -126,6 +127,28 @@ func (L *State) IsThread(index int) bool {
 
 // lua_isuserdata
 func (L *State) IsUserdata(index int) bool { return C.lua_isuserdata(L._s, C.int(index)) == 1 }
+
+// mlua_isgostruct
+func (L *State) IsGoStruct(index int) bool {
+	id := uint(C.mlua_isgostruct(L._s, C.int(index)))
+	if id == 0 {
+		return false
+	}
+
+	if uint(len(L._registry)) <= id {
+		return false
+	}
+
+	if L._registry[id] == nil {
+		return false
+	}
+
+	if reflect.Struct != reflect.TypeOf(L._registry[id]).Kind() {
+		return false
+	}
+
+	return true
+}
 
 // lua_newtable
 func (L *State) NewTable() {

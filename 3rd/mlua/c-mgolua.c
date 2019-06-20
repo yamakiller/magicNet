@@ -110,6 +110,19 @@ void mlua_pushglobaltable(lua_State *L) {
 	lua_pushglobaltable(L);
 }
 
+mlua_pushgostruct(lua_State *L, unsigned int wrapperid) {
+	unsigned int* iidptr = (unsigned int *)lua_newuserdata(L, sizeof(unsigned int));
+	*iidptr = wrapperid;
+}
+
+unsigned int mlua_isgostruct(lua_State *L, int idx) {
+	if (lua_isuserdata(L, idx) != 0) {
+		unsigned int* iidptr = lua_touserdata(L, idx);
+		return *iidptr;
+	}
+	return 0;
+}
+
 int mlua_pcall(lua_State* L, int nargs, int nresults, int errfunc){
 	return lua_pcallk(L, nargs, nresults, errfunc, 0, NULL);
 }

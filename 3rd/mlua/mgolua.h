@@ -38,6 +38,10 @@ void mlua_replace(lua_State *L, int idx);
 
 void mlua_pushglobaltable(lua_State *L);
 
+void mlua_pushgostruct(lua_State *L, unsigned int wrapperid);
+
+unsigned int mlua_isgostruct(lua_State *, int idx);
+
 int mlua_getmetatable(lua_State *L, const char *k);
 
 int mlua_buffersize();

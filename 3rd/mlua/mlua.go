@@ -170,11 +170,6 @@ func (L *State) TypeName(tp int) string {
 	return C.GoString(C.lua_typename(L._s, C.int(tp)))
 }
 
-func (L *State) PushGoFunction(f LuaGoFunction) {
-	fid := L.register(f)
-	C.mlua_push_go_wrapper(L._s, C.uint(fid))
-}
-
 // lua_gettop
 func (L *State) GetTop() int {
 	return int(C.lua_gettop(L._s))
@@ -251,6 +246,18 @@ func (L *State) PushThread() (isMain bool) {
 // lua_pushvalue
 func (L *State) PushValue(index int) {
 	C.lua_pushvalue(L._s, C.int(index))
+}
+
+// lua_pushcfunction -> PushGoFunction
+func (L *State) PushGoFunction(f LuaGoFunction) {
+	fid := L.register(f)
+	C.mlua_push_go_wrapper(L._s, C.uint(fid))
+}
+
+// mlua_pushgostruct
+func (L *State) PushGoStruct(d interface{}) {
+	did := L.register(d)
+	C.mlua_pushgostruct(L._s, C.uint(did))
 }
 
 // lua_setglobal
