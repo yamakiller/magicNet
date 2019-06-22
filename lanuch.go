@@ -26,10 +26,8 @@ func main() {
 	L := mlua.NewState()
 	L.OpenLibs()
 
-
-	L.RegisterGoStruct(&act{})
-
-	td := &act{1, 2, 3}
+  //结构及 函数注册测试完成---------------------------
+	/*td := &act{1, 2, 3}
 
 	L.PushUserGoStruct(td)
 
@@ -39,10 +37,27 @@ func main() {
 	//fmt.Print("as:", unsafe.Sizeof(td))
 
 	//tm := (*act)(unsafe.Pointer(L.ToGoStruct(-1)))
-	fmt.Print( td.A, bbb.A)
+	fmt.Print( td.A, bbb.A)*/
 
 	//L.Register("test2", test2)
-	//L.DoString("test2()")
+  //----------------------------------------------
+
+	//LuaReg测试-OK--------------------------------
+	/*af := make([]mlua.LuaReg, 1, 1)
+	af[0].Name = "test2"
+	af[0].Func = test2
+
+	fmt.Printf("start :%d\n", L.GetTop())
+
+	L.NewTable()
+	//L.PushInteger(1)
+	fmt.Printf("start 1:%d\n", L.GetTop())
+	L.SetFuncs(af, 0)
+
+	fmt.Printf("start 2:%d\n", L.GetTop())
+	L.SetGlobal("mm")
+
+	L.DoString("print('ooooo') mm.test2()")*/
 
 	var ispass bool
 	fmt.Scanln(&ispass)

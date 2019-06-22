@@ -29,7 +29,7 @@ int mlua_loadbuffer(lua_State *L, const char *buffer, size_t sz, const char* nam
 
 void mlua_push_go_wrapper(lua_State* L, void* gofunc, int nup);
 
-//void mlua_push_go_closure_wrapper(lua_State *L, int n);
+void mlua_push_fun_wrapper(lua_State* L, int nup);
 
 int mlua_upvalueindex(int i);
 

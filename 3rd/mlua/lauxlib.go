@@ -9,6 +9,7 @@ import "C"
 import (
 	"reflect"
 	"unsafe"
+	"fmt"
 )
 
 type LuaError struct {
@@ -18,8 +19,8 @@ type LuaError struct {
 }
 
 type LuaReg struct {
-	_name string
-	_func LuaGoFunction
+	Name string
+	Func LuaGoFunction
 }
 
 type LuaBuffer = C.luaL_Buffer
@@ -307,13 +308,16 @@ func (L *State) OptString(narg int, d string) string {
 func (L *State) SetFuncs(regs []LuaReg, nup int) {
   L.CheckStack(nup + 1, "too many upvalues")
 	for _, r := range regs {
+		C.lua_pushlightuserdata(L._s, unsafe.Pointer(&r.Func))
 		for i := 0;i < nup;i++ {
-			L.PushValue(-nup)
+			L.PushValue(-(nup + 1))
 		}
-		C.mlua_push_go_wrapper(L._s, unsafe.Pointer(&r._func), C.int(nup))
-		L.SetField(-(nup + 3), r._name)
+
+		C.mlua_push_fun_wrapper(L._s, C.int(nup + 1))
+		fmt.Println(L.Type(-(nup + 2)))
+		L.SetField(-(nup + 2), r.Name)
 	}
-	L.Pop(nup + 1)
+	L.Pop(nup)
 }
 
 // luaL_ref

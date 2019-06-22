@@ -92,13 +92,18 @@ int mlua_upvalueindex(int i) {
 	return lua_upvalueindex(i + 1);
 }
 
+void mlua_push_fun_wrapper(lua_State* L, int nup) {
+	lua_pushcclosure(L, go_function_wrapper_wrapper, nup);
+}
+
 void mlua_push_go_wrapper(lua_State* L,void* gofunc, int nup) {
 	lua_pushlightuserdata(L, gofunc);
 	int i;
 	for(i = 0;i < nup;i++) {
 		lua_pushvalue(L, -(nup + 1));
 	}
-	lua_pushcclosure(L, go_function_wrapper_wrapper, nup + 1);
+	mlua_push_fun_wrapper(L, nup + 1);
+	lua_pop(L, nup);
 }
 
 int panic_msg_warapper(lua_State *L) {
