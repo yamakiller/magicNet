@@ -6,7 +6,7 @@
 #define GOLUA_PANIC_MSG_WARAPPER "golua_panicmsg_warapper"
 
 struct GoStruct{
-	unsigned int _fakeId;
+	unsigned int _fakeId;  //to 可以删除
 	size_t _sz;
   char _data[1];
 };
@@ -27,9 +27,9 @@ int mlua_loadfile(lua_State *L, const char *filename);
 
 int mlua_loadbuffer(lua_State *L, const char *buffer, size_t sz, const char* name);
 
-void mlua_push_go_wrapper(lua_State* L, void* gofunc);
+void mlua_push_go_wrapper(lua_State* L, void* gofunc, int nup);
 
-void mlua_push_go_closure_wrapper(lua_State *L, int n);
+//void mlua_push_go_closure_wrapper(lua_State *L, int n);
 
 int mlua_upvalueindex(int i);
 

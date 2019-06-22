@@ -109,11 +109,6 @@ func (L *State) Copy(fromindex int, toindex int) {
 	C.lua_copy(L._s, C.int(fromindex), C.int(toindex))
 }
 
-// lua_checkstack
-func (L *State) CheckStack(n int) int {
-	return int(C.lua_checkstack(L._s, C.int(n)))
-}
-
 // lua_type
 func (L *State) Type(index int) int {
 	return int(C.lua_type(L._s, C.int(index)))
@@ -204,12 +199,12 @@ func (L *State) PushValue(index int) {
 
 // lua_pushcfunction -> PushGoFunction
 func (L *State) PushGoFunction(f LuaGoFunction) {
-	C.mlua_push_go_wrapper(L._s, unsafe.Pointer(&f))
+	C.mlua_push_go_wrapper(L._s, unsafe.Pointer(&f), C.int(0))
 }
 
 // lua_pushcclosure -> PushGoClosure
 func (L *State) PushGoClosure(f LuaGoFunction, args ...interface{}) {
-  var argsNum int = 1
+  var argsNum int = 0
 	C.lua_pushlightuserdata(L._s, unsafe.Pointer(&f))
 	for _, val := range args {
 		argsNum += 1
@@ -244,7 +239,7 @@ func (L *State) PushGoClosure(f LuaGoFunction, args ...interface{}) {
 			break;
 		}
 	}
-	C.mlua_push_go_closure_wrapper(L._s, C.int(argsNum))
+	C.mlua_push_go_wrapper(L._s, unsafe.Pointer(&f), C.int(argsNum))
 }
 
 //----------------------------------------------------//

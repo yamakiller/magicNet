@@ -17,6 +17,11 @@ type LuaError struct {
 	_stack_trace []LuaStackEntry
 }
 
+type LuaReg struct {
+	_name string
+	_func LuaGoFunction
+}
+
 type LuaBuffer = C.luaL_Buffer
 
 func (err *LuaError) Error() string {
@@ -198,6 +203,13 @@ func (L *State) CheckType(narg int, t LuaValType) {
 	C.luaL_checktype(L._s, C.int(narg), C.int(t))
 }
 
+//luaL_checkstack
+func (L *State) CheckStack(sz int, msg string) {
+	Cmsg := C.CString(msg)
+	defer C.free(unsafe.Pointer(Cmsg))
+	C.luaL_checkstack(L._s, C.int(sz), Cmsg)
+}
+
 // luaL_testudata
 func (L *State) TestUData(narg int, tname string) unsafe.Pointer {
 	Ctname := C.CString(tname)
@@ -289,6 +301,19 @@ func (L *State) OptString(narg int, d string) string {
 	Cd := C.CString(d)
 	defer C.free(unsafe.Pointer(Cd))
 	return C.GoString(C.luaL_optlstring(L._s, C.int(narg), Cd, &length))
+}
+
+// luaL_setfuncs
+func (L *State) SetFuncs(regs []LuaReg, nup int) {
+  L.CheckStack(nup + 1, "too many upvalues")
+	for _, r := range regs {
+		for i := 0;i < nup;i++ {
+			L.PushValue(-nup)
+		}
+		C.mlua_push_go_wrapper(L._s, unsafe.Pointer(&r._func), C.int(nup))
+		L.SetField(-(nup + 3), r._name)
+	}
+	L.Pop(nup + 1)
 }
 
 // luaL_ref
