@@ -15,11 +15,34 @@ func test3(L *mlua.State) int {
 	return 0
 }
 
+type act struct {
+	A int
+	B int
+	C int
+}
+
+
 func main() {
 	L := mlua.NewState()
 	L.OpenLibs()
 
-	L.Register("test2", test2)
+
+	L.RegisterGoStruct(&act{})
+
+	td := &act{1, 2, 3}
+
+	L.PushUserGoStruct(td)
+
+	var bbb act
+  L.ToUserGoStruct(-1, &bbb)
+
+	//fmt.Print("as:", unsafe.Sizeof(td))
+
+	//tm := (*act)(unsafe.Pointer(L.ToGoStruct(-1)))
+	fmt.Print( td.A, bbb.A)
+
+	//L.Register("test2", test2)
+	//L.DoString("test2()")
 
 	var ispass bool
 	fmt.Scanln(&ispass)

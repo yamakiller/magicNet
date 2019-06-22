@@ -31,13 +31,9 @@ func golua_call_allocf(fp uintptr, ptr uintptr, osize uint, nsize uint) uintptr 
 }
 
 //export golua_call_gofunction
-func golua_call_gofunction(L unsafe.Pointer, fid uint) int {
+func golua_call_gofunction(L unsafe.Pointer, f uintptr) int {
 	L1 := (*State)(L)
-	if fid < 0 {
-		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
-	}
-	f := L1._registry[fid].(LuaGoFunction)
-	return f(L1)
+	return (*((*LuaGoFunction)(unsafe.Pointer(f))))(L1)
 }
 
 //export golua_panicmsg_gofunction

@@ -3,16 +3,18 @@
 #include "lauxlib.h"
 #include "_cgo_export.h"
 #include <stdio.h>
+#include <string.h>
 
 #define GOLUA_PANIC_MSG_WARAPPER "golua_panicmsg_warapper"
 #define GOLUA_STATE_SELF "golua_state_self"
 
 
 static const char go_state_registry_key = 'k';
-
-typedef struct {
-	unsigned int fake_id;
-} GoStruct;
+struct GoStruct{
+	unsigned int _fakeId;
+	size_t _sz;
+  char _data[1];
+};
 
 int mlua_get_lib_version() {
 	return 105;
@@ -30,10 +32,10 @@ void mlua_setallocf(lua_State* L, void* goallocf) {
 	lua_setallocf(L, &go_alloc_wrapper, goallocf);
 }
 
-void mlua_setgostate(lua_State* L, void *goluaState)
+void mlua_setgostate(lua_State* L, uintptr_t goluaState)
 {
 	lua_pushlightuserdata(L,(void*)&go_state_registry_key);
-	lua_pushlightuserdata(L, goluaState);
+	lua_pushlightuserdata(L, (void*)goluaState);
 	lua_settable(L, LUA_REGISTRYINDEX);
 }
 
@@ -69,28 +71,22 @@ const char *mlua_tostring(lua_State *L, int idx) {
 	return lua_tostring(L, idx);
 }
 
+const void *mlua_tougostruct(lua_State *L, int idx) {
+	struct GoStruct *pGoData = (struct GoStruct*)lua_touserdata(L, idx);
+	return (const void *)pGoData;
+}
+
 int mlua_getmetatable(lua_State *L, const char *k) {
 	return lua_getfield(L, LUA_REGISTRYINDEX, k);
 }
 
 static int go_function_wrapper_wrapper(lua_State *L) {
-	int ret;
-	ret = golua_call_gofunction(mlua_getgostate(L), 	mlua_tointeger(L, lua_upvalueindex(1)));
-
-	if (lua_toboolean(L, lua_upvalueindex(2)))
-  {
-      lua_pushboolean(L, 0);
-      lua_replace(L, lua_upvalueindex(2));
-      return lua_error(L);
-  }
-
-	return ret;
+	return golua_call_gofunction(mlua_getgostate(L), 	(GoUintptr)lua_touserdata(L, lua_upvalueindex(1)));
 }
 
-void mlua_push_go_wrapper(lua_State* L, unsigned int wrapperid) {
-	lua_pushinteger(L, wrapperid);
-	lua_pushboolean(L, 0);
-	lua_pushcclosure(L, go_function_wrapper_wrapper, 2);
+void mlua_push_go_wrapper(lua_State* L,void* gofunc) {
+	lua_pushlightuserdata(L, gofunc);
+	lua_pushcclosure(L, go_function_wrapper_wrapper, 1);
 }
 
 int panic_msg_warapper(lua_State *L) {
@@ -110,9 +106,11 @@ void mlua_pushglobaltable(lua_State *L) {
 	lua_pushglobaltable(L);
 }
 
-mlua_pushgostruct(lua_State *L, unsigned int wrapperid) {
-	unsigned int* iidptr = (unsigned int *)lua_newuserdata(L, sizeof(unsigned int));
-	*iidptr = wrapperid;
+void mlua_pushugostruct(lua_State *L, char *godata, size_t sz) {
+	struct GoStruct *pGoData = (struct GoStruct*)lua_newuserdata(L, sizeof(struct GoStruct) + sz);
+	pGoData->_fakeId = 0;
+	pGoData->_sz = sz;
+	memcpy(&pGoData->_data[0], (void*)godata, sz);
 }
 
 unsigned int mlua_isgostruct(lua_State *L, int idx) {

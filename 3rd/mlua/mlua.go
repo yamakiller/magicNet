@@ -18,6 +18,9 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
+	"reflect"
+	"bytes"
+	"encoding/gob"
 )
 
 type LuaValType int
@@ -88,11 +91,11 @@ type LuaStackEntry struct {
 
 func newState(L *C.lua_State) *State {
 	newstate := &State{L, make([]interface{}, 0, 8), make([]uint, 0, 8)}
-	C.mlua_setgostate(L, unsafe.Pointer(newstate))
+	C.mlua_setgostate(L, C.uintptr_t(uintptr(unsafe.Pointer(newstate))))
 	return newstate
 }
 
-func (L *State) addFreeIndex(i uint) {
+/*func (L *State) addFreeIndex(i uint) {
 	freelen := len(L._freeIndices)
 	//reallocate if necessary
 	if freelen+1 > cap(L._freeIndices) {
@@ -143,6 +146,10 @@ func (L *State) unregister(fid uint) {
 		L._registry[fid] = nil
 		L.addFreeIndex(fid)
 	}
+}*/
+
+func (L *State) RegisterGoStruct(d interface{}) {
+	gob.Register(d)
 }
 
 // lua_absindex
@@ -250,14 +257,29 @@ func (L *State) PushValue(index int) {
 
 // lua_pushcfunction -> PushGoFunction
 func (L *State) PushGoFunction(f LuaGoFunction) {
-	fid := L.register(f)
-	C.mlua_push_go_wrapper(L._s, C.uint(fid))
+	C.mlua_push_go_wrapper(L._s, unsafe.Pointer(&f))
 }
 
-// mlua_pushgostruct
-func (L *State) PushGoStruct(d interface{}) {
-	did := L.register(d)
-	C.mlua_pushgostruct(L._s, C.uint(did))
+// lua_pushcclosure -> PushGoClosure
+func (L *State) PushGoClosure(f LuaGoFunction, args... interface{}) {
+
+}
+
+//----------------------------------------------------//
+// mlua_pushgostruct => lua_newuserdata               //
+// 内存管理权交由 lua虚拟机管理                           //
+// 内存消耗略大                                         //
+//----------------------------------------------------//
+func (L *State) PushUserGoStruct(d interface{}) {
+	var dby bytes.Buffer
+	enc := gob.NewEncoder(&dby)
+	err := enc.Encode(d)
+	if (err != nil){
+		panic(err)
+		return
+	}
+
+	C.mlua_pushugostruct(L._s, (*C.char)(unsafe.Pointer(&dby.Bytes()[0])), C.size_t(len(dby.Bytes())))
 }
 
 // lua_setglobal
@@ -298,12 +320,36 @@ func (L *State) ToNumber(index int) float64 {
 	return float64(C.mlua_tonumber(L._s, C.int(index)))
 }
 
+//----------------------------------------------
+// lua_tougostruct => lua_touserdata
+// 获取索引中的Go Struct 结构
+// TODO： 思考感觉性能消耗不小!  没有没改进方案呢？
+//----------------------------------------------
+func (L *State) ToUserGoStruct(index int, s interface{}){
+	r := (*C.struct_GoStruct)(C.mlua_tougostruct(L._s, C.int(index)))
+	n := int(r._sz)
+	cd := make([]byte, 0, n)
+	var cchars[] C.char
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&cchars))
+	header.Data = (uintptr)(unsafe.Pointer(&r._data[0]))
+	header.Len = n
+	for _, cc := range cchars {
+			cd = append(cd, byte(cc))
+	}
+	d := bytes.NewBuffer(cd)
+	dec := gob.NewDecoder(d)
+	err := dec.Decode(s)
+	if (err != nil) {
+		panic(err)
+	}
+}
+
 // lua_rawlen
 func (L *State) RawLen(index int) uint {
 	return uint(C.lua_rawlen(L._s, C.int(index)))
 }
 
-// lua_topointe
+// lua_topointer
 func (L *State) ToPointer(index int) unsafe.Pointer {
 	return unsafe.Pointer(C.lua_topointer(L._s, C.int(index)))
 }
