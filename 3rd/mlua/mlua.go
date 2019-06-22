@@ -95,59 +95,6 @@ func newState(L *C.lua_State) *State {
 	return newstate
 }
 
-/*func (L *State) addFreeIndex(i uint) {
-	freelen := len(L._freeIndices)
-	//reallocate if necessary
-	if freelen+1 > cap(L._freeIndices) {
-		newSlice := make([]uint, freelen, cap(L._freeIndices)*2)
-		copy(newSlice, L._freeIndices)
-		L._freeIndices = newSlice
-	}
-
-	L._freeIndices = L._freeIndices[0 : freelen+1]
-	L._freeIndices[freelen] = i
-}
-
-func (L *State) getFreeIndex() (index uint, ok bool) {
-	freelen := len(L._freeIndices)
-	if freelen > 0 {
-		i := L._freeIndices[freelen-1] //get index
-		L._freeIndices = L._freeIndices[0 : freelen-1]
-		return i, true
-	}
-	return 0, false
-}
-
-//returns the registered function id
-func (L *State) register(f interface{}) uint {
-	index, ok := L.getFreeIndex()
-	if !ok {
-		index = uint(len(L._registry))
-		//reallocate backing array if necessary
-		if index+1 > uint(cap(L._registry)) {
-			newcap := cap(L._registry) * 2
-			if index+1 > uint(newcap) {
-				newcap = int(index + 1)
-			}
-			newSlice := make([]interface{}, index, newcap)
-			copy(newSlice, L._registry)
-			L._registry = newSlice
-		}
-		//reslice
-		L._registry = L._registry[0 : index+1]
-	}
-
-	L._registry[index] = f
-	return index
-}
-
-func (L *State) unregister(fid uint) {
-	if (fid < uint(len(L._registry))) && (L._registry[fid] != nil) {
-		L._registry[fid] = nil
-		L.addFreeIndex(fid)
-	}
-}*/
-
 func (L *State) RegisterGoStruct(d interface{}) {
 	gob.Register(d)
 }
@@ -261,8 +208,52 @@ func (L *State) PushGoFunction(f LuaGoFunction) {
 }
 
 // lua_pushcclosure -> PushGoClosure
-func (L *State) PushGoClosure(f LuaGoFunction, args... interface{}) {
+func (L *State) PushGoClosure(f LuaGoFunction, args ...interface{}) {
+  var argsNum int = 1
+	C.lua_pushlightuserdata(L._s, unsafe.Pointer(&f))
+	for _, val := range args {
+		argsNum += 1
+		switch(reflect.TypeOf(val).Kind()) {
+		case reflect.Uint64:
+		case reflect.Uint32:
+		case reflect.Uint:
+		case reflect.Int64:
+		case reflect.Int32:
+		case reflect.Int:
+			L.PushInteger(reflect.ValueOf(val).Int())
+			break;
+		case reflect.Float64:
+		case reflect.Float32:
+			L.PushNumber(reflect.ValueOf(val).Float())
+			break;
+		case reflect.String:
+			L.PushString(reflect.ValueOf(val).String())
+			break;
+		case reflect.Struct:
+			L.PushUserGoStruct(val)
+			break;
+		case reflect.Uintptr:
+		case reflect.UnsafePointer:
+			L.PushLightGoStruct(unsafe.Pointer(reflect.ValueOf(val).Pointer()))
+		  break;
+		case reflect.Bool:
+			L.PushBoolean(reflect.ValueOf(val).Bool())
+			break;
+		default:
+			panic(fmt.Sprintf("mlua go Closure %s Type not supported", reflect.TypeOf(val).Name()))
+			break;
+		}
+	}
+	C.mlua_push_go_closure_wrapper(L._s, C.int(argsNum))
+}
 
+//----------------------------------------------------//
+// mlua_upvalueindex
+// 确保闭包参数从第二个位置开始防蚊
+//
+//----------------------------------------------------//
+func (L *State) UpvalueIndex(n int) int {
+	return int(C.mlua_upvalueindex(C.int(n)))
 }
 
 //----------------------------------------------------//
@@ -280,6 +271,11 @@ func (L *State) PushUserGoStruct(d interface{}) {
 	}
 
 	C.mlua_pushugostruct(L._s, (*C.char)(unsafe.Pointer(&dby.Bytes()[0])), C.size_t(len(dby.Bytes())))
+}
+
+// lua_pushlightuserdata =>nmlua_pushlgostruct
+func (L *State) PushLightGoStruct(d unsafe.Pointer) {
+	C.mlua_pushlgostruct(L._s, C.uintptr_t(uintptr(d)))
 }
 
 // lua_setglobal
@@ -328,20 +324,16 @@ func (L *State) ToNumber(index int) float64 {
 func (L *State) ToUserGoStruct(index int, s interface{}){
 	r := (*C.struct_GoStruct)(C.mlua_tougostruct(L._s, C.int(index)))
 	n := int(r._sz)
-	cd := make([]byte, 0, n)
-	var cchars[] C.char
-	header := (*reflect.SliceHeader)(unsafe.Pointer(&cchars))
-	header.Data = (uintptr)(unsafe.Pointer(&r._data[0]))
-	header.Len = n
-	for _, cc := range cchars {
-			cd = append(cd, byte(cc))
-	}
-	d := bytes.NewBuffer(cd)
+	d := bytes.NewBuffer(C.GoBytes(unsafe.Pointer(&r._data[0]), C.int(n)))
 	dec := gob.NewDecoder(d)
 	err := dec.Decode(s)
 	if (err != nil) {
 		panic(err)
 	}
+}
+
+func (L *State) ToLightGoStruct(index int) unsafe.Pointer {
+	return unsafe.Pointer(C.mlua_tolgostruct(L._s, C.int(index)))
 }
 
 // lua_rawlen

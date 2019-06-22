@@ -29,6 +29,10 @@ int mlua_loadbuffer(lua_State *L, const char *buffer, size_t sz, const char* nam
 
 void mlua_push_go_wrapper(lua_State* L, void* gofunc);
 
+void mlua_push_go_closure_wrapper(lua_State *L, int n);
+
+int mlua_upvalueindex(int i);
+
 int mlua_pcall(lua_State* L, int nargs, int nresults, int errfunc);
 
 lua_Integer mlua_tointeger(lua_State *L, int idx);
@@ -39,6 +43,8 @@ const char *mlua_tostring(lua_State *L, int idx);
 
 const void *mlua_tougostruct(lua_State *L, int idx);
 
+const void *mlua_tolgostruct(lua_State *L, int idx);
+
 int mlua_error(lua_State *L, const char *fmt);
 
 void mlua_replace(lua_State *L, int idx);
@@ -46,6 +52,8 @@ void mlua_replace(lua_State *L, int idx);
 void mlua_pushglobaltable(lua_State *L);
 
 void mlua_pushugostruct(lua_State *L, char *goStruct, size_t sz);
+
+void mlua_pushlgostruct(lua_State *L, uintptr_t p);
 
 unsigned int mlua_isgostruct(lua_State *, int idx);
 

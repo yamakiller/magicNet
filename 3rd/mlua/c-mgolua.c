@@ -76,6 +76,10 @@ const void *mlua_tougostruct(lua_State *L, int idx) {
 	return (const void *)pGoData;
 }
 
+const void *mlua_tolgostruct(lua_State *L, int idx) {
+	return (const void *)lua_touserdata(L, idx);
+}
+
 int mlua_getmetatable(lua_State *L, const char *k) {
 	return lua_getfield(L, LUA_REGISTRYINDEX, k);
 }
@@ -84,9 +88,17 @@ static int go_function_wrapper_wrapper(lua_State *L) {
 	return golua_call_gofunction(mlua_getgostate(L), 	(GoUintptr)lua_touserdata(L, lua_upvalueindex(1)));
 }
 
+int mlua_upvalueindex(int i) {
+	return lua_upvalueindex(i + 1);
+}
+
 void mlua_push_go_wrapper(lua_State* L,void* gofunc) {
 	lua_pushlightuserdata(L, gofunc);
 	lua_pushcclosure(L, go_function_wrapper_wrapper, 1);
+}
+
+void mlua_push_go_closure_wrapper(lua_State *L, int n) {
+	lua_pushcclosure(L, go_function_wrapper_wrapper, n);
 }
 
 int panic_msg_warapper(lua_State *L) {
@@ -111,6 +123,10 @@ void mlua_pushugostruct(lua_State *L, char *godata, size_t sz) {
 	pGoData->_fakeId = 0;
 	pGoData->_sz = sz;
 	memcpy(&pGoData->_data[0], (void*)godata, sz);
+}
+
+void mlua_pushlgostruct(lua_State *L, uintptr_t p) {
+	lua_pushlightuserdata(L, (void*)p);
 }
 
 unsigned int mlua_isgostruct(lua_State *L, int idx) {
