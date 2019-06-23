@@ -7,7 +7,6 @@ package mlua
 //#include "mgolua.h"
 import "C"
 import (
-	"reflect"
 	"unsafe"
 	"fmt"
 )
@@ -21,6 +20,22 @@ type LuaError struct {
 type LuaReg struct {
 	Name string
 	Func LuaGoFunction
+}
+
+type LuaDebug struct {
+	Event int
+	Name string
+	NameWhat string
+	What string
+	Source string
+	CurrentLine int
+	LineDefined int
+	LastLineDefined int
+	Nups uint8
+	NParams uint8
+	IsVararg byte
+	IsTailCall byte
+	ShortSrc []byte
 }
 
 type LuaBuffer = C.luaL_Buffer
@@ -141,18 +156,6 @@ func (L *State) IsGoStruct(index int) bool {
 		return false
 	}
 
-	if uint(len(L._registry)) <= id {
-		return false
-	}
-
-	if L._registry[id] == nil {
-		return false
-	}
-
-	if reflect.Struct != reflect.TypeOf(L._registry[id]).Kind() {
-		return false
-	}
-
 	return true
 }
 
@@ -170,7 +173,7 @@ func (L *State) NewUserData(sz uint) unsafe.Pointer {
 func (L *State) NewThread() *State { //TODO: should have same lists as parent
 	//		but may complicate gc
 	s := C.lua_newthread(L._s)
-	return &State{s, nil, nil}
+	return &State{s, nil}
 }
 
 // lua_next

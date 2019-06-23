@@ -31,7 +31,7 @@ type LuaStackEntry struct {
 }
 
 func newState(L *C.lua_State) *State {
-	newstate := &State{L, make([]interface{}, 0, 8), make([]uint, 0, 8)}
+	newstate := &State{L, nil}
 	C.mlua_setgostate(L, C.uintptr_t(uintptr(unsafe.Pointer(newstate))))
 	return newstate
 }
@@ -385,7 +385,7 @@ func (L *State) Concat(n int) {
 }
 
 // lua_setallocf
-func (L *State) SetAllocF(f Alloc) {
+func (L *State) SetAllocF(f LuaGoAllocFunction) {
 	C.mlua_setallocf(L._s, unsafe.Pointer(&f))
 }
 
@@ -436,8 +436,29 @@ func (L *State) Register(name string, f LuaGoFunction) {
 	L.SetGlobal(name)
 }
 
+// lua_sethook
+func (L *State) SetHook(f LuaGoHookFunction, mask int, count int) {
+	L._h = &f
+	C.mlua_sethook(L._s, C.int(mask), C.int(count))
+}
+
+// lua_gethookmask
+func (L *State) GetHookMask() int {
+	return int(C.lua_gethookmask(L._s))
+}
+
+// lua_gethookcount
+func (L *State) GetHookCount() int {
+	return int(C.lua_gethookcount(L._s))
+}
+
+// lua_gc
+func (L *State) Gcc(what int, data int) int {
+	return int(C.lua_gc(L._s, C.int(what), C.int(data)))
+}
+
 //exprot NewStateEnv
-func NewStateAlloc(f Alloc) *State {
+func NewStateAlloc(f LuaGoAllocFunction) *State {
 	ls := C.mlua_newstate(unsafe.Pointer(&f))
 	return newState(ls)
 }

@@ -62,3 +62,5 @@ int mlua_getmetatable(lua_State *L, const char *k);
 int mlua_buffersize();
 
 void luaopen_mlua(lua_State *L);
+
+void mlua_sethook(lua_State *L, int mask, int count);

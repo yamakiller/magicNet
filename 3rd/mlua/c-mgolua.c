@@ -155,3 +155,11 @@ void luaopen_mlua(lua_State *L) {
 int mlua_buffersize() {
 	return LUAL_BUFFERSIZE;
 }
+
+static void go_hook_wrapper(lua_State *L, lua_Debug *ar){
+	golua_hook_gofunction(mlua_getgostate(L), ar);
+}
+
+void mlua_sethook(lua_State *L, int mask, int count) {
+	lua_sethook(L, &go_hook_wrapper, mask, count);
+}
