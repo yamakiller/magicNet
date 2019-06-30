@@ -1,17 +1,17 @@
 package main
 
 import (
-	"fmt"
-//	"magicNet/3rd/mlua"
+	"magicNet/engine"
 )
 
-
-
-
-
-
 func main() {
+	fwk := new(engine.Framework)
+	if fwk.Start() != 0 {
+		fwk.Shutdown()
+		return
+	}
 
-	var ispass bool
-	fmt.Scanln(&ispass)
+	fwk.Loop()
+
+	fwk.Shutdown()
 }
