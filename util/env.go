@@ -28,9 +28,21 @@ func (E *Env) Put(v map[string]gjson.Result) {
 }
 
 // Put 插入数据
-/*func (E *Env) Put(k string, v interface{}) {
-	E._v[k] = v
-}*/
+func GetEnvInt(v map[string]gjson.Result, k string, defaultValue int) int {
+	if v == nil || !v[k].Exists() {
+		return defaultValue
+	}
+
+	return int(v[k].Int())
+}
+
+func GetEnvBool(v map[string]gjson.Result, k string, defaultValue bool) bool  {
+	if v == nil || !v[k].Exists() {
+		return defaultValue
+	}
+
+	return v[k].Bool()
+}
 
 // GetInt : 获取k对映的整型值
 func (E *Env) GetInt(k string, defaultValue int) int {

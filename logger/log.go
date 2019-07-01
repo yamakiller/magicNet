@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -18,9 +19,12 @@ func Init(logLevel string) {
 	configLevel(logLevel)
 	formatter := new(prefixed.TextFormatter)
 	formatter.FullTimestamp = true
-	formatter.SetColorScheme(&prefixed.ColorScheme{
-		PrefixStyle: "blue+b",
-	})
+	if runtime.GOOS == "windows" {
+		formatter.DisableColors = true
+	} else {
+		formatter.SetColorScheme(&prefixed.ColorScheme{
+			PrefixStyle: "blue+b",})
+	}
 
 	logrus.SetFormatter(formatter)
 }

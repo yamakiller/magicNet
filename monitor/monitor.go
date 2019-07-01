@@ -15,6 +15,7 @@ type Monitor struct {
 	e bool           /*is shutdown ?*/
 	s string         /*system run state */
 	h MonitorService /*system monitor http service*/
+	hmethod *MonitorMethod /*system monitor http service method*/
 }
 
 const (
@@ -28,8 +29,7 @@ var instMonitor *Monitor
 
 // Init : 初始化监视器
 func Init() {
-	instMonitor = &Monitor{sync.WaitGroup{}, 0, false, monitorIdle, MonitorService{}}
-
+	instMonitor = &Monitor{sync.WaitGroup{}, 0, false, monitorIdle, MonitorService{}, NewMonitorMethod()}
 }
 
 // StartService : 启动服务
@@ -41,7 +41,7 @@ func StartService() bool {
 
 	logger.Info(0, "monitor service starting...")
 	instMonitor.h.Init()
-	instMonitor.h.Bind("/", &MonitorMethod{})
+	instMonitor.h.Bind("/", instMonitor.hmethod)
 
 	protocol := msc["protocol"].String()
 	address := msc["address"].String()
@@ -111,6 +111,11 @@ func SetStateRun() {
 // SetStateShutdown : 设置系统为终止中
 func SetStateShutdown() {
 	instMonitor.s = monitorShutdown
+}
+
+// RegisterHttpMethod : 註冊HTTP 映射方法
+func RegisterHttpMethod(pattern string, f MonitorHttpFunction) {
+	instMonitor.hmethod.methods[pattern] = f
 }
 
 // Shutdown : 终止系统运行

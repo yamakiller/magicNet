@@ -12,6 +12,7 @@ type MonitorService struct {
 	serviceTlsCrt   string
 	serviceTlsKey   string
 	serviceHandle   *http.ServeMux
+	servichMethod   http.Handler
 }
 
 // Init : 初始化服务

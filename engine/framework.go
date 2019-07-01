@@ -23,6 +23,7 @@ const (
 	verBuildTime = "2019-06-29 11:58"
 )
 
+
 // Framework : 主框架对象
 type Framework struct {
 	name       string
@@ -32,11 +33,11 @@ type Framework struct {
 }
 
 // Start is Start system framework
-func (fr *Framework) Start() int {
+func (fr *Framework) start() int {
 	/*获取控制台输入参数*/
 	isHelp := false
 	isVers := false
-	flag.BoolVar(&isHelp, "h", false, "out help informat")
+  flag.BoolVar(&isHelp, "h", false, "out help informat")
 	flag.BoolVar(&isHelp, "?", false, "out help informat")
 	flag.BoolVar(&isVers, "v", false, "display version informat")
 	flag.StringVar(&fr.configPath, "c", "./conf/magicnet.conf", "config full path")
@@ -78,7 +79,7 @@ func (fr *Framework) Start() int {
 }
 
 // Loop framework mian loop
-func (fr *Framework) Loop() {
+func (fr *Framework) loop() {
 	monitor.SetStateRun()
 	for !monitor.IsShutdown() {
 		time.Sleep(time.Millisecond * 1000)
@@ -91,8 +92,7 @@ func (fr *Framework) Loop() {
 }
 
 // Shutdown framework end
-func (fr *Framework) Shutdown() {
-
+func (fr *Framework) shutdown() {
 	logger.Info(0, "%s exit", fr.name)
 	logger.Destory()
 	monitor.SetStateIdle()
