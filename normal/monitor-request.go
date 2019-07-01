@@ -49,7 +49,6 @@ func initializeAuth2() {
     }
   }
 
-
   serverAuth2 = server.NewDefaultServer(managerAuth2)
   //serverAuth2.SetClientAuthorizedHandler(handler)
   serverAuth2.SetPasswordAuthorizationHandler(func(username, password string)(userID string, err error){
