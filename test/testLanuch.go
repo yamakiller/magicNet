@@ -3,7 +3,9 @@ package test
 
 import (
 	"magicNet/engine"
-	"magicNet/logger"
+	"magicNet/engine/monitor"
+	"magicNet/engine/logger"
+	"magicNet/bootstrap"
 )
 
 type testHook struct {
@@ -24,11 +26,13 @@ func TestEmpty() {
 }
 
 func TestLanuchHook() {
-  lanuch := engine.NewLanuch(engine.Framework{}, &testHook{})
+	engine.SetEngineInitHook(&testHook{})
+	monitor.SetMonitorInitHook(&testHook{})
+	lanuch := bootstrap.NewLanuch(engine.Framework{})
   lanuch.Do()
 }
 
 func TestLanuchHookDefault() {
-	lanuch := engine.NewLanuch(engine.Framework{}, nil)
+	lanuch := bootstrap.NewLanuch(engine.Framework{})
   lanuch.Do()
 }

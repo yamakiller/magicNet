@@ -1,8 +1,9 @@
 package monitor
 
 import (
-	"magicNet/logger"
-	"magicNet/util"
+	"magicNet/engine/logger"
+	"magicNet/engine/util"
+	"magicNet/engine/hook"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -26,10 +27,17 @@ const (
 )
 
 var instMonitor *Monitor
+var monitorInitHook hook.InitHook
 
 // Init : 初始化监视器
 func Init() {
 	instMonitor = &Monitor{sync.WaitGroup{}, 0, false, monitorIdle, MonitorService{}, NewMonitorMethod()}
+}
+
+func SetMonitorInitHook(miHk hook.InitHook) {
+	if monitorInitHook == nil {
+		monitorInitHook = miHk
+	}
 }
 
 // StartService : 启动服务
@@ -39,7 +47,7 @@ func StartService() bool {
 		return true
 	}
 
-	logger.Info(0, "monitor service starting...")
+	logger.Info(0, "monitor service starting")
 	instMonitor.h.Init()
 	instMonitor.h.Bind("/", instMonitor.hmethod)
 
@@ -51,12 +59,17 @@ func StartService() bool {
 			msc["tls-key"].String())
 	}
 
+	if (!monitorInitHook.Initialize()) {
+		return false
+	}
+
 	WaitInc()
 	go func(addr string, proto string) {
 		logger.Info(0, "monitor service %s %s", proto, addr)
 		if !instMonitor.h.Listen(addr) {
 			instMonitor.e = true
 		}
+		monitorInitHook.Finalize()
 		WaitDec()
 	}(address+":"+port, protocol)
 

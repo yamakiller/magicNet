@@ -1,7 +1,7 @@
 package monitor
 
 import (
-	"magicNet/logger"
+	"magicNet/engine/logger"
 	"net/http"
 	"strings"
 )

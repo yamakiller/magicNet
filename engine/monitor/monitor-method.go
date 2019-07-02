@@ -1,8 +1,7 @@
 package monitor
 
 import (
-  //"magicNet/logger"
-  "magicNet/util"
+  "magicNet/engine/util"
   "regexp"
   "strings"
   "net/http"
@@ -18,6 +17,7 @@ type MonitorHttpFunction func(arg1 http.ResponseWriter, arg2 *http.Request)
 func NewMonitorMethod() *MonitorMethod {
   r := &MonitorMethod{}
   r.suffixRegexp, _ = regexp.Compile(`\.\w+.*`)
+  r.methods = make(map[string]MonitorHttpFunction)
   return r
 }
 

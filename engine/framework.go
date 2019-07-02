@@ -4,13 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"magicNet/logger"
-	"magicNet/monitor"
-	"magicNet/timer"
+	"magicNet/engine/logger"
+	"magicNet/engine/monitor"
+	"magicNet/engine/timer"
 	"os"
 	"runtime"
 	"strings"
 	"time"
+	"magicNet/engine/hook"
 )
 
 const (
@@ -32,8 +33,16 @@ type Framework struct {
 	loggerLv   string
 }
 
+var engineInitHook hook.InitHook
+
+func SetEngineInitHook(enHook hook.InitHook) {
+  if engineInitHook == nil {
+    engineInitHook = enHook
+  }
+}
+
 // Start is Start system framework
-func (fr *Framework) start() int {
+func (fr *Framework) Start() int {
 	/*获取控制台输入参数*/
 	isHelp := false
 	isVers := false
@@ -79,7 +88,11 @@ func (fr *Framework) start() int {
 }
 
 // Loop framework mian loop
-func (fr *Framework) loop() {
+func (fr *Framework) Loop() {
+	if !engineInitHook.Initialize() {
+		return
+	}
+
 	monitor.SetStateRun()
 	for !monitor.IsShutdown() {
 		time.Sleep(time.Millisecond * 1000)
@@ -92,7 +105,8 @@ func (fr *Framework) loop() {
 }
 
 // Shutdown framework end
-func (fr *Framework) shutdown() {
+func (fr *Framework) Shutdown() {
+	engineInitHook.Finalize()
 	logger.Info(0, "%s exit", fr.name)
 	logger.Destory()
 	monitor.SetStateIdle()

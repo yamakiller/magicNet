@@ -2,8 +2,8 @@ package engine
 
 import (
 	"io/ioutil"
-	"magicNet/logger"
-	"magicNet/util"
+	"magicNet/engine/logger"
+	"magicNet/engine/util"
 	"os"
 
 	"github.com/tidwall/gjson"

@@ -2,9 +2,9 @@ package script
 
 import (
 	"fmt"
-	"magicNet/files"
-	"magicNet/logger"
-	"magicNet/util"
+	"magicNet/engine/files"
+	"magicNet/engine/logger"
+	"magicNet/engine/util"
 	"strings"
 
 	"github.com/yamakiller/mgolua/mlua"
