@@ -7,6 +7,7 @@ import (
 	"magicNet/engine/logger"
 	"magicNet/engine/monitor"
 	"magicNet/engine/timer"
+	"magicNet/engine/util"
 	"os"
 	"runtime"
 	"strings"
@@ -76,7 +77,7 @@ func (fr *Framework) Start() int {
 		return -1
 	}
 	/*载入基础配置信息*/
-	if LoadEnv(fr.configPath) != 0 {
+	if util.LoadEnv(fr.configPath) != 0 {
 		return -1
 	}
 
@@ -109,6 +110,7 @@ func (fr *Framework) Shutdown() {
 	engineInitHook.Finalize()
 	logger.Info(0, "%s exit", fr.name)
 	logger.Destory()
+	util.UnLoadEnv()
 	monitor.SetStateIdle()
 }
 

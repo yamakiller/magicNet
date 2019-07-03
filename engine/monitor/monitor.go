@@ -5,6 +5,7 @@ import (
 	"magicNet/engine/util"
 	"magicNet/engine/hook"
 	"strings"
+	//"reflect"
 	"sync"
 	"sync/atomic"
 )
@@ -17,6 +18,12 @@ type Monitor struct {
 	s string         /*system run state */
 	h MonitorService /*system monitor http service*/
 	hmethod *MonitorMethod /*system monitor http service method*/
+}
+
+type monitorConfig struct {
+	protocol string
+	address  string
+	port     string
 }
 
 const (
@@ -42,7 +49,8 @@ func SetMonitorInitHook(miHk hook.InitHook) {
 
 // StartService : 启动服务
 func StartService() bool {
-	msc := util.GetEnvInstance().GetMap("monitor")
+
+	msc := util.GetEnvMap(util.GetEnvRoot(), "monitor")
 	if msc == nil {
 		return true
 	}
@@ -51,12 +59,12 @@ func StartService() bool {
 	instMonitor.h.Init()
 	instMonitor.h.Bind("/", instMonitor.hmethod)
 
-	protocol := msc["protocol"].String()
-	address := msc["address"].String()
-	port := msc["port"].String()
+	protocol := util.GetEnvString(msc, "protocol", "http")
+	address := util.GetEnvString(msc, "address", "127.0.0.1")
+	port := util.GetEnvString(msc, "port", "8001")
 	if strings.Compare(protocol, "https") == 0 {
-		instMonitor.h.SetHttps(msc["tls-crt"].String(),
-			msc["tls-key"].String())
+		instMonitor.h.SetHttps(util.GetEnvString(msc, "tls-crt", ""),
+													 util.GetEnvString(msc, "tls-key", ""))
 	}
 
 	if (!monitorInitHook.Initialize()) {

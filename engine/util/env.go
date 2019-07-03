@@ -1,110 +1,155 @@
 package util
 
 import (
-	"sync"
-
-	"github.com/tidwall/gjson"
+	"reflect"
+	"os"
+	"io/ioutil"
+	"magicNet/engine/logger"
 )
 
-var once sync.Once
 
-type Env struct {
-	_v map[string]gjson.Result
-}
+var (
+	instEnv map[string]interface{}
+)
 
-var instance *Env
-
-// GetEnvInstance 单例模式获取全局 Env 对象
-func GetEnvInstance() *Env {
-	once.Do(func() {
-		instance = new(Env)
-	})
-	return instance
-}
-
-// Put : 插入数据
-func (E *Env) Put(v map[string]gjson.Result) {
-	E._v = v
-}
-
-// Put 插入数据
-func GetEnvInt(v map[string]gjson.Result, k string, defaultValue int) int {
-	if v == nil || !v[k].Exists() {
-		return defaultValue
+func LoadEnv(filename string) int {
+	f, err := os.Open(filename)
+	if err != nil {
+		logger.Error(0, "open env config fail:%s", filename)
+		return -1
+	}
+	defer f.Close()
+	contents, err := ioutil.ReadAll(f)
+	if err != nil {
+		logger.Error(0, "read env config fail:%s", err.Error())
+		return -1
 	}
 
-	return int(v[k].Int())
-}
-
-func GetEnvBool(v map[string]gjson.Result, k string, defaultValue bool) bool  {
-	if v == nil || !v[k].Exists() {
-		return defaultValue
+	instEnv = make(map[string]interface{})
+	err = JsonUnSerialize(contents, &instEnv)
+	if err != nil {
+		instEnv = nil
+		logger.Error(0, "env unserialize fail:%s", err.Error())
+		return -1
 	}
 
-	return v[k].Bool()
+	return 0
 }
 
-// GetInt : 获取k对映的整型值
-func (E *Env) GetInt(k string, defaultValue int) int {
-	v := E._v[k]
-	if !v.Exists() {
-		return defaultValue
-	}
-	return int(v.Int())
+func UnLoadEnv() {
+	instEnv = nil
 }
 
-// GetString : 获取k对映的字符串
-func (E *Env) GetString(k string, defaultValue string) string {
-	v := E._v[k]
-	if !v.Exists() {
-		return defaultValue
+func GetEnvRoot() map[string]interface{} {
+	return instEnv
+}
+
+func GetEnvMap(v map[string]interface{}, k string) map[string]interface{} {
+	if (v[k] == nil ) {
+			return nil
 	}
 
-	return v.String()
-}
-
-// GetBoolean : 获取k对映的布尔值
-func (E *Env) GetBoolean(k string, defaultValue bool) bool {
-	v := E._v[k]
-	if !v.Exists() {
-		return defaultValue
-	}
-	return v.Bool()
-}
-
-// GetFloat : 获取k对映的 32位浮点数
-func (E *Env) GetFloat(k string, defaultValue float32) float32 {
-	v := E._v[k]
-	if !v.Exists() {
-		return defaultValue
-	}
-
-	return float32(v.Float())
-}
-
-// GetDouble : 获取k对映的64位浮点数
-func (E *Env) GetDouble(k string, defaultValue float64) float64 {
-	v := E._v[k]
-	if !v.Exists() {
-		return defaultValue
-	}
-	return v.Float()
-}
-
-// GetArray : 获取数组
-func (E *Env) GetArray(k string) []gjson.Result {
-	v := E._v[k]
-	if !v.Exists() {
+	elem := reflect.ValueOf(v[k])
+	if elem.IsNil() ||
+		 elem.Kind() != reflect.Map{
 		return nil
 	}
-	return v.Array()
+
+	var outv map[string]interface{}
+	var inv interface{} = &outv
+	reflect.ValueOf(inv).Elem().Set(elem)
+
+	return outv
 }
 
-// GetMap : 获取子 MAP
-func (E *Env) GetMap(k string) map[string]gjson.Result {
-	v := E._v[k]
-	if !v.Exists() {
+func GetEnvArray(v map[string]interface{}, k string) []interface{} {
+	if v[k] == nil {
+			return nil
+	}
+
+	elem := reflect.ValueOf(v[k])
+
+	if elem.Kind() != reflect.Slice &&
+	   elem.Kind() != reflect.Array {
 		return nil
 	}
-	return v.Map()
+
+	var outv []interface{}
+	var inv interface{} = &outv
+
+	reflect.ValueOf(inv).Elem().Set(elem)
+
+	return outv
+}
+
+func ToEnvMap(v interface{}) map[string]interface{} {
+	var outv map[string]interface{}
+	var inv interface{} = &outv
+	reflect.ValueOf(inv).Elem().Set(reflect.ValueOf(v))
+	return outv
+}
+
+func GetEnvBoolean(v map[string]interface{}, k string, defaultValue bool) bool {
+	istr := getEnvValue(v, k, reflect.Bool)
+	if istr == nil {
+		return defaultValue
+	}
+
+	return reflect.ValueOf(istr).Bool()
+}
+
+func GetEnvString(v map[string]interface{}, k string, defaultValue string) string {
+	istr := getEnvValue(v, k, reflect.String)
+	if istr == nil {
+		return defaultValue
+	}
+
+	return reflect.ValueOf(istr).String()
+}
+
+func GetEnvInt(v map[string]interface{}, k string, defaultValue int) int {
+	istr := getEnvValue(v, k, reflect.Int)
+	if istr == nil {
+		return defaultValue
+	}
+
+	return int(reflect.ValueOf(istr).Int())
+}
+
+func GetEnvInt64(v map[string]interface{}, k string, defaultValue int64) int64 {
+	istr := getEnvValue(v, k, reflect.Int64)
+	if istr == nil {
+		return defaultValue
+	}
+
+	return reflect.ValueOf(istr).Int()
+}
+
+func GetEnvFloat(v map[string]interface{}, k string, defaultValue float32) float32 {
+	istr := getEnvValue(v, k, reflect.Float32)
+	if istr == nil {
+		return defaultValue
+	}
+
+	return float32(reflect.ValueOf(istr).Float())
+}
+
+func GetEnvDouble(v map[string]interface{}, k string, defaultValue float64) float64 {
+	istr := getEnvValue(v, k, reflect.Float64)
+	if istr == nil {
+		return defaultValue
+	}
+
+	return reflect.ValueOf(istr).Float()
+}
+
+
+func getEnvValue(v map[string]interface{}, k string, c reflect.Kind) interface {} {
+	ival := v[k]
+	if ival == nil ||
+		 reflect.ValueOf(ival).Kind() != c {
+		return nil
+	}
+
+	return ival
 }

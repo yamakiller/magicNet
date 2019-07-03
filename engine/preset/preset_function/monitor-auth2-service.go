@@ -2,12 +2,16 @@ package preset_function
 
 import (
   "time"
+  //"reflect"
+  "strings"
   "net/http"
   "magicNet/engine/util"
   "magicNet/engine/monitor"
   "magicNet/engine/logger"
+  "github.com/dgrijalva/jwt-go"
   "gopkg.in/oauth2.v3"
   "gopkg.in/oauth2.v3/errors"
+  "gopkg.in/oauth2.v3/generates"
   "gopkg.in/oauth2.v3/models"
   "gopkg.in/oauth2.v3/manage"
   "gopkg.in/oauth2.v3/server"
@@ -18,17 +22,25 @@ import (
 var managerAuth2 *manage.Manager
 var serverAuth2 *server.Server
 
+type clientConfig struct {
+  ID string
+  Secret string
+  Domain string
+}
+
 //暂支持Clien模式及刷i新令牌
 func InitializeAuth2() {
-  logger.Info(0, "monitor service initialize auth2")
+  logger.Info(0, "monitor service initialize oauth2")
+  authEnv := util.GetEnvMap(util.GetEnvRoot(), "oauth2")
+  util.AssertEmpty(authEnv, "monitor serivce oauth2 config error")
 
-  autoEnv := util.GetEnvInstance().GetMap("auto2")
-  authTokenExp := util.GetEnvInt(autoEnv, "auth-token-exp", 10)
-  authRefreshTokenExp := util.GetEnvInt(autoEnv, "auth-refresh-token-exp", 20)
-  authIsGenerateRefresh := util.GetEnvBool(autoEnv, "auth-is-generate-refresh-token", true)
+  authTokenExp := util.GetEnvInt(authEnv, "auth-token-exp", 10)
+  authRefreshTokenExp := util.GetEnvInt(authEnv, "auth-refresh-token-exp", 20)
+  authIsGenerateRefresh := util.GetEnvBoolean(authEnv, "auth-is-generate-refresh-token", true)
+  authHS256Key := util.GetEnvString(authEnv, "auth-signing-=256-key", "")
 
   authCodeTokenCfg := &manage.Config{
-  	AccessTokenExp: time.Minute * time.Duration(authTokenExp),
+    AccessTokenExp: time.Minute * time.Duration(authTokenExp),
   	RefreshTokenExp: time.Minute * time.Duration(authRefreshTokenExp),
   	IsGenerateRefresh: authIsGenerateRefresh,
   }
@@ -41,16 +53,29 @@ func InitializeAuth2() {
 
   //后续提供优化方案-----------------------------------------------
   managerAuth2.MustTokenStorage(store.NewMemoryTokenStore())
-  if autoEnv["auth-clients"].Exists() {
-    csStore := store.NewClientStore()
-    for _, cs := range autoEnv["auth-clients"].Array() {
-        csId := cs.Map()["ID"].String()
-        csSecret := cs.Map()["Secret"].String()
-        csDomain := cs.Map()["Domain"].String()
+  if strings.Compare(authHS256Key, "") != 0 {
+      managerAuth2.MapAccessGenerate(generates.NewJWTAccessGenerate([]byte(authHS256Key), jwt.SigningMethodHS256))
+  }
 
-        csStore.Set(csId, &models.Client{ID : csId,
-                    Secret : csSecret,
-                    Domain : csDomain})
+
+  clients := util.GetEnvArray(authEnv, "auth-clients")
+  if clients != nil {
+    csStore := store.NewClientStore()
+    for _, cs := range clients {
+      clinetinfo := util.ToEnvMap(cs)
+      csId :=  util.GetEnvString(clinetinfo, "ID", "")
+      csSecret := util.GetEnvString(clinetinfo, "Secret", "")
+      csDomain := util.GetEnvString(clinetinfo, "Domain", "")
+
+      util.Assert(strings.Compare(csId, "") != 0  &&
+                  strings.Compare(csSecret, "") != 0 &&
+                  strings.Compare(csDomain, "") != 0,
+                  "Oauth2 client " + csId + " authorization configuration has security risks")
+
+
+      csStore.Set(csId, &models.Client{ID : csId,
+                  Secret : csSecret,
+                  Domain : csDomain})
     }
     managerAuth2.MapClientStorage(csStore)
   }

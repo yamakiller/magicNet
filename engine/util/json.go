@@ -15,8 +15,8 @@ func JsonSerialize(obj interface{}) string {
    return string(data)
 }
 
-func JsonUnSerialize(data []byte, obj interface{}) error {
+func JsonUnSerialize(data []byte, v interface{}) error {
   var json = jsoniter.ConfigCompatibleWithStandardLibrary
-  err := json.Unmarshal(data, &obj)
+  err := json.Unmarshal(data, v)
   return err
 }
