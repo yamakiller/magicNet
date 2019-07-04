@@ -8,11 +8,11 @@ import (
 	"magicNet/engine/monitor"
 	"magicNet/engine/timer"
 	"magicNet/engine/util"
+	"magicNet/engine/hook"
 	"os"
 	"runtime"
 	"strings"
 	"time"
-	"magicNet/engine/hook"
 )
 
 const (
@@ -34,9 +34,10 @@ type Framework struct {
 	loggerLv   string
 }
 
-var engineInitHook hook.InitHook
+var engineInitHook hook.InitializeHook
 
-func SetEngineInitHook(enHook hook.InitHook) {
+// SetEngineInitHook : 设置引擎初始/销毁Hook函数
+func SetEngineInitHook(enHook hook.InitializeHook) {
   if engineInitHook == nil {
     engineInitHook = enHook
   }
@@ -67,7 +68,8 @@ func (fr *Framework) Start() int {
 	monitor.Init()
 	monitor.SetStateStart()
 	/*启动系统日志*/
-	logger.Init(fr.loggerLv)
+	logger.StartService(fr.loggerLv)
+	/*系统日志重定向到文件*/
 	logger.Redirect(fr.loggerPath)
 	/*系统日志启动结束*/
 	logger.Info(0, "loading env")
@@ -80,7 +82,7 @@ func (fr *Framework) Start() int {
 	if util.LoadEnv(fr.configPath) != 0 {
 		return -1
 	}
-
+	/*开始启动系统服务*/
 	logger.Info(0, "start %s ....", fr.name)
 	if !monitor.StartService() {
 		return -1
@@ -100,22 +102,23 @@ func (fr *Framework) Loop() {
 	}
 	monitor.SetStateShutdown()
 
-	// 关闭HTTP去服务
-	timer.Destory()
+
+	timer.StopService()
+	monitor.StopService()
 	monitor.WaitSupper()
 }
 
 // Shutdown framework end
-func (fr *Framework) Shutdown() {
+func (fr *Framework) Dispose() {
 	engineInitHook.Finalize()
 	logger.Info(0, "%s exit", fr.name)
-	logger.Destory()
+	logger.SotpService()
 	util.UnLoadEnv()
 	monitor.SetStateIdle()
 }
 
 func (fr *Framework) bootstrap() int {
-	timer.Init()
+	timer.StartService()
 	return 0
 }
 

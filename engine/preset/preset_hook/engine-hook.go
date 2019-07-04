@@ -1,8 +1,7 @@
 package preset_hook
 
 import(
-  //"magicNet/logger"
-  //"magicNet/engine/preset/preset_function"
+  "magicNet/engine/hook"
 )
 
 type DefaultEngineHook struct {
@@ -14,3 +13,7 @@ func (dlhook *DefaultEngineHook)Initialize() bool {
 
 func (dlhook *DefaultEngineHook)Finalize() {
 }
+
+var (
+	_ hook.InitializeHook = &DefaultEngineHook{}
+)

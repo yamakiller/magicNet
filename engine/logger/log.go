@@ -12,8 +12,8 @@ import (
 
 var logf *os.File
 
-// Init is Initialization log module
-func Init(logLevel string) {
+// StartService : 启动系统日志服务系统
+func StartService(logLevel string) {
 	logf = nil
 	logrus.SetOutput(os.Stdout)
 	configLevel(logLevel)
@@ -42,8 +42,8 @@ func Redirect(filename string) {
 	}
 }
 
-// Destory : 销毁日志模块
-func Destory() {
+// StopService : 停止系统日志服务系统
+func SotpService() {
 	if logf == nil {
 		return
 	}

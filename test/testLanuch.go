@@ -5,6 +5,7 @@ import (
 	"magicNet/engine"
 	"magicNet/engine/monitor"
 	"magicNet/engine/logger"
+	"magicNet/engine/hook"
 	"magicNet/bootstrap"
 )
 
@@ -20,6 +21,10 @@ func (t *testHook)Initialize() bool {
 func (t *testHook)Finalize() {
   	logger.Info(0, "test hook Finalize")
 }
+
+var (
+	_ hook.InitializeHook = &testHook{}
+)
 
 func TestEmpty() {
 

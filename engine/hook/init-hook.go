@@ -1,6 +1,6 @@
 package hook
 
-type InitHook interface {
+type InitializeHook interface {
   Initialize() bool
   Finalize()
 }

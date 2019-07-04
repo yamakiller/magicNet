@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"magicNet/engine/logger"
+	"magicNet/engine/util"
 	"net/http"
 	"strings"
 )
@@ -11,13 +12,14 @@ type MonitorService struct {
 	serviceProtocol string
 	serviceTlsCrt   string
 	serviceTlsKey   string
-	serviceHandle   *http.ServeMux
-	servichMethod   http.Handler
+	serviceMutex   *http.ServeMux
+	serviceHandle  *http.Server
+	serivceStartMutex util.SpinLock
 }
 
 // Init : 初始化服务
 func (M *MonitorService) Init() {
-	M.serviceHandle = http.NewServeMux()
+	M.serviceMutex = http.NewServeMux()
 	M.serviceProtocol = "http"
 	M.serviceTlsCrt = ""
 	M.serviceTlsKey = ""
@@ -25,7 +27,7 @@ func (M *MonitorService) Init() {
 
 // Bind : 绑定服务
 func (M *MonitorService) Bind(pattern string, handler http.Handler) {
-	M.serviceHandle.Handle(pattern, handler)
+	M.serviceMutex.Handle(pattern, handler)
 }
 
 // SetHttps : 设置为Https协议
@@ -44,8 +46,22 @@ func (M *MonitorService) Listen(addr string) bool {
 	}
 }
 
+func (M *MonitorService) Close() {
+	M.serivceStartMutex.Lock()
+	defer M.serivceStartMutex.Unlock()
+
+	if M.serviceHandle != nil {
+		M.serviceHandle.Close()
+		M.serviceHandle = nil
+	}
+}
+
 func (M *MonitorService) lhttp(addr string) bool {
-	err := http.ListenAndServe(addr, M.serviceHandle)
+	M.serivceStartMutex.Lock()
+	M.serviceHandle = &http.Server{Addr: addr, Handler: M.serviceMutex}
+	M.serivceStartMutex.Unlock()
+
+	err := M.serviceHandle.ListenAndServe()
 	if err != nil {
 		if err == http.ErrServerClosed {
 			logger.Info(0, "monitor service closed")
@@ -59,7 +75,11 @@ func (M *MonitorService) lhttp(addr string) bool {
 }
 
 func (M *MonitorService) lhttps(addr string) bool {
-	err := http.ListenAndServeTLS(addr, M.serviceTlsCrt, M.serviceTlsKey, M.serviceHandle)
+	M.serivceStartMutex.Lock()
+	M.serviceHandle = &http.Server{Addr: addr, Handler: M.serviceMutex}
+	M.serivceStartMutex.Unlock()
+	
+	err := M.serviceHandle.ListenAndServeTLS(M.serviceTlsCrt, M.serviceTlsKey)
 	if err != nil {
 		if err == http.ErrServerClosed {
 			logger.Info(0, "monitor service closed")

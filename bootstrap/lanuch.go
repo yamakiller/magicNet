@@ -25,5 +25,5 @@ func (lch *Lanuch) Do() {
   lch.inst.Loop()
 
 lable_shutdown:
-  lch.inst.Shutdown()
+  lch.inst.Dispose()
 }

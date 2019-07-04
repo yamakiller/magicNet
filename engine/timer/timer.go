@@ -39,8 +39,8 @@ type Node struct {
 
 var instTime *Timer
 
-// Init  : 初始化定时器对象
-func Init() {
+// StartService  : 初始化定时器对象
+func StartService() {
 	instTime = &Timer{}
 	instTime.timeDur = 0
 	instTime.startTime = 0
@@ -61,8 +61,8 @@ func Init() {
 	instTime.start()
 }
 
-// Destory : 关闭定时器
-func Destory() {
+// StopService : 关闭定时器
+func StopService() {
 	instTime.stop()
 }
 
