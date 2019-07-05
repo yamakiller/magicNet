@@ -97,6 +97,11 @@ func Fatal(owner uint32, fmrt string, args ...interface{}) {
 	logrus.WithFields(logrus.Fields{"prefix": prefix(owner)}).Fatalf(wrap(fmrt), args...)
 }
 
+//Debug write debug error message
+func Debug(owner uint32, fmrt string, args ...interface{}) {
+	logrus.WithFields(logrus.Fields{"prefix": prefix(owner)}).Debugf(wrap(fmrt), args...)
+}
+
 //Trace write trace message
 func Trace(owner uint32, fmrt string, args ...interface{}) {
 	logrus.WithFields(logrus.Fields{"prefix": prefix(owner)}).Tracef(wrap(fmrt), args...)

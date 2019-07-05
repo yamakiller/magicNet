@@ -1,32 +1,18 @@
 package actor
 
-import (
-  "sync/atomic"
-)
 
-type IActor interface {
-  Pid() *PID
-  Dispone()
-  Stop()
+type Actor interface {
+  Receive(c Context)
 }
 
-type Actor struct {
-  pid PID
-  dead int32
+type ActorFunc func(c Context)
+
+func(f ActorFunc) Receive(c Context) {
+  f(c)
 }
 
-func (a *Actor)Pid() *PID {
-  return &a.pid
-}
+type ReceiverFunc func(c ReceiverContext, pack *MessagePack)
 
-func (a *Actor)Dispone() {
+type SenderFunc func(c SenderContext, pack *MessagePack)
 
-}
-
-func (a *Actor)Stop() {
-  atomic.StoreInt32(&a.dead, 1)
-}
-
-var (
-  _ IActor = &Actor{}
-)
+type ContextDecoratorFunc func(ctx Context) Context
