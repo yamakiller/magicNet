@@ -64,12 +64,17 @@ func (pid *PID) String() string {
   return ""
 }
 
+func (pid *PID) Stop() {
+  pid.ref().Stop(pid)
+}
+
 func NewPID() *PID {
   pid := &PID{}; GlobalRegistry.Register(pid)
   return pid
 }
 
 func pidFromId(id string, p *PID) {
+  
   /*if ((id >> pidKeyBit) == GlobalRegistry.GetLocalAddress()) {
 
   }*/
