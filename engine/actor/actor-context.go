@@ -142,9 +142,7 @@ func (ctx *actorContext) AwaitFuture(f *Future, cont func(res interface{}, err e
 	}
 
 	message := ctx.currentMessage
-	// invoke the callback when the future completes
 	f.continueWith(func(res interface{}, err error) {
-		// send the wrapped callback as a continuation message to self
 		ctx.self.sendSysMessage(&continuation{
 			f:       wrapper,
 			message: message,
