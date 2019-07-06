@@ -1,5 +1,7 @@
 package actor
 
+import "magicNet/engine/mailbox"
+
 type AutoReceiveMessage interface {
 	AutoReceiveMessage()
 }
@@ -12,44 +14,31 @@ type SystemMessage interface {
 	SystemMessage()
 }
 
-type ReceiveTimeout struct {}
 
-type Restarting struct {}
+type continuation struct {
+	message interface{}
+	f       func()
+}
 
-type Stopping struct{}
+func (*Stopping) 				AutoReceiveMessage(){}
+func (*Stopped) 				AutoReceiveMessage(){}
 
-type Stopped struct{}
-
-type Started struct {}
-
-type Restart struct {}
-
-func (*Restarting) AutoReceiveMessage() {}
-func (*Stopping) AutoReceiveMessage()   {}
-func (*Stopped) AutoReceiveMessage()    {}
-//func (*PoisonPill) AutoReceiveMessage() {}
-
-//func (*Started) SystemMessage()      {}
-func (*Stop) SystemMessage()         {}
-//func (*Watch) SystemMessage()        {}
-//func (*Unwatch) SystemMessage()      {}
-//func (*Terminated) SystemMessage()   {}
-//func (*Failure) SystemMessage()      {}
-//func (*Restart) SystemMessage()      {}
-//func (*continuation) SystemMessage() {}*/
+func (*Started) 				SystemMessage(){}
+func (*Stop)            SystemMessage(){}
+func (*Watch) 					SystemMessage(){}
+func (*Unwatch) 				SystemMessage(){}
+func (*Terminated) 			SystemMessage(){}
+func (*continuation) 		SystemMessage(){}
 
 var (
-	restartingMessage     interface{} = &Restarting{}
 	stoppingMessage       interface{} = &Stopping{}
 	stoppedMessage        interface{} = &Stopped{}
-	//poisonPillMessage     interface{} = &PoisonPill{}
 	receiveTimeoutMessage interface{} = &ReceiveTimeout{}
 )
 
 var (
-	//restartMessage        interface{} = &Restart{}
-	//startedMessage        interface{} = &Started{}
+	startedMessage        interface{} = &Started{}
 	stopMessage           interface{} = &Stop{}
-	//resumeMailboxMessage  interface{} = &mailbox.ResumeMailbox{}
-	//suspendMailboxMessage interface{} = &mailbox.SuspendMailbox{}
+	resumeMailboxMessage  interface{} = &mailbox.ResumeMailbox{}
+	suspendMailboxMessage interface{} = &mailbox.SuspendMailbox{}
 )

@@ -14,6 +14,7 @@ type Context interface {
   messagePart
   senderPart
   receiverPart
+  spawnerPart
   stopperPart
 }
 
@@ -29,8 +30,13 @@ type ReceiverContext interface {
   messagePart
 }
 
+type SpawnerContext interface {
+  infoPart
+  spawnerPart
+}
+
 type basePart interface {
-  ReceiveTimeout() time.Duration
+  //ReceiveTimeout() time.Duration
 
   Respond(response interface{})
 
@@ -44,13 +50,15 @@ type basePart interface {
   Unwatch(pid *PID)
 
   //设置定时器
-  SetReceiveTimeout(d time.Duration)
+  //SetReceiveTimeout(d time.Duration)
 
   //取消定时器
-	CancelReceiveTimeout()
+	//CancelReceiveTimeout()
 
   //将当前消息转发给指定的PID
   Forward(pid *PID)
+
+  AwaitFuture(f *Future, continuation func(res interface{}, err error))
 }
 
 type messagePart interface {
@@ -67,14 +75,29 @@ type senderPart interface {
   Request(pid *PID, message interface{})
 
   RequestWithCustomSender(pid *PID, message interface{}, sender *PID)
+
+  RequestFuture(pid *PID, message interface{}, timeout time.Duration) *Future
 }
 
 type receiverPart interface{
   Receive(pack *MessagePack)
 }
 
+type spawnerPart interface {
+
+	//Spawn(props *Props) *PID
+
+	//SpawnPrefix(props *Props, prefix string) *PID
+
+	//SpawnNamed(props *Props, id string) (*PID, error)
+}
+
 type stopperPart interface {
   Stop(pid *PID)
 
-  Poison(pid *PID)
+  StopFuture(pid *PID) *Future
+
+  Kill(pid *PID)
+
+  KillFuture(pid *PID) *Future
 }

@@ -59,7 +59,7 @@ func (mp *MessagePack) SetHeader(key string, value string) {
   mp.Header.Set(key, value)
 }
 
-var EmptyMessageHeader = make(messageHeader)
+var DefaultMessageHeader = make(messageHeader)
 
 func WrapPack(message interface{}) *MessagePack {
   if e, ok := message.(*MessagePack); ok {

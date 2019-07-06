@@ -16,7 +16,7 @@ func NewPIDSet(pids ...*PID) *PIDSet {
 }
 
 func (p *PIDSet) indexOf(v *PID) int {
-  id := v.id
+  id := v.Id
   for i, pid := range p.s {
     if id == pid {
       return i
@@ -43,12 +43,12 @@ func (p *PIDSet) Add(v *PID) {
       if p.s == nil {
         p.s = make([]uint32, 0, pidSetSliceLen)
       }
-      p.s = append(p.s, v.id)
+      p.s = append(p.s, v.Id)
       return
     }
     p.migrate()
   }
-  p.m[v.id] = struct{}{}
+  p.m[v.Id] = struct{}{}
 }
 
 func (p *PIDSet) Remove(v *PID) bool {
@@ -62,11 +62,11 @@ func (p *PIDSet) Remove(v *PID) bool {
     p.s = p.s[:l]
     return true
   }
-  _, ok := p.m[v.id]
+  _, ok := p.m[v.Id]
   if !ok {
     return false
   }
-  delete(p.m, v.id)
+  delete(p.m, v.Id)
   return true
 }
 
@@ -74,7 +74,7 @@ func (p *PIDSet) Contains(v *PID) bool {
   if p.m == nil {
     return p.indexOf(v) != -1
   }
-  _, ok := p.m[v.id]
+  _, ok := p.m[v.Id]
   return ok
 }
 
@@ -101,12 +101,12 @@ func (p *PIDSet)  Values() []PID {
   r := make([]PID, p.Len())
   if p.m == nil {
     for i,v := range p.s {
-        r[i].id = v
+        r[i].Id = v
     }
   } else {
     i := 0
     for v := range p.m {
-      r[i].id = v
+      r[i].Id = v
       i++
     }
   }
@@ -117,13 +117,13 @@ func (p *PIDSet) ForEach(f func(i int, pid PID)) {
   var pid PID
   if p.m == nil {
     for i, v := range p.s {
-      pid.id = v
+      pid.Id = v
       f(i, pid)
     }
   } else {
     i := 0
     for v := range p.m {
-      pid.id = v
+      pid.Id = v
       f(i, pid)
       i++
     }

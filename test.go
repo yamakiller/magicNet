@@ -9,5 +9,5 @@ import (
 func main() {
   test.TestEmpty()
 	//test.TestLanuchHook()
-  test.TestLanuchHookDefault()
+  //test.TestLanuchHookDefault()
 }

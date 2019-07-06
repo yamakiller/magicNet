@@ -3,8 +3,6 @@ package actor
 import (
   "sync"
   "sync/atomic"
-  //"runtime"
-  //"reflect"
   "magicNet/engine/util"
 )
 
@@ -44,7 +42,7 @@ func (r Registry)Register(pid *PID)(bool) {
           r.localItem[hash] = pid
           r.localSequence = key + 1
           r.localItemMutex.Unlock()
-          pid.id = (key | (r.localAddress << pidKeyBit))
+          pid.Id = (key | (r.localAddress << pidKeyBit))
           return true
       }
     }
@@ -73,7 +71,7 @@ func (r *Registry)UnRegister(pid *PID) bool {
   r.localItemMutex.Lock()
   defer r.localItemMutex.Unlock()
   hash := pid.Key() & uint32(len(r.localItem) - 1)
-  if r.localItem[hash] != nil && r.localItem[hash].Compare(pid)  {
+  if r.localItem[hash] != nil && r.localItem[hash].Equal(pid)  {
     ref := r.localItem[hash].p
     if l, ok := (*ref).(*ActorProcess); ok {
       atomic.StoreInt32(&l.death, 1)
@@ -89,7 +87,7 @@ func (r *Registry)Get(pid *PID) (Process, bool) {
   defer r.localItemMutex.RUnlock()
 
   hash := pid.Key() & uint32(len(r.localItem) - 1)
-  if r.localItem[hash] != nil && r.localItem[hash].Compare(pid) {
+  if r.localItem[hash] != nil && r.localItem[hash].Equal(pid) {
     return *r.localItem[hash].p, true
   }
   return deathLetter, false

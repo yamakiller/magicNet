@@ -9,12 +9,11 @@ option (gogoproto.gostring_all) = false;
 message PID {
     option (gogoproto.typedecl) = false;
     option (gogoproto.stringer) = false;
-    string address = 1;
-    string id = 2;
+    uint32 id = 1;
 }
 
 // user messages
-message PoisonPill {}
+message Kill {}
 
 // system messages
 message Watch {
@@ -29,5 +28,13 @@ message Terminated {
     PID who = 1;
     bool address_terminated = 2;
 }
+
+message ReceiveTimeout {}
+
+message Stopping {}
+
+message Stopped {}
+
+message Started {}
 
 message Stop {}
