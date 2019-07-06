@@ -199,11 +199,15 @@ func (ctx *actorContext) InvokeSysMessage(message interface{}) {
     case *Started:
       ctx.InvokeUsrMessage(msg)
     case *Watch:
+      ctx.handleWatch(msg)
     case *Unwatch:
+      ctx.handleUnWatch(msg)
     case *Stop:
+      ctx.handleStop(msg)
     case *Terminated:
+      ctx.handleTerminated(msg)
     default:
-      //TODO 记录错误日志
+      logger.Error(ctx.self.Id, "unknown system message %v", msg)
     }
 }
 
@@ -217,7 +221,7 @@ func (ctx *actorContext) handleWatch(msg *Watch) {
   }
 }
 
-func (ctx *actorContext) handleUnwatch(msg *Unwatch) {
+func (ctx *actorContext) handleUnWatch(msg *Unwatch) {
     ctx.unwatch(msg.Watcher)
 }
 
