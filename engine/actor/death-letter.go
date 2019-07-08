@@ -1,7 +1,7 @@
 package actor
 
 import (
-	"magicNet/engine/eventchannel"
+	"magicNet/engine/evtchan"
 	"magicNet/engine/logger"
 	"magicNet/engine/util"
 )
@@ -10,18 +10,18 @@ type deathLetterProcess struct{}
 
 var (
 	deathLetter           Process = &deathLetterProcess{}
-	deathLetterSubscriber *eventchannel.Subscription
+	deathLetterSubscriber *evtchan.Subscription
 )
 
 func init() {
-	deathLetterSubscriber = eventchannel.Subscribe(func(evt interface{}) {
+	deathLetterSubscriber = evtchan.Subscribe(func(evt interface{}) {
 		if deathLetter, ok := evt.(*DeadLetterEvent); ok {
 			util.Assert(deathLetter.Sender != nil && deathLetter.PID != nil, "deathLetter sender or pid is nil")
 			logger.Debug(deathLetter.Sender.GetID(), "DeathLetter Dest PID :%s", deathLetter.PID.String())
 		}
 	})
 
-	eventchannel.Subscribe(func(evt interface{}) {
+	evtchan.Subscribe(func(evt interface{}) {
 		if deathLetter, ok := evt.(*DeadLetterEvent); ok {
 			if m, ok := deathLetter.Message.(*Watch); ok {
 				m.Watcher.sendSysMessage(&Terminated{AddressTerminated: false, Who: deathLetter.PID})
@@ -40,7 +40,7 @@ type DeadLetterEvent struct {
 // SendUsrMessage ： 发送死亡消息
 func (*deathLetterProcess) SendUsrMessage(pid *PID, message interface{}) {
 	_, msg, sender := UnWrapPack(message)
-	eventchannel.Publish(&DeadLetterEvent{
+	evtchan.Publish(&DeadLetterEvent{
 		PID:     pid,
 		Message: msg,
 		Sender:  sender,
@@ -49,7 +49,7 @@ func (*deathLetterProcess) SendUsrMessage(pid *PID, message interface{}) {
 
 // SendSysMessage : 发送死亡消息
 func (*deathLetterProcess) SendSysMessage(pid *PID, message interface{}) {
-	eventchannel.Publish(&DeadLetterEvent{
+	evtchan.Publish(&DeadLetterEvent{
 		PID:     pid,
 		Message: message,
 	})
