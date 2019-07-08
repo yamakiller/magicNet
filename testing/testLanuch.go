@@ -1,4 +1,4 @@
-package test
+package testing
 
 import (
 	"fmt"
@@ -25,6 +25,7 @@ var (
 	_ hook.InitializeHook = &testHook{}
 )
 
+// TestEmpty : xxxxx
 func TestEmpty() {
 
 }
@@ -34,7 +35,7 @@ func TestWait() {
 	fmt.Println("已经执行到末尾")
 	var ispass bool
 	fmt.Scanln(&ispass)
-	fmt.Println("程序结束\n")
+	//fmt.Println("程序结束\n")
 }
 
 // TestLanuchHook : xxxx

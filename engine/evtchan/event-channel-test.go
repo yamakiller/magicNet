@@ -1,5 +1,13 @@
 package evtchan
 
+/*
+ * @Author: mirliang@my.cn
+ * @Date: 2019年07月08日 13:52:48
+ * @LastEditors: mirliang@my.cn
+ * @LastEditTime: 2019年07月08日 15:29:14
+ * @Description: 事件通道测试代码
+ */
+
 import (
 	"fmt"
 )
@@ -14,7 +22,7 @@ type TestLetterEvent struct {
 // TestGolbalSubRun ： 全局订阅测试函数
 func testGolbalSubRun(evt interface{}) {
 	if v, ok := evt.(*TestLetterEvent); ok {
-		fmt.Printf("测试一下:%v\n", v)
+		fmt.Printf("测试一下:PID:%d, Sender:%d\n", v.PID, v.Sender)
 		return
 	}
 	fmt.Printf("虽然执行了但并未成功解析数据\n")
@@ -23,5 +31,8 @@ func testGolbalSubRun(evt interface{}) {
 // TestGlobalEventChan  ：全局 通道测试函数
 func TestGlobalEventChan() {
 	Subscribe(testGolbalSubRun)
-	Publish(&TestLetterEvent{0, 1, 2})
+	for i := 0; i < 100; i++ {
+		testi := i + 1
+		Publish(&TestLetterEvent{uint32(i), 0, uint32(testi)})
+	}
 }

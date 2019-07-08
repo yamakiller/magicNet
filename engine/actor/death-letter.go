@@ -32,9 +32,9 @@ func init() {
 
 // DeadLetterEvent : 死亡消息
 type DeadLetterEvent struct {
-	PID     *PID        // The invalid process, to which the message was sent
-	Message interface{} // The message that could not be delivered
-	Sender  *PID        // the process that sent the Message
+	PID     *PID
+	Message interface{}
+	Sender  *PID
 }
 
 // SendUsrMessage ： 发送死亡消息

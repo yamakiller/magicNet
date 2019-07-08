@@ -2,13 +2,13 @@ package main
 
 import (
 	"magicNet/engine/evtchan"
-	"magicNet/test"
+	"magicNet/testing"
 )
 
 func main() {
-	test.TestEmpty()
+	testing.TestEmpty()
 	evtchan.TestGlobalEventChan()
 	//test.TestLanuchHook()
 	//test.TestLanuchHookDefault()
-	test.TestWait()
+	//testing.TestWait()
 }
