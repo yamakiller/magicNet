@@ -12,8 +12,8 @@ type SchedulerContext struct {
 
 // DefaultSchedulerContext :  默认推送Context
 var DefaultSchedulerContext = &SchedulerContext{
-	nil,
-	DefaultMessageHeader,
+	senderMiddleware: nil,
+	headers:          DefaultMessageHeader,
 }
 
 // Sender : 推送者[无效]

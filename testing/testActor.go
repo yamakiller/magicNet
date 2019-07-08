@@ -25,9 +25,8 @@ func (state *routerActor) Receive(context actor.Context) {
 		fmt.Printf("%v 处理一个myMessage %v \n", context.Self(), msg)
 		atomic.AddInt32(&msg.i, 1)
 		wait.Done()
-	default:
-		fmt.Printf("ddddd:%p, %v\n", context, msg)
-		//logger.Error(context.Self().ID, "default :%v", msg)
+	case *actor.Started:
+		logger.Error(context.Self().ID, "router Actor 已启动\n")
 	}
 }
 
@@ -48,10 +47,17 @@ func TestActorContext() {
 	schedulerContext := actor.DefaultSchedulerContext
 	wait.Add(1 * 1)
 
+	/*schedulerContext.SetSenderMiddleware(func(_ actor.SenderContext, target *actor.PID, pack *actor.MessagePack) {
+				target.set
+	})*/
+
 	tmp := &actor.Agnets{}
 	rpid := schedulerContext.Make(tmp.SetMakeActor(func() actor.Actor { return &routerActor{} }))
 
-	schedulerContext.Send(rpid, &myMessage{int32(1), rpid})
+	if rpid == nil {
+
+	}
+	//schedulerContext.Send(rpid, &myMessage{int32(1), rpid})
 
 	/*agnet := actor.AgnetFromActorMaker(func() actor.Actor { return &tellerActor{} })
 

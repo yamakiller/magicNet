@@ -4,7 +4,7 @@ package actor
  * @Author: mirliang@my.cn
  * @Date: 2019年07月05日 19:16:28
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月08日 20:25:42
+ * @LastEditTime: 2019年07月08日 21:21:12
  * @Description: Actor Context 对象
  */
 
@@ -237,7 +237,7 @@ func (ctx *actorContext) InvokeSysMessage(message interface{}) {
 	case *Terminated:
 		ctx.handleTerminated(msg)
 	default:
-		logger.Error(ctx.self.ID, "unknown system message %v", msg)
+		logger.Error(ctx.self.ID, "unknown system message %+v", msg)
 	}
 }
 

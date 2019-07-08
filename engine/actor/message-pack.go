@@ -73,6 +73,7 @@ func WrapPack(message interface{}) *MessagePack {
 	if e, ok := message.(*MessagePack); ok {
 		return e
 	}
+
 	return &MessagePack{nil, message, nil}
 }
 
@@ -99,8 +100,8 @@ func UnWrapPackMessage(message interface{}) interface{} {
 		return e.Message
 	}
 
-	fmt.Println("errrorororo")
-	return nil
+	fmt.Println("errrorororo", message)
+	return message
 }
 
 // UnWrapPackSender : 消息包拆分返回[发送者]
