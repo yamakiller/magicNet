@@ -4,10 +4,8 @@ import (
 	"magicNet/test"
 )
 
-
-
 func main() {
-  test.TestEmpty()
+	test.TestEmpty()
 	//test.TestLanuchHook()
-  //test.TestLanuchHookDefault()
+	//test.TestLanuchHookDefault()
 }

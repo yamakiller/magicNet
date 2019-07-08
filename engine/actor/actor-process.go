@@ -1,28 +1,29 @@
 package actor
 
 import (
-  "sync/atomic"
-  "magicNet/engine/mailbox"
+	"magicNet/engine/mailbox"
+	"sync/atomic"
 )
 
+// ActorProcess : Actor 处理模块
 type ActorProcess struct {
-  mailbox mailbox.Mailbox
-  death   int32
+	mailbox mailbox.Mailbox
+	death   int32
 }
 
 func NewActorProcess(mailbox mailbox.Mailbox) *ActorProcess {
-  return &ActorProcess{mailbox: mailbox}
+	return &ActorProcess{mailbox: mailbox}
 }
 
 func (a *ActorProcess) SendUsrMessage(pid *PID, message interface{}) {
-  a.mailbox.PostUsrMessage(message)
+	a.mailbox.PostUsrMessage(message)
 }
 
 func (a *ActorProcess) SendSysMessage(pid *PID, message interface{}) {
-  a.mailbox.PostSysMessage(message)
+	a.mailbox.PostSysMessage(message)
 }
 
 func (a *ActorProcess) Stop(pid *PID) {
-  atomic.StoreInt32(&a.death, 1)
-  a.SendSysMessage(pid, stopMessage)
+	atomic.StoreInt32(&a.death, 1)
+	a.SendSysMessage(pid, stopMessage)
 }

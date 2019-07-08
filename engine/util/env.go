@@ -1,17 +1,17 @@
 package util
 
 import (
-	"reflect"
-	"os"
 	"io/ioutil"
 	"magicNet/engine/logger"
+	"os"
+	"reflect"
 )
-
 
 var (
 	instEnv map[string]interface{}
 )
 
+// LoadEnv : 载入环境变量配置信息
 func LoadEnv(filename string) int {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -26,7 +26,7 @@ func LoadEnv(filename string) int {
 	}
 
 	instEnv = make(map[string]interface{})
-	err = JsonUnSerialize(contents, &instEnv)
+	err = JSONUnSerialize(contents, &instEnv)
 	if err != nil {
 		instEnv = nil
 		logger.Error(0, "env unserialize fail:%s", err.Error())
@@ -36,22 +36,25 @@ func LoadEnv(filename string) int {
 	return 0
 }
 
+// UnLoadEnv : 卸载载入的环境变量
 func UnLoadEnv() {
 	instEnv = nil
 }
 
+// GetEnvRoot : 获取环境变量根map对象
 func GetEnvRoot() map[string]interface{} {
 	return instEnv
 }
 
+// GetEnvMap : 获取当前环境变量 k -> 的map接点
 func GetEnvMap(v map[string]interface{}, k string) map[string]interface{} {
-	if (v[k] == nil ) {
-			return nil
+	if v[k] == nil {
+		return nil
 	}
 
 	elem := reflect.ValueOf(v[k])
 	if elem.IsNil() ||
-		 elem.Kind() != reflect.Map{
+		elem.Kind() != reflect.Map {
 		return nil
 	}
 
@@ -62,15 +65,16 @@ func GetEnvMap(v map[string]interface{}, k string) map[string]interface{} {
 	return outv
 }
 
+// GetEnvArray : 获取当前环境变量 k -> 数组对象
 func GetEnvArray(v map[string]interface{}, k string) []interface{} {
 	if v[k] == nil {
-			return nil
+		return nil
 	}
 
 	elem := reflect.ValueOf(v[k])
 
 	if elem.Kind() != reflect.Slice &&
-	   elem.Kind() != reflect.Array {
+		elem.Kind() != reflect.Array {
 		return nil
 	}
 
@@ -82,6 +86,7 @@ func GetEnvArray(v map[string]interface{}, k string) []interface{} {
 	return outv
 }
 
+// ToEnvMap : 获取当前环境变的 map 对象
 func ToEnvMap(v interface{}) map[string]interface{} {
 	var outv map[string]interface{}
 	var inv interface{} = &outv
@@ -89,6 +94,7 @@ func ToEnvMap(v interface{}) map[string]interface{} {
 	return outv
 }
 
+// GetEnvBoolean : 获取当前环境变量 k-> Bool
 func GetEnvBoolean(v map[string]interface{}, k string, defaultValue bool) bool {
 	istr := getEnvValue(v, k, reflect.Bool)
 	if istr == nil {
@@ -98,6 +104,7 @@ func GetEnvBoolean(v map[string]interface{}, k string, defaultValue bool) bool {
 	return reflect.ValueOf(istr).Bool()
 }
 
+// GetEnvString : 获取当前环境变量 k -> String
 func GetEnvString(v map[string]interface{}, k string, defaultValue string) string {
 	istr := getEnvValue(v, k, reflect.String)
 	if istr == nil {
@@ -107,6 +114,7 @@ func GetEnvString(v map[string]interface{}, k string, defaultValue string) strin
 	return reflect.ValueOf(istr).String()
 }
 
+// GetEnvInt : 获取当前环境变量 k -> Int
 func GetEnvInt(v map[string]interface{}, k string, defaultValue int) int {
 	istr := getEnvValue(v, k, reflect.Int)
 	if istr == nil {
@@ -116,6 +124,7 @@ func GetEnvInt(v map[string]interface{}, k string, defaultValue int) int {
 	return int(reflect.ValueOf(istr).Int())
 }
 
+// GetEnvInt64 : 获取当前环境变量 k -> int64
 func GetEnvInt64(v map[string]interface{}, k string, defaultValue int64) int64 {
 	istr := getEnvValue(v, k, reflect.Int64)
 	if istr == nil {
@@ -125,6 +134,7 @@ func GetEnvInt64(v map[string]interface{}, k string, defaultValue int64) int64 {
 	return reflect.ValueOf(istr).Int()
 }
 
+// GetEnvFloat : 获取当前环境变量 k -> float32
 func GetEnvFloat(v map[string]interface{}, k string, defaultValue float32) float32 {
 	istr := getEnvValue(v, k, reflect.Float32)
 	if istr == nil {
@@ -134,6 +144,7 @@ func GetEnvFloat(v map[string]interface{}, k string, defaultValue float32) float
 	return float32(reflect.ValueOf(istr).Float())
 }
 
+// GetEnvDouble : 获取当前环境变量 k -> float64
 func GetEnvDouble(v map[string]interface{}, k string, defaultValue float64) float64 {
 	istr := getEnvValue(v, k, reflect.Float64)
 	if istr == nil {
@@ -143,11 +154,11 @@ func GetEnvDouble(v map[string]interface{}, k string, defaultValue float64) floa
 	return reflect.ValueOf(istr).Float()
 }
 
-
-func getEnvValue(v map[string]interface{}, k string, c reflect.Kind) interface {} {
+// GetEnvValue : 获取当前环境变量 k -> interface
+func getEnvValue(v map[string]interface{}, k string, c reflect.Kind) interface{} {
 	ival := v[k]
 	if ival == nil ||
-		 reflect.ValueOf(ival).Kind() != c {
+		reflect.ValueOf(ival).Kind() != c {
 		return nil
 	}
 

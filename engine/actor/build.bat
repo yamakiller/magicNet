@@ -1,1 +1,1 @@
-protoc -I=. -I=%GOPATH%\src --gogoslick_out=. messages.proto
+protoc -I=. -I=%GOPATH%\src --gogoslick_out=. agreement.proto
