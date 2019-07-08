@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 )
 
+// Registry ：注册表
 type Registry struct {
 	localAddress   uint32
 	localSequence  uint32
@@ -23,15 +24,17 @@ var GlobalRegistry = &Registry{
 }
 
 // SetLocalAddress : 设置本地服务器地址
-func (r Registry) SetLocalAddress(addr uint32) {
+func (r *Registry) SetLocalAddress(addr uint32) {
 	r.localAddress = addr
 }
 
-func (r Registry) GetLocalAddress() uint32 {
+// GetLocalAddress : 获取本地服务器地址信息
+func (r *Registry) GetLocalAddress() uint32 {
 	return r.localAddress
 }
 
-func (r Registry) Register(pid *PID) bool {
+// Register : 注册一个Actor并生成PID
+func (r *Registry) Register(pid *PID) bool {
 	r.localItemMutex.Lock()
 	for {
 		var i uint32
@@ -43,7 +46,7 @@ func (r Registry) Register(pid *PID) bool {
 				r.localItem[hash] = pid
 				r.localSequence = key + 1
 				r.localItemMutex.Unlock()
-				pid.Id = (key | (r.localAddress << pidKeyBit))
+				pid.ID = (key | (r.localAddress << pidKeyBit))
 				return true
 			}
 		}
@@ -68,13 +71,14 @@ func (r Registry) Register(pid *PID) bool {
 	}
 }
 
+// UnRegister : 注销 PID
 func (r *Registry) UnRegister(pid *PID) bool {
 	r.localItemMutex.Lock()
 	defer r.localItemMutex.Unlock()
 	hash := pid.Key() & uint32(len(r.localItem)-1)
 	if r.localItem[hash] != nil && r.localItem[hash].Equal(pid) {
 		ref := r.localItem[hash].p
-		if l, ok := (*ref).(*ActorProcess); ok {
+		if l, ok := (*ref).(*AtrProcess); ok {
 			atomic.StoreInt32(&l.death, 1)
 		}
 		r.localItem[hash] = nil
@@ -83,6 +87,7 @@ func (r *Registry) UnRegister(pid *PID) bool {
 	return false
 }
 
+// Get : 获取PID的处理对象
 func (r *Registry) Get(pid *PID) (Process, bool) {
 	r.localItemMutex.RLock()
 	defer r.localItemMutex.RUnlock()

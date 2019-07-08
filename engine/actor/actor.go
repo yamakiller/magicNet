@@ -8,11 +8,11 @@ type Actor interface {
 // NewActor : 创建 Actor函数
 type NewActor func() Actor
 
-// ActorFunc : Actor 接收代理函数
-type ActorFunc func(c Context)
+// AtrFunc : Actor 接收代理函数
+type AtrFunc func(c Context)
 
 // Receive : Actor 接收函数外壳
-func (f ActorFunc) Receive(c Context) {
+func (f AtrFunc) Receive(c Context) {
 	f(c)
 }
 

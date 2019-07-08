@@ -17,7 +17,7 @@ func init() {
 	deathLetterSubscriber = eventchannel.Subscribe(func(evt interface{}) {
 		if deathLetter, ok := evt.(*DeadLetterEvent); ok {
 			util.Assert(deathLetter.Sender != nil && deathLetter.PID != nil, "deathLetter sender or pid is nil")
-			logger.Debug(deathLetter.Sender.GetId(), "DeathLetter Dest PID :%s", deathLetter.PID.String())
+			logger.Debug(deathLetter.Sender.GetID(), "DeathLetter Dest PID :%s", deathLetter.PID.String())
 		}
 	})
 

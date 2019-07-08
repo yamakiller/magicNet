@@ -130,7 +130,7 @@ func (ctx *actorContext) Unwatch(who *PID) {
 
 func (ctx *actorContext) Forward(pid *PID) {
 	if msg, ok := ctx.currentMessage.(SystemMessage); ok {
-		logger.Error(ctx.self.Id, "system message cannot be forwarded %v", msg)
+		logger.Error(ctx.self.ID, "system message cannot be forwarded %v", msg)
 		return
 	}
 	ctx.sendUsrMessage(pid, ctx.currentMessage)
@@ -203,7 +203,7 @@ func (ctx *actorContext) InvokeSysMessage(message interface{}) {
 	case *Terminated:
 		ctx.handleTerminated(msg)
 	default:
-		logger.Error(ctx.self.Id, "unknown system message %v", msg)
+		logger.Error(ctx.self.ID, "unknown system message %v", msg)
 	}
 }
 

@@ -9,7 +9,7 @@ option (gogoproto.gostring_all) = false;
 message PID {
     option (gogoproto.typedecl) = false;
     option (gogoproto.stringer) = false;
-    uint32 id = 1;
+    uint32 ID = 1;
 }
 
 // user messages
