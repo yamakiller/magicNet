@@ -1,7 +1,17 @@
 package actor
 
+/*
+ * @Author: mirliang@my.cn
+ * @Date: 2019年07月05日 19:16:28
+ * @LastEditors: mirliang@my.cn
+ * @LastEditTime: 2019年07月08日 20:25:42
+ * @Description: Actor Context 对象
+ */
+
 import (
+	fmt "fmt"
 	"magicNet/engine/logger"
+	"magicNet/engine/util"
 	"time"
 
 	"github.com/emirpasic/gods/stacks/linkedliststack"
@@ -37,7 +47,7 @@ type actorContext struct {
 
 func (ctx *actorContext) initActor() {
 	ctx.state = stateAlive
-	ctx.actor = ctx.agnet.newactor()
+	ctx.actor = ctx.agnet.actorMake()
 }
 
 func (ctx *actorContext) Self() *PID {
@@ -53,6 +63,7 @@ func (ctx *actorContext) Actor() Actor {
 }
 
 func (ctx *actorContext) Message() interface{} {
+	fmt.Println("wwwwwwwwwww", ctx.currentMessage)
 	return UnWrapPackMessage(ctx.currentMessage)
 }
 
@@ -168,12 +179,14 @@ func (ctx *actorContext) InvokeUsrMessage(message interface{}) {
 
 func (ctx *actorContext) processMessage(m interface{}) {
 	ctx.currentMessage = m
+	fmt.Println("ppppppppppp", m)
 	ctx.defaultReceive()
 	ctx.currentMessage = nil
 }
 
 func (ctx *actorContext) Receive(pack *MessagePack) {
 	ctx.currentMessage = pack
+	fmt.Println("rrrrrrrrrrrrr", pack)
 	ctx.defaultReceive()
 	ctx.currentMessage = nil
 }
@@ -183,7 +196,28 @@ func (ctx *actorContext) defaultReceive() {
 		ctx.Stop(ctx.self)
 		return
 	}
+
+	fmt.Printf("ttttttttttttttttttt:%v,%p\n", ctx.currentMessage, ctx)
 	ctx.actor.Receive(Context(ctx))
+	fmt.Println("oooooooooooooooooooo")
+}
+
+func (ctx *actorContext) Make(agnet *Agnets) *PID {
+	pid, err := ctx.MakeNamed(agnet, "")
+	if err != nil {
+		panic(err)
+	}
+	return pid
+}
+
+func (ctx *actorContext) MakeNamed(agnet *Agnets, name string) (*PID, error) {
+	pid, err := agnet.make()
+
+	if err != nil {
+		return pid, err
+	}
+
+	return pid, nil
 }
 
 func (ctx *actorContext) InvokeSysMessage(message interface{}) {
@@ -237,7 +271,8 @@ func (ctx *actorContext) handleTerminated(msg *Terminated) {
 }
 
 func (ctx *actorContext) EscalateFailure(reason interface{}, message interface{}) {
-	//TODO 考虑出错的问题
+	logger.Debug(ctx.self.ID, "Recovering reason:%v  %s", reason, util.GetStack())
+	ctx.self.sendSysMessage(suspendMailboxMessage)
 }
 
 func (ctx *actorContext) tryTerminate() {

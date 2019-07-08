@@ -55,6 +55,10 @@ func (*deathLetterProcess) SendSysMessage(pid *PID, message interface{}) {
 	})
 }
 
+func (*deathLetterProcess) OverloadUsrMessage() int {
+	return 0
+}
+
 // Stop: 发送停止消息
 func (ref *deathLetterProcess) Stop(pid *PID) {
 	ref.SendSysMessage(pid, stopMessage)

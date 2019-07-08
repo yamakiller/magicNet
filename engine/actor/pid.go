@@ -1,6 +1,7 @@
 package actor
 
 import (
+	"magicNet/engine/logger"
 	"magicNet/engine/util"
 	"strings"
 	"sync/atomic"
@@ -94,7 +95,12 @@ func (pid *PID) ref() Process {
 }
 
 func (pid *PID) sendUsrMessage(message interface{}) {
-	pid.ref().SendUsrMessage(pid, message)
+	ref := pid.ref()
+	ref.SendSysMessage(pid, message)
+	overload := ref.OverloadUsrMessage()
+	if overload > 0 {
+		logger.Warning(pid.ID, "mailbox overload :%d", overload)
+	}
 }
 
 func (pid *PID) sendSysMessage(message interface{}) {
@@ -119,19 +125,19 @@ func NewPID() *PID {
 
 // Tell : 调用
 func (pid *PID) Tell(message interface{}) {
-	ctx := DefaultForwardContext
+	ctx := DefaultSchedulerContext
 	ctx.Send(pid, message)
 }
 
 // Request ：请求自定义恢复目标PID
 func (pid *PID) Request(message interface{}, responseTo *PID) {
-	ctx := DefaultForwardContext
+	ctx := DefaultSchedulerContext
 	ctx.RequestWithCustomSender(pid, message, responseTo)
 }
 
 // RequestFuture ：请求并等待回复[带超时]
 func (pid *PID) RequestFuture(message interface{}, timeOut time.Duration) *Future {
-	ctx := DefaultForwardContext
+	ctx := DefaultSchedulerContext
 	return ctx.RequestFuture(pid, message, timeOut)
 }
 

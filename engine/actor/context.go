@@ -1,5 +1,13 @@
 package actor
 
+/*
+ * @Author: mirliang@my.cn
+ * @Date: 2019年07月05日 16:35:59
+ * @LastEditors: mirliang@my.cn
+ * @LastEditTime: 2019年07月08日 17:21:40
+ * @Description:  Context 接口
+ */
+
 import "time"
 
 type infoPart interface {
@@ -15,7 +23,7 @@ type Context interface {
 	messagePart
 	senderPart
 	receiverPart
-	spawnerPart
+	makerPart
 	stopperPart
 }
 
@@ -33,10 +41,10 @@ type ReceiverContext interface {
 	messagePart
 }
 
-// SpawnerContext : 创建者Context基础接口
-type SpawnerContext interface {
+// MakerContext : 创建者Context基础接口
+type MakerContext interface {
 	infoPart
-	spawnerPart
+	makerPart
 }
 
 // basePart : 所有对象的基础接口
@@ -88,13 +96,10 @@ type receiverPart interface {
 	Receive(pack *MessagePack)
 }
 
-type spawnerPart interface {
+type makerPart interface {
+	Make(agnet *Agnets) *PID
 
-	//Spawn(props *Props) *PID
-
-	//SpawnPrefix(props *Props, prefix string) *PID
-
-	//SpawnNamed(props *Props, id string) (*PID, error)
+	MakeNamed(agnet *Agnets, name string) (*PID, error)
 }
 
 type stopperPart interface {

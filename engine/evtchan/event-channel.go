@@ -4,7 +4,7 @@ package evtchan
  * @Author: mirliang@my.cn
  * @Date: 2019年07月06日 10:12:19
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月08日 15:29:33
+ * @LastEditTime: 2019年07月08日 15:31:45
  * @Description:事件通道 [同步]
  */
 
