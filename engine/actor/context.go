@@ -3,84 +3,89 @@ package actor
 import "time"
 
 type infoPart interface {
-  Self() *PID
+	Self() *PID
 
-  Actor() Actor
+	Actor() Actor
 }
 
+// Context : Context 基础接口
 type Context interface {
-  infoPart
-  basePart
-  messagePart
-  senderPart
-  receiverPart
-  spawnerPart
-  stopperPart
+	infoPart
+	basePart
+	messagePart
+	senderPart
+	receiverPart
+	spawnerPart
+	stopperPart
 }
 
+// SenderContext ： 发送者Context基础接口
 type SenderContext interface {
-  infoPart
-  senderPart
-  messagePart
+	infoPart
+	senderPart
+	messagePart
 }
 
+// ReceiverContext : 接收者Context基础接口
 type ReceiverContext interface {
-  infoPart
-  receiverPart
-  messagePart
+	infoPart
+	receiverPart
+	messagePart
 }
 
+// SpawnerContext : 创建者Context基础接口
 type SpawnerContext interface {
-  infoPart
-  spawnerPart
+	infoPart
+	spawnerPart
 }
 
+// basePart : 所有对象的基础接口
 type basePart interface {
-  //ReceiveTimeout() time.Duration
+	//ReceiveTimeout() time.Duration
 
-  Respond(response interface{})
+	Respond(response interface{})
 
-  //将当前的消息，存放到stack上
-  Stash()
+	//将当前的消息，存放到stack上
+	Stash()
 
-  //注册监视器
-  Watch(pid *PID)
+	//注册监视器
+	Watch(pid *PID)
 
-  //注销监视器
-  Unwatch(pid *PID)
+	//注销监视器
+	Unwatch(pid *PID)
 
-  //设置定时器
-  //SetReceiveTimeout(d time.Duration)
+	//设置定时器
+	//SetReceiveTimeout(d time.Duration)
 
-  //取消定时器
+	//取消定时器
 	//CancelReceiveTimeout()
 
-  //将当前消息转发给指定的PID
-  Forward(pid *PID)
+	//将当前消息转发给指定的PID
+	Forward(pid *PID)
 
-  AwaitFuture(f *Future, continuation func(res interface{}, err error))
+	AwaitFuture(f *Future, continuation func(res interface{}, err error))
 }
 
 type messagePart interface {
-  Message() interface{}
+	Message() interface{}
 
-  MessageHeader() ReadOnlyMessageHeader
+	MessageHeader() ReadOnlyMessageHeader
 }
 
 type senderPart interface {
-  Sender() *PID
+	Sender() *PID
 
-  Send(pid *PID, message interface{})
+	Send(pid *PID, message interface{})
 
-  Request(pid *PID, message interface{})
+	Request(pid *PID, message interface{})
 
-  RequestWithCustomSender(pid *PID, message interface{}, sender *PID)
+	RequestWithCustomSender(pid *PID, message interface{}, sender *PID)
 
-  RequestFuture(pid *PID, message interface{}, timeout time.Duration) *Future
+	RequestFuture(pid *PID, message interface{}, timeout time.Duration) *Future
 }
 
-type receiverPart interface{
-  Receive(pack *MessagePack)
+type receiverPart interface {
+	Receive(pack *MessagePack)
 }
 
 type spawnerPart interface {
@@ -93,11 +98,11 @@ type spawnerPart interface {
 }
 
 type stopperPart interface {
-  Stop(pid *PID)
+	Stop(pid *PID)
 
-  StopFuture(pid *PID) *Future
+	StopFuture(pid *PID) *Future
 
-  Kill(pid *PID)
+	Kill(pid *PID)
 
-  KillFuture(pid *PID) *Future
+	KillFuture(pid *PID) *Future
 }

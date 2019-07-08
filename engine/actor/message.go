@@ -14,21 +14,20 @@ type SystemMessage interface {
 	SystemMessage()
 }
 
-
 type continuation struct {
 	message interface{}
 	f       func()
 }
 
-func (*Stopping) 				AutoReceiveMessage(){}
-func (*Stopped) 				AutoReceiveMessage(){}
+func (*Stopping) AutoReceiveMessage() {}
+func (*Stopped) AutoReceiveMessage()  {}
 
-func (*Started) 				SystemMessage(){}
-func (*Stop)            SystemMessage(){}
-func (*Watch) 					SystemMessage(){}
-func (*Unwatch) 				SystemMessage(){}
-func (*Terminated) 			SystemMessage(){}
-func (*continuation) 		SystemMessage(){}
+func (*Started) SystemMessage()      {}
+func (*Stop) SystemMessage()         {}
+func (*Watch) SystemMessage()        {}
+func (*Unwatch) SystemMessage()      {}
+func (*Terminated) SystemMessage()   {}
+func (*continuation) SystemMessage() {}
 
 var (
 	stoppingMessage       interface{} = &Stopping{}

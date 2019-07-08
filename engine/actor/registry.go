@@ -17,6 +17,7 @@ const (
 	registerDefaultSize = 32
 )
 
+// GlobalRegistry : Actor 全局注册表
 var GlobalRegistry = &Registry{
 	localItem: make([]*PID, registerDefaultSize),
 }
