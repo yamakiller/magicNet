@@ -53,7 +53,7 @@ func pidFromID(id string, p *PID) {
 }
 
 func pidIsRemote(id uint32) bool {
-	if (id >> pidKeyBit) == GlobalRegistry.GetLocalAddress() {
+	if (id >> pidKeyBit) == globalRegistry.GetLocalAddress() {
 		return false
 	}
 
@@ -86,7 +86,7 @@ func (pid *PID) ref() Process {
 		}
 	}
 
-	ref, exits := GlobalRegistry.Get(pid)
+	ref, exits := globalRegistry.Get(pid)
 	if exits {
 		atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&pid.p)), unsafe.Pointer(&ref))
 	}
@@ -96,7 +96,7 @@ func (pid *PID) ref() Process {
 
 func (pid *PID) sendUsrMessage(message interface{}) {
 	ref := pid.ref()
-	ref.SendSysMessage(pid, message)
+	ref.SendUsrMessage(pid, message)
 	overload := ref.OverloadUsrMessage()
 	if overload > 0 {
 		logger.Warning(pid.ID, "mailbox overload :%d", overload)
@@ -117,11 +117,11 @@ func (pid *PID) Stop() {
 }
 
 // NewPID ：新建一个PID
-func NewPID() *PID {
+/*func NewPID() *PID {
 	pid := &PID{}
-	GlobalRegistry.Register(pid)
+	globalRegistry.Register(pid)
 	return pid
-}
+}*/
 
 // Tell : 调用
 func (pid *PID) Tell(message interface{}) {

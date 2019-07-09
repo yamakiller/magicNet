@@ -1,7 +1,6 @@
 package testing
 
 import (
-	fmt "fmt"
 	"magicNet/engine/actor"
 	"magicNet/engine/logger"
 	"sync"
@@ -22,19 +21,20 @@ type tellerActor struct{}
 func (state *routerActor) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *myMessage:
-		fmt.Printf("%v 处理一个myMessage %v \n", context.Self(), msg)
+		logger.Info(context.Self().ID, "处理一个myMessage %08x， %d", msg.pid.ID, msg.i)
 		atomic.AddInt32(&msg.i, 1)
 		wait.Done()
 	case *actor.Started:
 		logger.Error(context.Self().ID, "router Actor 已启动\n")
+	default:
+		logger.Error(context.Self().ID, "其他消息\n")
 	}
 }
 
 func (state *tellerActor) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *myMessage:
-		for i := 0; i < 1; i++ {
-			logger.Info(context.Self().ID, "发送数据")
+		for i := 0; i < 100; i++ {
 			context.Send(msg.pid, msg)
 			time.Sleep(10 * time.Millisecond)
 		}
@@ -45,7 +45,7 @@ func (state *tellerActor) Receive(context actor.Context) {
 // TestActorContext : 测试大量Actor 消息发送
 func TestActorContext() {
 	schedulerContext := actor.DefaultSchedulerContext
-	wait.Add(1 * 1)
+	wait.Add(100 * 1000)
 
 	/*schedulerContext.SetSenderMiddleware(func(_ actor.SenderContext, target *actor.PID, pack *actor.MessagePack) {
 				target.set
@@ -53,18 +53,12 @@ func TestActorContext() {
 
 	tmp := &actor.Agnets{}
 	rpid := schedulerContext.Make(tmp.SetMakeActor(func() actor.Actor { return &routerActor{} }))
+	agnet := actor.AgnetFromActorMaker(func() actor.Actor { return &tellerActor{} })
 
-	if rpid == nil {
-
-	}
-	//schedulerContext.Send(rpid, &myMessage{int32(1), rpid})
-
-	/*agnet := actor.AgnetFromActorMaker(func() actor.Actor { return &tellerActor{} })
-
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 1000; i++ {
 		pid := schedulerContext.Make(agnet)
 		schedulerContext.Send(pid, &myMessage{int32(i), rpid})
-	}*/
+	}
 
-	//wait.Wait()
+	wait.Wait()
 }

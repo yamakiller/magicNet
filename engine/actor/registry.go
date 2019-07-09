@@ -6,11 +6,16 @@ import (
 	"sync/atomic"
 )
 
+type registryValue struct {
+	key uint32
+	val interface{}
+}
+
 // Registry ：注册表
 type Registry struct {
 	localAddress   uint32
 	localSequence  uint32
-	localItem      []*PID
+	localItem      []registryValue
 	localItemMutex sync.RWMutex
 }
 
@@ -18,9 +23,10 @@ const (
 	registerDefaultSize = 32
 )
 
-// GlobalRegistry : Actor 全局注册表
-var GlobalRegistry = &Registry{
-	localItem: make([]*PID, registerDefaultSize),
+// globalRegistry : Actor 全局注册表
+var globalRegistry = &Registry{
+	localSequence: 1,
+	localItem:     make([]registryValue, registerDefaultSize),
 }
 
 // SetLocalAddress : 设置本地服务器地址
@@ -34,7 +40,7 @@ func (r *Registry) GetLocalAddress() uint32 {
 }
 
 // Register : 注册一个Actor并生成PID
-func (r *Registry) Register(pid *PID) bool {
+func (r *Registry) Register(pid *PID, process Process) bool {
 	r.localItemMutex.Lock()
 	for {
 		var i uint32
@@ -42,8 +48,9 @@ func (r *Registry) Register(pid *PID) bool {
 		for i = 0; i < currentNum; i++ {
 			key := ((i + r.localSequence) & pidMask)
 			hash := key & (currentNum - 1)
-			if r.localItem[hash] == nil {
-				r.localItem[hash] = pid
+			if r.localItem[hash].key == 0 {
+				r.localItem[hash].key = key
+				r.localItem[hash].val = process
 				r.localSequence = key + 1
 				r.localItemMutex.Unlock()
 				pid.ID = (key | (r.localAddress << pidKeyBit))
@@ -53,14 +60,14 @@ func (r *Registry) Register(pid *PID) bool {
 
 		newNum := (currentNum * 2)
 		util.Assert(newNum <= pidMax, "actor number overflow")
-		newItem := make([]*PID, newNum)
+		newItem := make([]registryValue, newNum)
 
 		for i = 0; i < currentNum; i++ {
-			if newItem[i] == nil {
+			if r.localItem[i].key == 0 {
 				continue
 			}
 
-			hash := (newItem[i].Key() & (newNum - 1))
+			hash := (r.localItem[i].key & (newNum - 1))
 			if hash == i {
 				continue
 			}
@@ -76,12 +83,13 @@ func (r *Registry) UnRegister(pid *PID) bool {
 	r.localItemMutex.Lock()
 	defer r.localItemMutex.Unlock()
 	hash := pid.Key() & uint32(len(r.localItem)-1)
-	if r.localItem[hash] != nil && r.localItem[hash].Equal(pid) {
-		ref := r.localItem[hash].p
-		if l, ok := (*ref).(*AtrProcess); ok {
+	if r.localItem[hash].key != 0 && r.localItem[hash].key == pid.Key() {
+		ref := r.localItem[hash].val
+		if l, ok := ref.(*AtrProcess); ok {
 			atomic.StoreInt32(&l.death, 1)
 		}
-		r.localItem[hash] = nil
+		r.localItem[hash].key = 01
+		r.localItem[hash].val = nil
 		return true
 	}
 	return false
@@ -93,8 +101,8 @@ func (r *Registry) Get(pid *PID) (Process, bool) {
 	defer r.localItemMutex.RUnlock()
 
 	hash := pid.Key() & uint32(len(r.localItem)-1)
-	if r.localItem[hash] != nil && r.localItem[hash].Equal(pid) {
-		return *r.localItem[hash].p, true
+	if r.localItem[hash].key != 0 && r.localItem[hash].key == pid.Key() {
+		return r.localItem[hash].val.(Process), true
 	}
 	return deathLetter, false
 }

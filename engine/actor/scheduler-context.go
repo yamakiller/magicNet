@@ -6,14 +6,12 @@ import (
 
 // SchedulerContext : 调度器
 type SchedulerContext struct {
-	senderMiddleware SenderFunc
-	headers          messageHeader
+	headers messageHeader
 }
 
 // DefaultSchedulerContext :  默认推送Context
 var DefaultSchedulerContext = &SchedulerContext{
-	senderMiddleware: nil,
-	headers:          DefaultMessageHeader,
+	headers: DefaultMessageHeader,
 }
 
 // Sender : 推送者[无效]
@@ -81,11 +79,7 @@ func (sc *SchedulerContext) RequestFuture(pid *PID, message interface{}, timeout
 
 // sendUsrMessage : 发送消息
 func (sc *SchedulerContext) sendUsrMessage(pid *PID, message interface{}) {
-	if sc.senderMiddleware != nil {
-		sc.senderMiddleware(sc, pid, WrapPack(message))
-	} else {
-		pid.sendUsrMessage(message)
-	}
+	pid.sendUsrMessage(message)
 }
 
 // Make : 制作器

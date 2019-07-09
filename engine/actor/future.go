@@ -14,8 +14,8 @@ var ErrTimeout = errors.New("future: timeout")
 // NewFuture :  创建一个Future
 func NewFuture(d time.Duration) *Future {
 	ref := &futureProcess{Future{cond: sync.NewCond(&sync.Mutex{})}}
-	pid := &PID{p: (*Process)(unsafe.Pointer(ref))}
-	GlobalRegistry.Register(pid)
+	pid := &PID{}
+	globalRegistry.Register(pid, ref)
 
 	ref.pid = pid
 	if d >= 0 {
@@ -120,6 +120,10 @@ func (fp *futureProcess) SendSysMessage(pid *PID, message interface{}) {
 	fp.Stop(pid)
 }
 
+func (fp *futureProcess) OverloadUsrMessage() int {
+	return 0
+}
+
 func (fp *futureProcess) Stop(pid *PID) {
 	fp.cond.L.Lock()
 	if fp.done {
@@ -132,7 +136,7 @@ func (fp *futureProcess) Stop(pid *PID) {
 	if tp != nil {
 		tp.Stop()
 	}
-	GlobalRegistry.UnRegister(pid)
+	globalRegistry.UnRegister(pid)
 
 	fp.sendToPipes()
 	fp.runCompletions()

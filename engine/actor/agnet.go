@@ -2,7 +2,6 @@ package actor
 
 import (
 	"magicNet/engine/mailbox"
-	"unsafe"
 )
 
 // MakeFunc : 创建ActorContext函数
@@ -16,12 +15,13 @@ var (
 		mb := agnet.produceMailbox()
 		dp := agnet.getDispatcher()
 		proc := NewActorProcess(mb)
-		pid := &PID{p: (*Process)(unsafe.Pointer(proc))}
-		GlobalRegistry.Register(pid)
+		pid := &PID{}
+		globalRegistry.Register(pid, proc)
 		ctx.self = pid
 		mb.Start()
 		mb.RegisterHandlers(ctx, dp)
 		mb.PostSysMessage(startedMessage)
+
 		return pid, nil
 	}
 )

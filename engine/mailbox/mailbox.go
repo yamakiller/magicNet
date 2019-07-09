@@ -4,12 +4,11 @@ package mailbox
  * @Author: mirliang@my.cn
  * @Date: 2019年07月04日 20:34:38
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月08日 20:17:48
+ * @LastEditTime: 2019年07月09日 10:08:39
  * @Description: Actor 的消息队列模块
  */
 
 import (
-	"fmt"
 	"magicNet/engine/util"
 	"runtime"
 	"sync/atomic"
@@ -142,7 +141,6 @@ func (m *defaultMailbox) run() {
 				m.invoker.InvokeSysMessage(msg)
 			}
 			for _, ms := range m.mailboxStats {
-				fmt.Println("gggggg")
 				ms.MessageReceived(msg)
 			}
 			continue
@@ -156,7 +154,6 @@ func (m *defaultMailbox) run() {
 			atomic.AddInt32(&m.usrMessages, -1)
 			m.invoker.InvokeUsrMessage(msg)
 			for _, ms := range m.mailboxStats {
-				fmt.Println("kkkkk")
 				ms.MessageReceived(msg)
 			}
 		} else {

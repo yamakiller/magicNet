@@ -4,12 +4,11 @@ package actor
  * @Author: mirliang@my.cn
  * @Date: 2019年07月05日 19:16:28
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月08日 21:21:12
+ * @LastEditTime: 2019年07月09日 10:30:16
  * @Description: Actor Context 对象
  */
 
 import (
-	fmt "fmt"
 	"magicNet/engine/logger"
 	"magicNet/engine/util"
 	"time"
@@ -63,7 +62,6 @@ func (ctx *actorContext) Actor() Actor {
 }
 
 func (ctx *actorContext) Message() interface{} {
-	fmt.Println("wwwwwwwwwww", ctx.currentMessage)
 	return UnWrapPackMessage(ctx.currentMessage)
 }
 
@@ -111,7 +109,6 @@ func (ctx *actorContext) RequestFuture(pid *PID, message interface{}, timeout ti
 }
 
 func (ctx *actorContext) Respond(response interface{}) {
-	// If the message is addressed to nil forward it to the dead letter channel
 	if ctx.Sender() == nil {
 		deathLetter.SendUsrMessage(nil, response)
 		return
@@ -179,14 +176,12 @@ func (ctx *actorContext) InvokeUsrMessage(message interface{}) {
 
 func (ctx *actorContext) processMessage(m interface{}) {
 	ctx.currentMessage = m
-	fmt.Println("ppppppppppp", m)
 	ctx.defaultReceive()
 	ctx.currentMessage = nil
 }
 
 func (ctx *actorContext) Receive(pack *MessagePack) {
 	ctx.currentMessage = pack
-	fmt.Println("rrrrrrrrrrrrr", pack)
 	ctx.defaultReceive()
 	ctx.currentMessage = nil
 }
@@ -197,9 +192,7 @@ func (ctx *actorContext) defaultReceive() {
 		return
 	}
 
-	fmt.Printf("ttttttttttttttttttt:%v,%p\n", ctx.currentMessage, ctx)
 	ctx.actor.Receive(Context(ctx))
-	fmt.Println("oooooooooooooooooooo")
 }
 
 func (ctx *actorContext) Make(agnet *Agnets) *PID {
@@ -282,7 +275,7 @@ func (ctx *actorContext) tryTerminate() {
 }
 
 func (ctx *actorContext) finalizeStop() {
-	GlobalRegistry.UnRegister(ctx.self)
+	globalRegistry.UnRegister(ctx.self)
 	ctx.InvokeUsrMessage(stoppedMessage)
 	otherStopped := &Terminated{Who: ctx.self}
 	// Notify watchers
