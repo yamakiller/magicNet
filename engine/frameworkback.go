@@ -1,6 +1,6 @@
 package engine
 
-import (
+/*import (
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -41,11 +41,11 @@ func SetEngineInitHook(enHook hook.InitializeHook) {
   if engineInitHook == nil {
     engineInitHook = enHook
   }
-}
+}*/
 
 // Start is Start system framework
-func (fr *Framework) Start() int {
-	/*获取控制台输入参数*/
+/*func (fr *Framework) Start() int {
+
 	isHelp := false
 	isVers := false
   flag.BoolVar(&isHelp, "h", false, "out help informat")
@@ -67,22 +67,22 @@ func (fr *Framework) Start() int {
 
 	monitor.Init()
 	monitor.SetStateStart()
-	/*启动系统日志*/
+
 	logger.StartService(fr.loggerLv)
-	/*系统日志重定向到文件*/
+
 	logger.Redirect(fr.loggerPath)
-	/*系统日志启动结束*/
+
 	logger.Info(0, "loading env")
-	/*检测输入的基础配置文件*/
+
 	if strings.Compare(fr.configPath, "") == 0 {
 		logger.Error(0, "please set the configuration file, please enter -help=true to view the parameters.")
 		return -1
 	}
-	/*载入基础配置信息*/
+
 	if util.LoadEnv(fr.configPath) != 0 {
 		return -1
 	}
-	/*开始启动系统服务*/
+
 	logger.Info(0, "start %s ....", fr.name)
 	if !monitor.StartService() {
 		return -1
@@ -143,4 +143,4 @@ func (fr *Framework) usage() {
 	}
 
 	fmt.Printf(string(contents))
-}
+}*/

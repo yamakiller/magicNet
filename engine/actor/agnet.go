@@ -21,7 +21,6 @@ var (
 		mb.Start()
 		mb.RegisterHandlers(ctx, dp)
 		mb.PostSysMessage(startedMessage)
-
 		return pid, nil
 	}
 )

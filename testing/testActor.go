@@ -21,7 +21,7 @@ type tellerActor struct{}
 func (state *routerActor) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *myMessage:
-		logger.Info(context.Self().ID, "处理一个myMessage %08x， %d", msg.pid.ID, msg.i)
+		//logger.Info(context.Self().ID, "处理一个myMessage %08x， %d", msg.pid.ID, msg.i)
 		atomic.AddInt32(&msg.i, 1)
 		wait.Done()
 	case *actor.Started:

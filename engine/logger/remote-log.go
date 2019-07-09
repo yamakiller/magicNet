@@ -7,8 +7,8 @@ package logger
 	logRemoteEsMode   int = 3
 )*/
 
-type RemoteLogger struct {
-}
+/*type RemoteLogger struct {
+}*/
 
 // Redirect is Config log mode and level
 /*func Redirect() {
