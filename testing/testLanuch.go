@@ -1,6 +1,21 @@
 package testing
 
-import (
+import "fmt"
+
+// TestEmpty : xxxxx
+func TestEmpty() {
+
+}
+
+// TestWait :
+func TestWait() {
+	fmt.Println("已经执行到末尾")
+	var ispass bool
+	fmt.Scanln(&ispass)
+	//fmt.Println("程序结束\n")
+}
+
+/*import (
 	"fmt"
 	"magicNet/bootstrap"
 	"magicNet/engine"
@@ -25,11 +40,6 @@ var (
 	_ hook.InitializeHook = &testHook{}
 )
 
-// TestEmpty : xxxxx
-func TestEmpty() {
-
-}
-
 // TestWait :
 func TestWait() {
 	fmt.Println("已经执行到末尾")
@@ -50,4 +60,4 @@ func TestLanuchHook() {
 func TestLanuchHookDefault() {
 	lanuch := bootstrap.NewLanuch(engine.Framework{})
 	lanuch.Do()
-}
+}*/

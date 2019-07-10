@@ -1,6 +1,6 @@
 package monitor
 
-import (
+/*import (
   "magicNet/engine/util"
   "regexp"
   "strings"
@@ -45,4 +45,4 @@ func (mm *MonitorMethod) match(requestURI string) MonitorHttpFunction {
 
   r := mm.methods[tmpURI]
   return r
-}
+}*/

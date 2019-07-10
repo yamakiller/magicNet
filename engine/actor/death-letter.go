@@ -3,6 +3,7 @@ package actor
 import (
 	"magicNet/engine/evtchan"
 	"magicNet/engine/logger"
+	"magicNet/engine/util"
 )
 
 type deathLetterProcess struct{}
@@ -15,10 +16,9 @@ var (
 func init() {
 	deathLetterSubscriber = evtchan.Subscribe(func(evt interface{}) {
 		if deathLetter, ok := evt.(*DeadLetterEvent); ok {
-			//util.Assert(deathLetter.Sender != nil && deathLetter.PID != nil, "deathLetter sender or pid is nil")
-			//logger.Debug(deathLetter.Sender.GetID(), "DeathLetter Dest PID :%s", deathLetter.PID.String())
+			util.Assert(deathLetter.Sender != nil && deathLetter.PID != nil, "deathLetter sender or pid is nil")
+			logger.Debug(deathLetter.Sender.GetID(), "DeathLetter Dest PID :%s", deathLetter.PID.String())
 			//TODO : 修改 2019-7-10
-			logger.Debug(0, "Sender:%v  PID:%v", deathLetter.Sender, deathLetter.PID)
 		}
 	})
 

@@ -2,7 +2,6 @@ package script
 
 import (
 	"fmt"
-	"magicNet/engine/files"
 	"magicNet/engine/logger"
 	"magicNet/engine/util"
 	"strings"
@@ -113,7 +112,8 @@ func (S *LuaStack) ExecuteScriptFile(fileName string) int {
 		}
 	}
 
-	utilFile := files.GetInstance()
+	//TODO 标记需要修改
+	/*utilFile := files.GetInstance()
 	tmpfilename := tmp + BYTELUA_FILE_EXT
 	if utilFile.IsFileExist(tmpfilename) {
 		tmp = tmpfilename
@@ -131,9 +131,9 @@ func (S *LuaStack) ExecuteScriptFile(fileName string) int {
 		if S.luaLoadBuffer(data.GetData(), uint(data.GetBytes()), fullFilePath) == 0 {
 			rn = S.ExecuteFunction(0)
 		}
-	}
+	}*/
 
-	return rn
+	return 0
 }
 
 func (S *LuaStack) Clean() {

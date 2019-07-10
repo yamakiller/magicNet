@@ -1,6 +1,6 @@
 package monitor
 
-import (
+/*import (
 	"magicNet/engine/logger"
 	"magicNet/engine/util"
 	"net/http"
@@ -78,7 +78,7 @@ func (M *MonitorService) lhttps(addr string) bool {
 	M.serivceStartMutex.Lock()
 	M.serviceHandle = &http.Server{Addr: addr, Handler: M.serviceMutex}
 	M.serivceStartMutex.Unlock()
-	
+
 	err := M.serviceHandle.ListenAndServeTLS(M.serviceTlsCrt, M.serviceTlsKey)
 	if err != nil {
 		if err == http.ErrServerClosed {
@@ -90,4 +90,4 @@ func (M *MonitorService) lhttps(addr string) bool {
 		}
 	}
 	return true
-}
+}*/
