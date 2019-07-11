@@ -127,8 +127,6 @@ func (srv *Service) setWait(wait *sync.WaitGroup) {
 
 // Make : 服务创建器
 func Make(name string, f func() IService) IService {
-	// 需要调整
-
 	wgn := &sync.WaitGroup{}
 	srv := f()
 	srv.setName(name)
