@@ -27,13 +27,15 @@ type IService interface {
 	RegisterMethod(key interface{}, method MethodFunc)
 
 	setName(n string)
+
+	setWait(wait *sync.WaitGroup)
 }
 
 // Service 服务基类
 type Service struct {
 	pid    *actor.PID
 	name   string
-	wait   sync.WaitGroup
+	wait   *sync.WaitGroup
 	method map[interface{}]MethodFunc
 }
 
@@ -60,7 +62,11 @@ func (srv *Service) Receive(context actor.Context) {
 
 // Started : 服务的启动函数
 func (srv *Service) Started(context actor.Context) {
-
+	srv.pid = context.Self()
+	srv.name = srv.name + "$" + srv.pid.String()
+	if srv.wait != nil {
+		srv.wait.Done()
+	}
 }
 
 // Stoped : 服务停止收尾处理函数
@@ -72,7 +78,9 @@ func (srv *Service) Stoped(context actor.Context) {
 
 // Terminated : 服务被终止可以被销毁
 func (srv *Service) Terminated(context actor.Context) {
-	srv.wait.Done()
+	if srv.wait != nil {
+		srv.wait.Done()
+	}
 }
 
 // Shutdown : 主动关闭服务
@@ -113,74 +121,24 @@ func (srv *Service) setName(n string) {
 	srv.name = n
 }
 
-var serviceAgnet = Agnets{}
+func (srv *Service) setWait(wait *sync.WaitGroup) {
+	srv.wait = wait
+}
 
-// Make : 服务制作器
+// Make : 服务创建器
 func Make(name string, f func() IService) IService {
 	// 需要调整
 
-	/*schedulerContext := actor.DefaultSchedulerContext
+	wgn := &sync.WaitGroup{}
 	srv := f()
 	srv.setName(name)
-
-	serivceAgnet := actor.Agnets{maker: func(agnet *Agnets) (*PID, error) {
-		ctx := newActorContext(agnet)
-		mb := agnet.produceMailbox()
-		dp := agnet.getDispatcher()
-		proc := NewActorProcess(mb)
-		pid := &PID{}
-		globalRegistry.Register(pid, proc)
-		ctx.self = pid
-		mb.Start()
-		mb.RegisterHandlers(ctx, dp)
-		mb.PostSysMessage(startedMessage)
-		return pid, nil
-	}}
-
-	serivceAgnet.SetMakeActor(func() actor.Actor {
+	srv.setWait(wgn)
+	wgn.Add(1)
+	actor.DefaultMaker(actor.AgnetFromActorMaker(func() actor.Actor {
 		return srv
-	})
+	}))
+	wgn.Wait()
+	wgn.Add(1)
 
-	schedulerContext.Make(&serivceAgnet)
-	return srv*/
-
-	/*ref := &process{}
-	proxy, absent := actor.ProcessRegistry.Add(ref, id)
-	if !absent {
-		return proxy, actor.ErrNameExists
-	}
-
-	var pc = *props
-	pc.WithSpawnFunc(nil)
-	ref.state = config.CreateRouterState()
-
-	if config.RouterType() == GroupRouterType {
-		wg := &sync.WaitGroup{}
-		wg.Add(1)
-		ref.router, _ = actor.DefaultSpawner(id+"/router", actor.PropsFromProducer(func() actor.Actor {
-			return &groupRouterActor{
-				props:  &pc,
-				config: config,
-				state:  ref.state,
-				wg:     wg,
-			}
-		}), parentContext)
-		wg.Wait() // wait for routerActor to start
-	} else {
-		wg := &sync.WaitGroup{}
-		wg.Add(1)
-		ref.router, _ = actor.DefaultSpawner(id+"/router", actor.PropsFromProducer(func() actor.Actor {
-			return &poolRouterActor{
-				props:  &pc,
-				config: config,
-				state:  ref.state,
-				wg:     wg,
-			}
-		}), parentContext)
-		wg.Wait() // wait for routerActor to start
-	}
-
-	ref.parent = parentContext.Self()
-	return proxy, nil*/
 	return nil
 }
