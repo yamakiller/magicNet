@@ -26,9 +26,9 @@ type IService interface {
 
 	RegisterMethod(key interface{}, method MethodFunc)
 
-	setName(n string)
+	withName(n string)
 
-	setWait(wait *sync.WaitGroup)
+	withWait(wait *sync.WaitGroup)
 }
 
 // Service 服务基类
@@ -117,11 +117,11 @@ func (srv *Service) RegisterMethod(key interface{}, method MethodFunc) {
 	srv.method[key] = method
 }
 
-func (srv *Service) setName(n string) {
+func (srv *Service) withName(n string) {
 	srv.name = n
 }
 
-func (srv *Service) setWait(wait *sync.WaitGroup) {
+func (srv *Service) withWait(wait *sync.WaitGroup) {
 	srv.wait = wait
 }
 
@@ -129,8 +129,8 @@ func (srv *Service) setWait(wait *sync.WaitGroup) {
 func Make(name string, f func() IService) IService {
 	wgn := &sync.WaitGroup{}
 	srv := f()
-	srv.setName(name)
-	srv.setWait(wgn)
+	srv.withName(name)
+	srv.withWait(wgn)
 	wgn.Add(1)
 	actor.DefaultMaker(actor.AgnetFromActorMaker(func() actor.Actor {
 		return srv
@@ -138,5 +138,5 @@ func Make(name string, f func() IService) IService {
 	wgn.Wait()
 	wgn.Add(1)
 
-	return nil
+	return srv
 }
