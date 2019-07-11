@@ -4,22 +4,22 @@ package frame
  * @Author: mirliang@my.cn
  * @Date: 2019年07月09日 14:36:58
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月10日 16:27:34
+ * @LastEditTime: 2019年07月11日 18:25:03
  * @Description: 主进程框架基类
  */
 
 /* LineOption ->
-Start ->
+Init ->
 	LoadEnv ->
 		InitService ->
 					Wait ->
 		CloseService ->
 	UnLoadEnv ->
-Shutdown */
+Destory */
 
 type startPart interface {
-	Start() bool
-	Shutdown()
+	Init() error
+	Destory()
 }
 
 type commandLinePart interface {
@@ -27,12 +27,12 @@ type commandLinePart interface {
 }
 
 type envPart interface {
-	LoadEnv() bool
+	LoadEnv() error
 	UnLoadEnv()
 }
 
 type servicePart interface {
-	InitService() bool
+	InitService() error
 	CloseService()
 }
 

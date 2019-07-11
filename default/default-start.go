@@ -12,11 +12,13 @@ import (
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
-type defaultStart struct {
+// DefaultStart :默认启动器
+type DefaultStart struct {
 	sysLogger logger.Logger
 }
 
-func (s *defaultStart) Start() bool {
+// Init : 初始化系统
+func (s *DefaultStart) Init() error {
 	logPath := flag.String("logPath", "", "log file path")
 	logLevl := flag.Int("logLevel", int(logger.PANICLEVEL), "log level")
 	logSize := flag.Int("logSize", 1024, "log mailbox size")
@@ -41,12 +43,13 @@ func (s *defaultStart) Start() bool {
 		l.Redirect()
 		return &l
 	})
+	//---------------------
 	logger.WithDefault(s.sysLogger)
 	// 设置虚拟文件系统根目录
 	if strings.Compare(*virDir, "") == 0 {
 		dir, err := os.Getwd()
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		files.WithRootPath(dir)
@@ -54,10 +57,11 @@ func (s *defaultStart) Start() bool {
 		files.WithRootPath(*virDir)
 	}
 
-	return true
+	return nil
 }
 
-func (s *defaultStart) Shutdown() {
+// Destory : 销毁处理
+func (s *DefaultStart) Destory() {
 	if s.sysLogger != nil {
 		s.sysLogger.Close()
 	}

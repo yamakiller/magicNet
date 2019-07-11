@@ -57,6 +57,12 @@ func (agnet *Agnets) produceMailbox() mailbox.Mailbox {
 	return agnet.mailboxMake()
 }
 
+// SetMakeFunc : 设置基础制造机器
+func (agnet *Agnets) SetMakeFunc(maker MakeFunc) *Agnets {
+	agnet.maker = maker
+	return agnet
+}
+
 // SetMakeActor : 设置Actor创建器
 func (agnet *Agnets) SetMakeActor(m MakeActor) *Agnets {
 	agnet.actorMake = m

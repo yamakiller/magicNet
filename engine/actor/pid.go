@@ -33,12 +33,13 @@ func idToHex(u uint32) string {
 	return string(str[:8])
 }
 
-func pidFromID(id string, p *PID) {
+// HexToID : 16进制字符串，转换为 uint32
+func HexToID(hex string) uint32 {
 	var i uint32
 	var addr uint32
-	var len = uint32(strings.Count(id, "") - 1)
+	var len = uint32(strings.Count(hex, "") - 1)
 	for i = 1; i < len; i++ {
-		c := id[i]
+		c := hex[i]
 		if c >= '0' && c <= '9' {
 			c = c - '0'
 		} else if c >= 'a' && c <= 'f' {
@@ -50,6 +51,11 @@ func pidFromID(id string, p *PID) {
 		}
 		addr = addr*16 + uint32(c)
 	}
+	return addr
+}
+
+func pidFromID(id string, p *PID) {
+	p.ID = HexToID(id)
 }
 
 func pidIsRemote(id uint32) bool {

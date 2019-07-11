@@ -18,10 +18,12 @@ const (
 	verBuildTime = "2019-07-10 16:58"
 )
 
-type defaultCMDLineOption struct {
+// DefaultCMDLineOption : 默认命令处理器
+type DefaultCMDLineOption struct {
 }
 
-func (cmdline *defaultCMDLineOption) LineOption() {
+// LineOption : 命令处理函数
+func (cmdline *DefaultCMDLineOption) LineOption() {
 	showVer := flag.Bool("v", false, "show build version")
 	if *showVer {
 		version.Show()
@@ -35,7 +37,7 @@ func (cmdline *defaultCMDLineOption) LineOption() {
 	}
 }
 
-func (cmdline *defaultCMDLineOption) usage() {
+func (cmdline *DefaultCMDLineOption) usage() {
 	f, ferr := os.Open("help.md")
 	if ferr != nil {
 		panic(fmt.Sprint("error: open help.md file fail:", ferr))

@@ -9,16 +9,16 @@ import (
 func Launch(f frame.MakeFrame) {
 	defer debug.Trace()
 	fme := f()
-	if !fme.Start() {
-		goto l_start_lable
+	if err := fme.Init(); err != nil {
+		panic(err)
 	}
 
-	if !fme.LoadEnv() {
-		goto l_env_label
+	if err := fme.LoadEnv(); err != nil {
+		panic(err)
 	}
 
-	if !fme.InitService() {
-		goto l_srv_label
+	if err := fme.InitService(); err != nil {
+		panic(err)
 	}
 
 	for {
@@ -27,10 +27,7 @@ func Launch(f frame.MakeFrame) {
 		}
 	}
 
-l_srv_label:
 	fme.CloseService()
-l_env_label:
 	fme.UnLoadEnv()
-l_start_lable:
-	fme.Shutdown()
+	fme.Destory()
 }
