@@ -29,7 +29,7 @@ type OAuth2 struct {
 }
 
 // Init : xxx
-func (oa *OAuth2) Init(method *HTTPSrvMethod) {
+func (oa *OAuth2) Init(method IHTTPSrvMethod) {
 	oauth2CodeTokenCfg := &manage.Config{
 		AccessTokenExp:    time.Minute * time.Duration(oa.TokenExp),
 		RefreshTokenExp:   time.Minute * time.Duration(oa.RefreshTokenExp),

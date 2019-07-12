@@ -11,39 +11,48 @@ import (
 //HTTPSrvFunc : http 服务函数
 type HTTPSrvFunc func(arg1 http.ResponseWriter, arg2 *http.Request)
 
+// IHTTPSrvMethod : HTTP 服务方法接口
+type IHTTPSrvMethod interface {
+	http.Handler
+	RegisterMethod(pattern string, f interface{})
+	match(requestURI string) interface{}
+}
+
 //HTTPSrvMethod : http 服务方法
 type HTTPSrvMethod struct {
 	suffixRegexp *regexp.Regexp
-	methods      map[string]HTTPSrvFunc
+	methods      map[string]interface{}
 	l            sync.RWMutex
 }
 
 //NewHTTPSrvMethod 新建一个服务方法
-func NewHTTPSrvMethod() *HTTPSrvMethod {
+func NewHTTPSrvMethod() IHTTPSrvMethod {
 	r := &HTTPSrvMethod{}
 	r.suffixRegexp, _ = regexp.Compile(`\.\w+.*`)
-	r.methods = make(map[string]HTTPSrvFunc, 32)
+	r.methods = make(map[string]interface{}, 32)
 	return r
 }
 
 func (hsm *HTTPSrvMethod) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f := hsm.match(r.RequestURI)
 	if f == nil {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	f(w, r)
+	if v, ok := f.(HTTPSrvFunc); ok {
+		v(w, r)
+	}
 }
 
 // RegisterMethod : 注册服务方法
-func (hsm *HTTPSrvMethod) RegisterMethod(pattern string, f HTTPSrvFunc) {
+func (hsm *HTTPSrvMethod) RegisterMethod(pattern string, f interface{}) {
 	hsm.l.Lock()
 	defer hsm.l.Unlock()
 	hsm.methods[pattern] = f
 }
 
-func (hsm *HTTPSrvMethod) match(requestURI string) HTTPSrvFunc {
+func (hsm *HTTPSrvMethod) match(requestURI string) interface{} {
 	hsm.l.RLock()
 	defer hsm.l.RUnlock()
 	suffix := hsm.suffixRegexp.FindStringSubmatch(requestURI)

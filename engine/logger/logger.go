@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -212,7 +211,7 @@ func (log *LogContext) push(data Event) {
 
 // Redirect : 重定向日志文件
 func (log *LogContext) Redirect() {
-	if strings.Compare(log.FilName, "") == 0 {
+	if log.FilName == "" {
 		log.LogHandle.SetOutput(os.Stdout)
 		return
 	}

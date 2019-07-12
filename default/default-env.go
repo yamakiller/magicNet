@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"magicNet/engine/util"
-	"strings"
 )
 
 // DefaultEnv : 默认的环境变量管理器
@@ -16,7 +15,7 @@ type DefaultEnv struct {
 func (env *DefaultEnv) LoadEnv() error {
 	configPath := ""
 	flag.StringVar(&configPath, "e", "./conf/magicnet.conf", "config full path")
-	if strings.Compare(configPath, "") == 0 {
+	if configPath == "" {
 		return errors.New("enter the environment variable file path  -e <filePath>")
 	}
 

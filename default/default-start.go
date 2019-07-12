@@ -6,7 +6,6 @@ import (
 	"magicNet/engine/logger"
 	"os"
 	"runtime"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
@@ -46,7 +45,7 @@ func (s *DefaultStart) Init() error {
 	//---------------------
 	logger.WithDefault(s.sysLogger)
 	// 设置虚拟文件系统根目录
-	if strings.Compare(*virDir, "") == 0 {
+	if *virDir == "" {
 		dir, err := os.Getwd()
 		if err != nil {
 			return err

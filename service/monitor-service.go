@@ -27,7 +27,7 @@ func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 }
 
 // MakeHTTPMethod : http method 生成器
-type MakeHTTPMethod func() *library.HTTPSrvMethod
+type MakeHTTPMethod func() library.IHTTPSrvMethod
 
 // MonitorService : 监视去服务
 type MonitorService struct {
@@ -41,7 +41,7 @@ type MonitorService struct {
 
 	isShutdown bool
 	httpErr    error
-	httpMethod *library.HTTPSrvMethod
+	httpMethod library.IHTTPSrvMethod
 	httpWait   sync.WaitGroup
 	httpMutex  *http.ServeMux
 	httpHandle *http.Server
@@ -53,10 +53,11 @@ func (ms *MonitorService) Started(context actor.Context) {
 	ms.httpMutex = http.NewServeMux()
 	ms.httpHandle = &http.Server{Addr: ms.Addr, Handler: ms.httpMutex}
 	if ms.MakerMethod == nil {
-		ms.httpMethod = &library.HTTPSrvMethod{}
+		ms.httpMethod = library.NewHTTPSrvMethod()
 	} else {
 		ms.httpMethod = ms.MakerMethod()
 	}
+	ms.httpMutex.Handle("/", ms.httpMethod)
 
 	if ms.OAuto2 != nil {
 		ms.OAuto2.Init(ms.httpMethod)
