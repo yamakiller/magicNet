@@ -46,7 +46,7 @@ func (hsm *HTTPSrvMethodJS) RegisterMethod(pattern string, f interface{}) {
 	hsm.methods[pattern] = f
 }
 
-func (hsm *HTTPSrvMethodJS) runJs(jsfile string, jsfun string, w http.ResponseWriter, r *http.就) {
+func (hsm *HTTPSrvMethodJS) runJs(jsfile string, jsfun string, w http.ResponseWriter, r *http.Request) {
 	fileFullPath := files.GetFullPathForFilename(jsfile)
 	if !files.IsFileExist(fileFullPath) {
 		w.WriteHeader(http.StatusNotFound)
