@@ -35,7 +35,7 @@ func (t *TraceDebug) Stop() {
 
 func (t *TraceDebug) saveCore(err interface{}) {
 	timeUnix := time.Now().Unix()
-	formatTimeStr := time.Unix(timeUnix, 0).Format("2006-01-02015-04-05")
+	formatTimeStr := time.Unix(timeUnix, 0).Format("2006-01-04-05")
 	fileName := "core-" + formatTimeStr + ". cre"
 
 	f, err := os.Create(fileName)
