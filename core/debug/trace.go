@@ -2,21 +2,38 @@ package debug
 
 import (
 	"fmt"
+	"magicNet/core/version"
 	"os"
 	"runtime"
+	"runtime/trace"
 	"strings"
 	"time"
 )
 
-// Trace : 跟踪异常及崩溃记录到core文件中
-func Trace() {
-	if err := recover(); err != nil {
-		saveCore(err)
-		os.Exit(0)
+// TraceDebug : Debug 跟踪器
+type TraceDebug struct {
+}
+
+// Start : 启动DEBUG跟踪器
+func (t *TraceDebug) Start() {
+	if strings.TrimSpace(strings.ToLower(version.Build)) == "debug" {
+		trace.Start(os.Stderr)
 	}
 }
 
-func saveCore(err interface{}) {
+// Stop : 停止DEBUG跟踪器
+func (t *TraceDebug) Stop() {
+	if err := recover(); err != nil {
+		t.saveCore(err)
+		os.Exit(0)
+	}
+
+	if strings.TrimSpace(strings.ToLower(version.Build)) == "debug" {
+		trace.Stop()
+	}
+}
+
+func (t *TraceDebug) saveCore(err interface{}) {
 	timeUnix := time.Now().Unix()
 	formatTimeStr := time.Unix(timeUnix, 0).Format("2006-01-02015-04-05")
 	fileName := "core-" + formatTimeStr + ". cre"
@@ -25,11 +42,11 @@ func saveCore(err interface{}) {
 	defer f.Close()
 
 	f.WriteString(fmt.Sprintln(err))
-	f.WriteString(stack())
+	f.WriteString(t.stack())
 	f.Sync()
 }
 
-func stack() string {
+func (t *TraceDebug) stack() string {
 	var name, file string
 	var line int
 	var pc [16]uintptr

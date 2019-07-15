@@ -7,7 +7,9 @@ import (
 
 // Launch : 系统启动器
 func Launch(f frame.MakeFrame) {
-	defer debug.Trace()
+	debugTrace := debug.TraceDebug{}
+	debugTrace.Start()
+	defer debugTrace.Stop()
 	fme := f()
 	if err := fme.Init(); err != nil {
 		panic(err)
