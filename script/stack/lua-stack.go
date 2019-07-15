@@ -1,4 +1,4 @@
-package script
+package stack
 
 import (
 	"fmt"
@@ -9,9 +9,6 @@ import (
 
 	"github.com/yamakiller/mgolua/mlua"
 )
-
-//const BYTELUA_FILE_EXT = ".luac"
-//const NOT_BYTELUA_FILE_EXT = ".lua"
 
 const (
 	byteLuaFileExt    = ".luac"

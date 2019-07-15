@@ -1,3 +1,4 @@
+BUILD           := debug
 BUILD_VERSION   := v1.0.0
 BUILD_TIME      := $(shell date "+%F %T")
 BUILD_NAME      := app_$(shell date "+%Y%m%d%H" )
@@ -12,6 +13,7 @@ all:
     # CGO_ENABLED=0 GOOS=linux GOARCH=amd64
     go build -ldflags                           \
     "                                           \
+    -X 'version.Build=${BUILD}'                 \
     -X 'version.BuildVersion=${BUILD_VERSION}'  \
     -X 'version.BuildTime=${BUILD_TIME}'        \
     -X 'version.BuildName=${BUILD_NAME}'        \
