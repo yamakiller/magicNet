@@ -2,6 +2,7 @@ package script
 
 import (
 	"fmt"
+	"magicNet/engine/files"
 	"magicNet/engine/logger"
 	"magicNet/engine/util"
 	"strings"
@@ -9,17 +10,25 @@ import (
 	"github.com/yamakiller/mgolua/mlua"
 )
 
-const BYTELUA_FILE_EXT = ".luac"
-const NOT_BYTELUA_FILE_EXT = ".lua"
+//const BYTELUA_FILE_EXT = ".luac"
+//const NOT_BYTELUA_FILE_EXT = ".lua"
 
+const (
+	byteLuaFileExt    = ".luac"
+	notByteLuaFileExt = ".lua"
+)
+
+// LuaStack : LUA虚拟机 堆
 type LuaStack struct {
 	_l *mlua.State
 }
 
+// GetLuaState : 获取LUA虚拟机C对象
 func (S *LuaStack) GetLuaState() *mlua.State {
 	return S._l
 }
 
+// AddSreachPath : 添加LUA搜索路径
 func (S *LuaStack) AddSreachPath(path string) {
 	S._l.GetGlobal("searchers")
 	S._l.GetField(-1, "path")
@@ -30,6 +39,7 @@ func (S *LuaStack) AddSreachPath(path string) {
 	S._l.Pop(2)
 }
 
+// AddLuaLoader : LUA载入器
 func (S *LuaStack) AddLuaLoader(f *mlua.LuaGoFunction) {
 	if f == nil {
 		return
@@ -49,6 +59,7 @@ func (S *LuaStack) AddLuaLoader(f *mlua.LuaGoFunction) {
 	S._l.Pop(1)
 }
 
+// ExecuteFunction : 执行LUA函数
 func (S *LuaStack) ExecuteFunction(numArgs int) int {
 	funcIndex := -(numArgs + 1)
 	if !S._l.IsGFunction(funcIndex) {
@@ -95,79 +106,88 @@ func (S *LuaStack) ExecuteFunction(numArgs int) int {
 	return ret
 }
 
+// ExecuteString : 执行LUA字符串
 func (S *LuaStack) ExecuteString(codes string) int {
 	S._l.LoadString(codes)
 	return S.ExecuteFunction(0)
 }
 
+// ExecuteScriptFile ： 执行LUA脚本文件
 func (S *LuaStack) ExecuteScriptFile(fileName string) int {
 	tmp := fileName
-	pos := strings.LastIndex(tmp, BYTELUA_FILE_EXT)
+	pos := strings.LastIndex(tmp, byteLuaFileExt)
 	if pos != -1 {
 		tmp = util.SubStr(tmp, 0, pos)
 	} else {
-		pos = strings.LastIndex(tmp, NOT_BYTELUA_FILE_EXT)
-		if pos == (len(tmp) - len(NOT_BYTELUA_FILE_EXT)) {
+		pos = strings.LastIndex(tmp, notByteLuaFileExt)
+		if pos == (len(tmp) - len(notByteLuaFileExt)) {
 			tmp = util.SubStr(tmp, 0, pos)
 		}
 	}
 
-	//TODO 标记需要修改
-	/*utilFile := files.GetInstance()
-	tmpfilename := tmp + BYTELUA_FILE_EXT
-	if utilFile.IsFileExist(tmpfilename) {
-		tmp = tmpfilename
+	tmpFileName := tmp + byteLuaFileExt
+	tmpFileName = files.GetFullPathForFilename(tmpFileName)
+	if files.IsFileExist(tmpFileName) {
+		tmp = tmpFileName
 	} else {
-		tmpfilename = tmp + NOT_BYTELUA_FILE_EXT
-		if utilFile.IsFileExist(tmpfilename) {
-			tmp = tmpfilename
+		tmpFileName = tmp + notByteLuaFileExt
+		if files.IsFileExist(tmpFileName) {
+			tmp = tmpFileName
 		}
 	}
 
-	fullFilePath := utilFile.GetFullPathForFilename(tmp)
-	data := utilFile.GetDataFromFile(fullFilePath)
+	data := files.GetDataFromFile(tmp)
 	rn := 0
-	if data != nil {
-		if S.luaLoadBuffer(data.GetData(), uint(data.GetBytes()), fullFilePath) == 0 {
+	if !data.IsNil() {
+		if S.loadBuffer(&data.GetBytes()[0], uint(data.GetSize()), tmp) == 0 {
 			rn = S.ExecuteFunction(0)
 		}
-	}*/
+	}
 
-	return 0
+	return rn
 }
 
+// Clean : 清空堆栈
 func (S *LuaStack) Clean() {
 	S._l.SetTop(0)
 }
 
+// PushInt : 插入Int
 func (S *LuaStack) PushInt(intValue int) {
 	S._l.PushInteger(int64(intValue))
 }
 
+// PushLong : 插入64位Int
 func (S *LuaStack) PushLong(longValue int64) {
 	S._l.PushInteger(longValue)
 }
 
+// PushFloat : 插入 float
 func (S *LuaStack) PushFloat(floatValue float32) {
 	S._l.PushNumber(float64(floatValue))
 }
 
+// PushDouble : 插入 float64
 func (S *LuaStack) PushDouble(doubleValue float64) {
 	S._l.PushNumber(float64(doubleValue))
 }
 
+// PushBoolean : 插入 bool
 func (S *LuaStack) PushBoolean(boolValue bool) {
 	S._l.PushBoolean(boolValue)
 }
 
+// PushString : 插入字符串
 func (S *LuaStack) PushString(stringValue string) {
 	S._l.PushString(stringValue)
 }
 
+// PushNil : 插入一个 Nil
 func (S *LuaStack) PushNil() {
 	S._l.PushNil()
 }
 
+// ReLoad : 重新载入
 func (S *LuaStack) ReLoad(moduleFileName string) int {
 	if len(moduleFileName) == 0 {
 		logger.Error(0, "reload %s fail.", moduleFileName)
@@ -190,7 +210,7 @@ func (S *LuaStack) ReLoad(moduleFileName string) int {
 	return S.ExecuteString(require)
 }
 
-func (S *LuaStack) luaLoadBuffer(chunk *byte, chunkSize uint, chunkName string) int {
+func (S *LuaStack) loadBuffer(chunk *byte, chunkSize uint, chunkName string) int {
 	r := S._l.LoadBuffer(chunk, chunkSize, chunkName)
 
 	if r != 0 {
