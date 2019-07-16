@@ -2,7 +2,6 @@ package timer
 
 import (
 	"container/list"
-	"magicNet/engine/monitor"
 	"sync"
 	"time"
 )
@@ -24,6 +23,7 @@ type Timer struct {
 	near         [timeNear]*list.List
 	t            [4][timeLevel]*list.List
 	m            sync.Mutex
+	w            sync.WaitGroup
 	timeDur      uint32
 	startTime    uint32
 	current      uint64
@@ -31,6 +31,7 @@ type Timer struct {
 	shutdown     chan struct{}
 }
 
+// Node : 定时器节点
 type Node struct {
 	expire uint32
 	param  interface{}
@@ -87,16 +88,17 @@ func Now() uint64 {
 }
 
 // Start : 启动定时器
-func (T *Timer) start() {
+func (tm *Timer) start() {
 	tnow := time.Now()
-	T.startTime = uint32(tnow.Unix())
-	T.current = uint64(tnow.UnixNano() / 10000000)
-	T.currentPoint = T.getTime()
-	monitor.WaitInc()
+	tm.startTime = uint32(tnow.Unix())
+	tm.current = uint64(tnow.UnixNano() / 10000000)
+	tm.currentPoint = tm.getTime()
+
+	tm.w.Add(1)
 	go func(t *Timer) {
 		tick := time.NewTicker(time.Nanosecond * 1000)
 		defer tick.Stop()
-		defer monitor.WaitDec()
+		defer tm.w.Done()
 		for {
 			select {
 			case <-tick.C:
@@ -105,31 +107,31 @@ func (T *Timer) start() {
 				return
 			}
 		}
-	}(T)
+	}(tm)
 }
 
-func (T *Timer) stop() {
-	close(T.shutdown)
+func (tm *Timer) stop() {
+	close(tm.shutdown)
 }
 
-func (T *Timer) getStartTime() uint32 {
-	return T.startTime
+func (tm *Timer) getStartTime() uint32 {
+	return tm.startTime
 }
 
-func (T *Timer) getNow() uint64 {
-	return T.current
+func (tm *Timer) getNow() uint64 {
+	return tm.current
 }
 
-func (T *Timer) update() {
-	T.m.Lock()
+func (tm *Timer) update() {
+	tm.m.Lock()
 
-	T.execute()
+	tm.execute()
 
-	T.shift()
+	tm.shift()
 
-	T.execute()
+	tm.execute()
 
-	T.m.Unlock()
+	tm.m.Unlock()
 }
 
 func dispatchList(front *list.Element) {
@@ -139,27 +141,27 @@ func dispatchList(front *list.Element) {
 	}
 }
 
-func (T *Timer) execute() {
-	idx := T.timeDur & timeNearMask
+func (tm *Timer) execute() {
+	idx := tm.timeDur & timeNearMask
 	for {
-		if T.near[idx].Len() <= 0 {
+		if tm.near[idx].Len() <= 0 {
 			break
 		}
 
-		front := T.near[idx].Front()
-		T.near[idx].Init()
-		T.m.Unlock()
+		front := tm.near[idx].Front()
+		tm.near[idx].Init()
+		tm.m.Unlock()
 		dispatchList(front)
-		T.m.Lock()
+		tm.m.Lock()
 	}
 }
 
-func (T *Timer) shift() {
+func (tm *Timer) shift() {
 	var mask uint32 = timeNear
-	T.timeDur++
-	ct := T.timeDur
+	tm.timeDur++
+	ct := tm.timeDur
 	if ct == 0 {
-		T.moveList(3, 0)
+		tm.moveList(3, 0)
 	} else {
 		timeDur := ct >> timeNearShift
 		i := 0
@@ -167,7 +169,7 @@ func (T *Timer) shift() {
 
 			idx := int(timeDur & timeLevelMask)
 			if idx != 0 {
-				T.moveList(i, idx)
+				tm.moveList(i, idx)
 				break
 			}
 
@@ -179,21 +181,21 @@ func (T *Timer) shift() {
 	}
 }
 
-func (T *Timer) moveList(level, idx int) {
-	front := T.t[level][idx].Front()
-	T.t[level][idx].Init()
+func (tm *Timer) moveList(level, idx int) {
+	front := tm.t[level][idx].Front()
+	tm.t[level][idx].Init()
 	for e := front; e != nil; e = e.Next() {
 		node := e.Value.(*Node)
-		T.addNode(node)
+		tm.addNode(node)
 	}
 }
 
-func (T *Timer) addNode(n *Node) {
+func (tm *Timer) addNode(n *Node) {
 	expire := n.expire
-	currentTime := T.timeDur
+	currentTime := tm.timeDur
 
 	if (expire | timeNearMask) == (currentTime | timeNearMask) {
-		T.near[expire&timeNearMask].PushBack(n)
+		tm.near[expire&timeNearMask].PushBack(n)
 	} else {
 		var i uint32
 		var mask uint32 = timeNear << timeLevelShift
@@ -204,19 +206,19 @@ func (T *Timer) addNode(n *Node) {
 			mask <<= timeLevelShift
 		}
 
-		T.t[i][(expire>>(timeNearShift+i*timeLevelShift))&timeLevelMask].PushBack(n)
+		tm.t[i][(expire>>(timeNearShift+i*timeLevelShift))&timeLevelMask].PushBack(n)
 	}
 }
 
-func (T *Timer) putTime(tm int, f TimeGoFunction, parm interface{}) {
+func (tm *Timer) putTime(t int, f TimeGoFunction, parm interface{}) {
 
 	n := &Node{0, parm, f}
-	T.m.Lock()
-	defer T.m.Unlock()
-	n.expire = uint32(tm) + T.timeDur
-	T.addNode(n)
+	tm.m.Lock()
+	defer tm.m.Unlock()
+	n.expire = uint32(t) + tm.timeDur
+	tm.addNode(n)
 }
 
-func (T *Timer) getTime() uint64 {
+func (tm *Timer) getTime() uint64 {
 	return uint64(time.Now().UnixNano() / 10000000)
 }
