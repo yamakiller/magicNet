@@ -126,5 +126,6 @@ func (ms *MonitorService) listen() (net.Listener, error) {
 	if addr == "" {
 		addr = ":" + ms.Proto
 	}
+
 	return net.Listen("tcp", addr)
 }
