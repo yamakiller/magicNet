@@ -30,8 +30,7 @@ func OperWSListen(operator *actor.PID, addr string) (int32, error) {
 	}
 
 	s.l.Lock()
-	// ? 是否考虑被 resIdle 得处理
-	/*s.s = &wslisten{handle: h}
+	s.s = &wslisten{handle: h}
 	s.b = resAssigned
 	lstn, _ := s.s.(*wslisten)
 	if err := lstn.listen(operator, addr); err != nil {
@@ -39,7 +38,7 @@ func OperWSListen(operator *actor.PID, addr string) (int32, error) {
 		s.s = nil
 		s.l.Unlock()
 		return -1, err
-	}*/
+	}
 	s.l.Unlock()
 
 	return h, nil
