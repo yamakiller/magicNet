@@ -39,6 +39,7 @@ type wslisten struct {
 	httpMtx    *http.ServeMux
 	httpErr    error
 	httpWait   sync.WaitGroup
+	stat       int
 	isShutdown bool
 }
 
@@ -247,7 +248,6 @@ func (wsl *wslisten) listen(operator *actor.PID, addr string) error {
 				conn.close(nil)
 				so.l.Unlock()
 				conn.closewait()
-				//! 这里应该没有问题
 				return true
 			}
 			so.l.Unlock()
@@ -262,15 +262,24 @@ func (wsl *wslisten) listen(operator *actor.PID, addr string) error {
 	return nil
 }
 
-// Connect : 无效
-func (wsl *wslisten) connect(addr string) error {
+func (wsl *wslisten) setKeepAive(keep uint64) {
+
+}
+
+func (wsl *wslisten) connect(operator *actor.PID, addr string) error {
 	return nil
 }
 
-// Close : 关闭
-func (wsl *wslisten) close(lck *util.ReSpinLock) error {
-	err := wsl.httpSrv.Close()
-	return err
+func (wsl *wslisten) getStat() int {
+	return wsl.stat
+}
+
+func (wsl *wslisten) setStat(stat int) {
+	wsl.stat = stat
+}
+
+func (wsl *wslisten) close(lck *util.ReSpinLock) {
+	wsl.httpSrv.Close()
 }
 
 func (wsl *wslisten) closewait() {
