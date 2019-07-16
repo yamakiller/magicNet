@@ -247,7 +247,7 @@ func (wsl *wslisten) listen(operator *actor.PID, addr string) error {
 				conn.close(nil)
 				so.l.Unlock()
 				conn.closewait()
-				//? 这里是否会崩溃有待测试-可以这样写吗
+				//! 这里应该没有问题
 				return true
 			}
 			so.l.Unlock()
