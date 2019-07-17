@@ -4,6 +4,7 @@ import (
 	"errors"
 	"magicNet/engine/actor"
 	"magicNet/engine/util"
+	"net"
 	"sync/atomic"
 )
 
@@ -138,6 +139,63 @@ func OperTCPConnect(operator *actor.PID, addr string, outChanSize int) (int32, e
 	return h, nil
 }
 
+// OperUDPListen : 开启一个 udp socket 监听
+func OperUDPListen(operator *actor.PID, addr string, outChanSize int) (int32, error) {
+	h, s := defaultNServer.grap()
+	if h == -1 || s == nil {
+		return h, errors.New(ErrSocketResources)
+	}
+
+	s.l.Lock()
+	s.s = &udpSocket{}
+	ups, _ := s.s.(*udpSocket)
+	ups.h = h
+	ups.so = s
+	ups.operator = operator
+	ups.out = make(chan *NetChunk, outChanSize)
+
+	s.b = resAssigned
+	if err := ups.listen(operator, addr); err != nil {
+		s.b = resIdle
+		s.s = nil
+		s.l.Unlock()
+		return -1, err
+	}
+	s.l.Unlock()
+
+	return h, nil
+}
+
+// OperUDPConnect : 创建一个udp socket 客户端连接
+func OperUDPConnect(operator *actor.PID, srcAddr string, dstAddr string, outChanSize int) (int32, error) {
+
+	h, s := defaultNServer.grap()
+	if h == -1 || s == nil {
+		return h, errors.New(ErrSocketResources)
+	}
+
+	client := &udpSocket{}
+	client.h = h
+	client.operator = operator
+	client.out = make(chan *NetChunk, outChanSize)
+	client.so = s
+
+	err := client.udpConnect(operator, srcAddr, dstAddr)
+	if err != nil {
+		atomic.StoreInt32(&s.b, resIdle)
+		return -1, err
+	}
+	s.l.Lock()
+	s.s = client
+	client.netWait.Add(2)
+	go client.recv()
+	go client.write()
+	atomic.StoreInt32(&s.b, resAssigned)
+	s.l.Unlock()
+
+	return h, nil
+}
+
 //OperWrite : 发送数据
 func OperWrite(handle int32, data []byte, n int) error {
 	s := defaultNServer.get(handle)
@@ -156,7 +214,34 @@ func OperWrite(handle int32, data []byte, n int) error {
 		return errors.New(ErrUnConnected)
 	}
 
-	s.s.push(data, n)
+	s.s.push(&NetChunk{Data: data}, n)
+
+	return nil
+}
+
+// OperUDPWrite : 发送udp数据
+func OperUDPWrite(handle int32, addr string, data []byte, n int) error {
+	s := defaultNServer.get(handle)
+	if s == nil {
+		return errors.New(ErrUnknownSocket)
+	}
+
+	s.l.Lock()
+	defer s.l.Unlock()
+
+	if s.b != resAssigned || s.s == nil {
+		return errors.New(ErrUnknownSocket)
+	}
+
+	if s.s.getStat() != Connected {
+		return errors.New(ErrUnConnected)
+	}
+
+	udpAddr, err := net.ResolveUDPAddr("udp", addr)
+	if err != nil {
+		return err
+	}
+	s.s.push(&NetChunk{Data: data, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)}, n)
 
 	return nil
 }

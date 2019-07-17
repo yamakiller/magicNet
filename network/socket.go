@@ -22,8 +22,6 @@ const (
 	CConnect
 	// CClient : 客户端
 	CClient
-	// CUDP : 对象
-	CUDP
 )
 
 const (
@@ -43,6 +41,7 @@ const (
 type NetChunk struct {
 	Data []byte
 	Addr net.IP
+	Port uint16
 }
 
 // NetAccept : 连接数据包
@@ -68,7 +67,8 @@ type NetInfo struct {
 type ISocket interface {
 	listen(operator *actor.PID, addr string) error
 	connect(operator *actor.PID, addr string) error
-	push(data []byte, n int)
+	udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error
+	push(data *NetChunk, n int) error
 	recv()
 	write()
 	setKeepAive(keep uint64)

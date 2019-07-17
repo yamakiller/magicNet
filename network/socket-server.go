@@ -145,6 +145,10 @@ func (ss *sServer) connect(operator *actor.PID, addr string) error {
 	return nil
 }
 
+func (ss *sServer) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
+	return nil
+}
+
 func (ss *sServer) getStat() int32 {
 	return ss.stat
 }
@@ -157,6 +161,6 @@ func (ss *sServer) closewait() {
 	ss.netWait.Wait()
 }
 
-func (ss *sServer) push(data []byte, n int) {
-
+func (ss *sServer) push(data *NetChunk, n int) error {
+	return nil
 }

@@ -37,6 +37,10 @@ func (sc *sConn) connect(operator *actor.PID, addr string) error {
 	return nil
 }
 
+func (sc *sConn) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
+	return nil
+}
+
 func (sc *sConn) recv() {
 	defer sc.w.Done()
 	for {
@@ -119,9 +123,10 @@ write_end:
 	sc.outStat = 1
 }
 
-func (sc *sConn) push(data []byte, n int) {
+func (sc *sConn) push(data *NetChunk, n int) error {
 	//? 是否可以优化
-	sc.out <- &NetChunk{Data: data}
+	sc.out <- data
+	return nil
 }
 
 func (sc *sConn) setKeepAive(keep uint64) {
