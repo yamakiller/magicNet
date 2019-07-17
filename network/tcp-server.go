@@ -63,6 +63,13 @@ func (tps *tcpServer) makeConn(handle int32, s interface{}, operator *actor.PID,
 	return conn
 }
 
+func (tps *tcpServer) getProto() string {
+	return ProtoTCP
+}
+func (tps *tcpServer) getType() int {
+	return CListen
+}
+
 func (tps *tcpServer) close(lck *util.ReSpinLock) {
 	tps.s.Close()
 }

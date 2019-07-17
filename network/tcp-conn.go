@@ -9,6 +9,14 @@ type tcpConn struct {
 	sConn
 }
 
+func (tpc *tcpConn) getProto() string {
+	return ProtoTCP
+}
+
+func (tpc *tcpConn) getType() int {
+	return CConnect
+}
+
 func tcpConnClose(s interface{}) {
 	if conn, ok := s.(net.Conn); ok {
 		conn.Close()

@@ -27,3 +27,11 @@ func (tpc *tcpClient) connect(operator *actor.PID, addr string) error {
 
 	return nil
 }
+
+func (tpc *tcpClient) getProto() string {
+	return ProtoTCP
+}
+
+func (tpc *tcpClient) getType() int {
+	return CClient
+}
