@@ -113,6 +113,13 @@ func (wss *wsServer) httpListen(addr string) (net.Listener, error) {
 	return net.Listen("tcp", addr)
 }
 
+func (wss *wsServer) getProto() string {
+	return ProtoWeb
+}
+func (wss *wsServer) getType() int {
+	return CListen
+}
+
 func (wss *wsServer) close(lck *util.ReSpinLock) {
 	wss.httpSrv.Close()
 }

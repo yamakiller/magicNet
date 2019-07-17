@@ -14,6 +14,14 @@ type wsConn struct {
 	sConn
 }
 
+func (sc *wsConn) getProto() string {
+	return ProtoWeb
+}
+
+func (sc *wsConn) getType() int {
+	return CConnect
+}
+
 func wsConnClose(s interface{}) {
 	if conn, ok := s.(*websocket.Conn); ok {
 		conn.Close()

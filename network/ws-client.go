@@ -27,3 +27,11 @@ func (wsc *wsClient) connect(operator *actor.PID, addr string) error {
 	wsc.i.WriteLastTime = now
 	return nil
 }
+
+func (wsc *wsClient) getProto() string {
+	return ProtoWeb
+}
+
+func (wsc *wsClient) getType() int {
+	return CClient
+}
