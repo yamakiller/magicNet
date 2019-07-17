@@ -20,20 +20,30 @@ const (
 const (
 	// ErrSocketResources : 套接字资源不足
 	ErrSocketResources = "lack of socket resources"
+	// ErrUnknownSocket :
+	ErrUnknownSocket = "unknown socket"
+	// ErrClosedSocket :
+	ErrClosedSocket = "socket is closed"
+	// ErrUnConnected :
+	ErrUnConnected = "socket is not connected"
 )
 
 // OperWSListen : 开启一个websocket 监听
-func OperWSListen(operator *actor.PID, addr string) (int32, error) {
+func OperWSListen(operator *actor.PID, addr string, outChanSize int) (int32, error) {
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
 		return h, errors.New(ErrSocketResources)
 	}
 
 	s.l.Lock()
-	s.s = &wslisten{handle: h}
+	s.s = &wsServer{}
+	wss, _ := s.s.(*wsServer)
+	wss.handle = h
+	wss.operator = operator
+	wss.outChanMax = outChanSize
+
 	s.b = resAssigned
-	lstn, _ := s.s.(*wslisten)
-	if err := lstn.listen(operator, addr); err != nil {
+	if err := wss.listen(operator, addr); err != nil {
 		s.b = resIdle
 		s.s = nil
 		s.l.Unlock()
@@ -45,17 +55,129 @@ func OperWSListen(operator *actor.PID, addr string) (int32, error) {
 }
 
 // OperWSConnect : 创建一个websocket 客户端连接
-func OperWSConnect(operator *actor.PID, addr string) (int32, error) {
+func OperWSConnect(operator *actor.PID, addr string, outChanSize int) (int32, error) {
+	h, s := defaultNServer.grap()
+	if h == -1 || s == nil {
+		return h, errors.New(ErrSocketResources)
+	}
+
+	client := &wsClient{}
+	client.h = h
+	client.o = operator
+	client.out = make(chan *NetChunk, outChanSize)
+	client.so = s
+	err := client.connect(operator, addr)
+	if err != nil {
+		atomic.StoreInt32(&s.b, resIdle)
+		return -1, err
+	}
+
+	s.l.Lock()
+	s.s = client
+	client.w.Add(2)
+	go client.recv()
+	go client.write()
+	atomic.StoreInt32(&s.b, resAssigned)
+	s.l.Unlock()
+
+	return h, nil
+}
+
+// OperTCPListen : 开启一个 tcp socket 监听
+func OperTCPListen(operator *actor.PID, addr string, outChanSize int) (int32, error) {
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
 		return h, errors.New(ErrSocketResources)
 	}
 
 	s.l.Lock()
-	// TODO : 连接Client
+	s.s = &tcpServer{}
+	tps, _ := s.s.(*tcpServer)
+	tps.handle = h
+	tps.operator = operator
+	tps.outChanMax = outChanSize
+
+	s.b = resAssigned
+	if err := tps.listen(operator, addr); err != nil {
+		s.b = resIdle
+		s.s = nil
+		s.l.Unlock()
+		return -1, err
+	}
 	s.l.Unlock()
 
 	return h, nil
+}
+
+// OperTCPConnect : 创建一个tcp socket 客户端连接
+func OperTCPConnect(operator *actor.PID, addr string, outChanSize int) (int32, error) {
+	h, s := defaultNServer.grap()
+	if h == -1 || s == nil {
+		return h, errors.New(ErrSocketResources)
+	}
+
+	client := &tcpClient{}
+	client.h = h
+	client.o = operator
+	client.out = make(chan *NetChunk, outChanSize)
+	client.so = s
+	err := client.connect(operator, addr)
+	if err != nil {
+		atomic.StoreInt32(&s.b, resIdle)
+		return -1, err
+	}
+
+	s.l.Lock()
+	s.s = client
+	client.w.Add(2)
+	go client.recv()
+	go client.write()
+	atomic.StoreInt32(&s.b, resAssigned)
+	s.l.Unlock()
+
+	return h, nil
+}
+
+//OperWrite : 发送数据
+func OperWrite(handle int32, data []byte, n int) error {
+	s := defaultNServer.get(handle)
+	if s == nil {
+		return errors.New(ErrUnknownSocket)
+	}
+
+	s.l.Lock()
+	defer s.l.Unlock()
+
+	if s.b != resAssigned || s.s == nil {
+		return errors.New(ErrUnknownSocket)
+	}
+
+	if s.s.getStat() != Connected {
+		return errors.New(ErrUnConnected)
+	}
+
+	s.s.push(data, n)
+
+	return nil
+}
+
+// OperOpen : 打开SOCKET
+func OperOpen(handle int32) error {
+	s := defaultNServer.get(handle)
+	if s == nil {
+		return errors.New(ErrUnknownSocket)
+	}
+
+	s.l.Lock()
+	defer s.l.Unlock()
+	if s.b != resAssigned || s.s == nil {
+		return errors.New(ErrUnknownSocket)
+	}
+
+	if !s.s.setConnected() {
+		return errors.New(ErrClosedSocket)
+	}
+	return nil
 }
 
 // OperClose : 关闭一个Socket
