@@ -3,6 +3,7 @@ package network
 import (
 	"magicNet/engine/actor"
 	"magicNet/engine/util"
+	"net"
 )
 
 const (
@@ -19,6 +20,8 @@ const (
 	CListen = iota
 	// CConnect : 连接
 	CConnect
+	// CClient : 客户端
+	CClient
 )
 
 const (
@@ -39,9 +42,15 @@ type NetChunk struct {
 	Data []byte
 }
 
+// NetAccept : 连接数据包
+type NetAccept struct {
+	Handle int32
+	Addr   net.IP
+}
+
 // NetClose : Socket 关闭消息
 type NetClose struct {
-	handle int32
+	Handle int32
 }
 
 // NetInfo  : Socket 通用状态数据信息
@@ -56,9 +65,14 @@ type NetInfo struct {
 type ISocket interface {
 	listen(operator *actor.PID, addr string) error
 	connect(operator *actor.PID, addr string) error
+	push(data []byte, n int)
+	recv()
+	write()
 	setKeepAive(keep uint64)
-	getStat() int
-	setStat(stat int)
+	getKeepAive() uint64
+	getLastActivedTime() uint64
+	getStat() int32
+	setConnected() bool
 	close(lck *util.ReSpinLock)
 	closewait()
 }
