@@ -72,6 +72,8 @@ type ISocket interface {
 	getKeepAive() uint64
 	getLastActivedTime() uint64
 	getStat() int32
+	getProto() string
+	getType() int
 	setConnected() bool
 	close(lck *util.ReSpinLock)
 	closewait()
