@@ -22,6 +22,8 @@ const (
 	CConnect
 	// CClient : 客户端
 	CClient
+	// CUDP : 对象
+	CUDP
 )
 
 const (
@@ -40,6 +42,7 @@ const (
 // NetChunk : 网络数据消息
 type NetChunk struct {
 	Data []byte
+	Addr net.IP
 }
 
 // NetAccept : 连接数据包
