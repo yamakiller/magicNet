@@ -168,7 +168,7 @@ func (nss *NatsStreamSubscribe) Connect(clusterID string, clientID string) error
 	return nil
 }
 
-// Subscribe : 以队列方式订阅 out 通道挂起,需要手动确认Ack包
+// Subscribe : 以队列订阅 out 通道挂起,需要手动确认Ack包
 func (nss *NatsStreamSubscribe) Subscribe(subject string, queueGroup string, durableID string) error {
 	awk, _ := time.ParseDuration(fmt.Sprint(nss.MaxAckSecond, "s"))
 	sub, err := nss.c.QueueSubscribe(subject, queueGroup, nss.procMessage,
@@ -194,11 +194,23 @@ func (nss *NatsStreamSubscribe) Close() {
 		nss.isShutdown = true
 		close(nss.Quit)
 		nss.c.Close()
+		close(nss.Out)
 	}
 }
 
 func (nss *NatsStreamSubscribe) procMessage(msg *stan.Msg) {
-	nss.Out <- msg
+	select {
+	case <-nss.Quit:
+		return
+	default:
+	}
+
+	select {
+	case <-nss.Quit:
+		return
+	case nss.Out <- msg:
+	}
+
 }
 
 func (nss *NatsStreamSubscribe) autoReConnect() error {
