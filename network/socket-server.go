@@ -7,11 +7,10 @@ import (
 	"net"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type sServer struct {
-	handle     int32
+	h          int32
 	s          interface{}
 	maker      makeConn
 	operator   *actor.PID
@@ -60,65 +59,6 @@ func (ss *sServer) accept(conn interface{},
 	actor.DefaultSchedulerContext.Send(ss.operator, &NetAccept{Handle: handle, Addr: ip.IP.To16()})
 
 	return nil
-}
-
-func (ss *sServer) keeploop() {
-	defer ss.netWait.Done()
-	for {
-		if ss.isShutdown {
-			break
-		}
-
-		time.Sleep(time.Second * 1)
-		now := timer.Now()
-		ss.conns.Range(func(handle interface{}, v interface{}) bool {
-			so := operGet(handle.(int32))
-			if so == nil {
-				return true
-			}
-
-			if so.b == resIdle {
-				return true
-			}
-
-			so.l.Lock()
-			defer so.l.Unlock()
-			if so.b == resIdle || so.b == resOccupy || so.s == nil {
-				return true
-			}
-
-			// 维护KeepAlive
-			if so.s.getKeepAive() == 0 {
-				return true
-			}
-
-			if (now - so.s.getLastActivedTime()) > so.s.getKeepAive() {
-				so.s.close(nil)
-			}
-			return true
-		})
-	}
-
-	//------------------关闭所有连接-----------------------------
-	ss.conns.Range(func(handle interface{}, v interface{}) bool {
-		so := operGet(handle.(int32))
-		if so.b == resIdle {
-			return true
-		}
-
-		so.l.Lock()
-		if so.b == resIdle || so.b == resOccupy || so.s == nil {
-			so.l.Unlock()
-			return true
-		}
-
-		conn := so.s
-		conn.close(nil)
-		so.l.Unlock()
-		conn.closewait()
-
-		return true
-	})
 }
 
 func (ss *sServer) recv() {

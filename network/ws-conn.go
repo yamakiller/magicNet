@@ -15,7 +15,7 @@ type wsConn struct {
 }
 
 func (sc *wsConn) getProto() string {
-	return ProtoWeb
+	return protoWeb
 }
 
 func (sc *wsConn) getType() int {

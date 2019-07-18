@@ -192,7 +192,7 @@ func (ups *udpSocket) closewait() {
 }
 
 func (ups *udpSocket) getProto() string {
-	return ProtoUDP
+	return protoUDP
 }
 
 func (ups *udpSocket) getType() int {

@@ -29,7 +29,7 @@ func (wsc *wsClient) connect(operator *actor.PID, addr string) error {
 }
 
 func (wsc *wsClient) getProto() string {
-	return ProtoWeb
+	return protoWeb
 }
 
 func (wsc *wsClient) getType() int {

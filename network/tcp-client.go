@@ -29,7 +29,7 @@ func (tpc *tcpClient) connect(operator *actor.PID, addr string) error {
 }
 
 func (tpc *tcpClient) getProto() string {
-	return ProtoTCP
+	return protoTCP
 }
 
 func (tpc *tcpClient) getType() int {

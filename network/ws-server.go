@@ -52,9 +52,8 @@ func (wss *wsServer) listen(operator *actor.PID, addr string) error {
 		return err
 	}
 
-	wss.netWait.Add(2)
+	wss.netWait.Add(1)
 	go wss.serve(ln)
-	go wss.keeploop()
 
 	time.Sleep(time.Millisecond * 1)
 	return nil
@@ -67,6 +66,26 @@ func (wss *wsServer) serve(ln net.Listener) {
 		wss.isShutdown = true
 		break
 	}
+
+	wss.conns.Range(func(handle interface{}, v interface{}) bool {
+		so := operGet(handle.(int32))
+		if so.b == resIdle {
+			return true
+		}
+
+		so.l.Lock()
+		if so.b == resIdle || so.b == resOccupy || so.s == nil {
+			so.l.Unlock()
+			return true
+		}
+
+		conn := so.s
+		conn.close(nil)
+		so.l.Unlock()
+		conn.closewait()
+
+		return true
+	})
 }
 
 func (wss *wsServer) wsAccept(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +133,7 @@ func (wss *wsServer) httpListen(addr string) (net.Listener, error) {
 }
 
 func (wss *wsServer) getProto() string {
-	return ProtoWeb
+	return protoWeb
 }
 func (wss *wsServer) getType() int {
 	return CListen

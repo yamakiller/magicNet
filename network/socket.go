@@ -8,11 +8,13 @@ import (
 
 const (
 	//ProtoTCP : TCP/IP　协议
-	ProtoTCP = "tcp"
+	protoTCP = "tcp"
 	//ProtoUDP : UDP　协议
-	ProtoUDP = "udp"
+	protoUDP = "udp"
 	//ProtoWeb : WebSocket
-	ProtoWeb = "web"
+	protoWeb = "web"
+	//ProtoRPC
+	protoRPC = "rpc"
 )
 
 const (
