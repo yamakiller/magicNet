@@ -6,7 +6,8 @@ import (
 
 func main() {
 	testing.TestEmpty()
-	testing.TestJSStack()
+	testing.TestChan()
+	//testing.TestJSStack()
 	//testing.TestDir()
 	//testing.TestActorContext()
 	//test.TestLanuchHook()

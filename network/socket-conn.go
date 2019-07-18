@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"magicNet/engine/actor"
 	"magicNet/engine/util"
 	"magicNet/timer"
@@ -20,6 +21,7 @@ type sConn struct {
 	so       *slot
 	srv      *sServer
 	out      chan *NetChunk
+	quit     chan int
 	outStat  int32  //out状态
 	keepAive uint64 // 毫秒
 	stat     int32
@@ -76,13 +78,14 @@ read_end:
 	sc.so.l.Lock()
 	closeHandle = sc.h
 	closeOperator = sc.o
-	close(sc.out)
+	close(sc.quit)
 	//-----等待写协程结束------
 	for {
 		if atomic.CompareAndSwapInt32(&sc.outStat, 1, 1) {
 			break
 		}
 	}
+	close(sc.out)
 	//----------------------
 	if sc.srv != nil {
 		sc.srv.conns.Delete(sc.h)
@@ -114,6 +117,8 @@ func (sc *sConn) write() {
 
 			sc.i.WriteBytes += uint64(n)
 			sc.i.WriteLastTime = timer.Now()
+		case <-sc.quit:
+			goto write_end
 		}
 	}
 write_error:
@@ -124,8 +129,18 @@ write_end:
 }
 
 func (sc *sConn) push(data *NetChunk, n int) error {
-	//? 是否可以优化
-	sc.out <- data
+	select {
+	case <-sc.quit:
+		return errors.New("conn closed")
+	default:
+	}
+
+	select {
+	case <-sc.quit:
+		return errors.New("conn closed")
+	case sc.out <- data:
+	}
+
 	return nil
 }
 

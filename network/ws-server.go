@@ -118,6 +118,7 @@ func (wss *wsServer) wsMakeConn(handle int32, s interface{}, operator *actor.PID
 	conn.wr = wsConnWrite
 	conn.cls = wsConnClose
 	conn.out = make(chan *NetChunk, wss.outChanMax)
+	conn.quit = make(chan int)
 	conn.i.ReadLastTime = now
 	conn.i.WriteLastTime = now
 

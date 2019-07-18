@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"fmt"
 	"magicNet/engine/actor"
 	"magicNet/engine/util"
@@ -19,6 +20,7 @@ type udpSocket struct {
 	operator *actor.PID
 	netWait  sync.WaitGroup
 	out      chan *NetChunk
+	quit     chan int
 	outStat  int32
 	mode     int32
 	stat     int32
@@ -101,13 +103,14 @@ read_end:
 	ups.so.l.Lock()
 	closeHandle = ups.h
 	closeOperator = ups.operator
-	close(ups.out)
+	close(ups.quit)
 	//-----等待写协程结束------
 	for {
 		if atomic.CompareAndSwapInt32(&ups.outStat, 1, 1) {
 			break
 		}
 	}
+	close(ups.out)
 
 	ups.so.s = nil
 	ups.so.b = resIdle
@@ -137,6 +140,8 @@ func (ups *udpSocket) write() {
 
 			ups.i.WriteBytes += uint64(n)
 			ups.i.WriteLastTime = timer.Now()
+		case <-ups.quit:
+			goto write_end
 		}
 	}
 write_error:
@@ -147,8 +152,18 @@ write_end:
 }
 
 func (ups *udpSocket) push(data *NetChunk, n int) error {
-	//? 是否可以优化
-	ups.out <- data
+	select {
+	case <-ups.quit:
+		return errors.New("conn closed")
+	default:
+	}
+
+	select {
+	case <-ups.quit:
+		return errors.New("conn closed")
+	case ups.out <- data:
+	}
+
 	return nil
 }
 
