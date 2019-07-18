@@ -39,7 +39,7 @@ func OperWSListen(operator *actor.PID, addr string, outChanSize int) (int32, err
 	s.l.Lock()
 	s.s = &wsServer{}
 	wss, _ := s.s.(*wsServer)
-	wss.handle = h
+	wss.h = h
 	wss.operator = operator
 	wss.outChanMax = outChanSize
 
@@ -94,7 +94,7 @@ func OperTCPListen(operator *actor.PID, addr string, outChanSize int) (int32, er
 	s.l.Lock()
 	s.s = &tcpServer{}
 	tps, _ := s.s.(*tcpServer)
-	tps.handle = h
+	tps.h = h
 	tps.operator = operator
 	tps.outChanMax = outChanSize
 
@@ -196,6 +196,31 @@ func OperUDPConnect(operator *actor.PID, srcAddr string, dstAddr string, outChan
 	return h, nil
 }
 
+// OperRPCListen 打开RPC服务
+func OperRPCListen(operator *actor.PID, addr string) (int32, error) {
+	h, s := defaultNServer.grap()
+	if h == -1 || s == nil {
+		return h, errors.New(ErrSocketResources)
+	}
+
+	s.l.Lock()
+	defer s.l.Unlock()
+	s.s = &rpcServer{}
+	rpcs, _ := s.s.(*rpcServer)
+	rpcs.h = h
+	rpcs.so = s
+	rpcs.operator = operator
+	if err := rpcs.listen(operator, addr); err != nil {
+		s.s = nil
+		atomic.StoreInt32(&s.b, resIdle)
+		return -1, err
+	}
+
+	s.b = resAssigned
+
+	return h, nil
+}
+
 //OperWrite : 发送数据
 func OperWrite(handle int32, data []byte, n int) error {
 	s := defaultNServer.get(handle)
@@ -246,7 +271,68 @@ func OperUDPWrite(handle int32, addr string, data []byte, n int) error {
 	return nil
 }
 
-// OperOpen : 打开SOCKET
+// OperKeep : 获取 socket 得Keep
+func OperKeep(handle int32) (uint64, error) {
+	s := defaultNServer.get(handle)
+	if s == nil {
+		return 0, errors.New(ErrUnknownSocket)
+	}
+
+	s.l.Lock()
+	defer s.l.Unlock()
+	if s.b != resAssigned || s.s == nil {
+		return 0, errors.New(ErrUnknownSocket)
+	}
+
+	if s.s.getStat() != Connecting && s.s.getStat() != Connected {
+		return 0, errors.New(ErrClosedSocket)
+	}
+	return s.s.getKeepAive(), nil
+}
+
+// OperSetKeep : 设置socket keep
+func OperSetKeep(handle int32, keep uint64) error {
+	s := defaultNServer.get(handle)
+	if s == nil {
+		return errors.New(ErrUnknownSocket)
+	}
+
+	s.l.Lock()
+	defer s.l.Unlock()
+	if s.b != resAssigned || s.s == nil {
+		return errors.New(ErrUnknownSocket)
+	}
+
+	if s.s.getStat() != Connecting && s.s.getStat() != Connected {
+		return errors.New(ErrClosedSocket)
+	}
+
+	s.s.setKeepAive(keep)
+	s.s.getLastActivedTime()
+	return nil
+}
+
+// OperLastActivedTime : 获取 socket 最后的活动事件
+func OperLastActivedTime(handle int32) (uint64, error) {
+	s := defaultNServer.get(handle)
+	if s == nil {
+		return 0, errors.New(ErrUnknownSocket)
+	}
+
+	s.l.Lock()
+	defer s.l.Unlock()
+	if s.b != resAssigned || s.s == nil {
+		return 0, errors.New(ErrUnknownSocket)
+	}
+
+	if s.s.getStat() != Connecting && s.s.getStat() != Connected {
+		return 0, errors.New(ErrClosedSocket)
+	}
+
+	return s.s.getLastActivedTime(), nil
+}
+
+// OperOpen : 打开socket
 func OperOpen(handle int32) error {
 	s := defaultNServer.get(handle)
 	if s == nil {
