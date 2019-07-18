@@ -121,6 +121,7 @@ func OperTCPConnect(operator *actor.PID, addr string, outChanSize int) (int32, e
 	client.h = h
 	client.o = operator
 	client.out = make(chan *NetChunk, outChanSize)
+	client.quit = make(chan int)
 	client.so = s
 	err := client.connect(operator, addr)
 	if err != nil {
@@ -153,6 +154,7 @@ func OperUDPListen(operator *actor.PID, addr string, outChanSize int) (int32, er
 	ups.so = s
 	ups.operator = operator
 	ups.out = make(chan *NetChunk, outChanSize)
+	ups.quit = make(chan int)
 
 	s.b = resAssigned
 	if err := ups.listen(operator, addr); err != nil {
@@ -178,6 +180,7 @@ func OperUDPConnect(operator *actor.PID, srcAddr string, dstAddr string, outChan
 	client.h = h
 	client.operator = operator
 	client.out = make(chan *NetChunk, outChanSize)
+	client.quit = make(chan int)
 	client.so = s
 
 	err := client.udpConnect(operator, srcAddr, dstAddr)
