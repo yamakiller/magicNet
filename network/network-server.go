@@ -221,6 +221,21 @@ func OperRPCListen(operator *actor.PID, addr string) (int32, error) {
 	return h, nil
 }
 
+// OperRPCTall RPC调用
+func OperRPCTall(operator *actor.PID, addr string, rpcmethod string, args interface{}, reply interface{}) error {
+	h, s := defaultNServer.grap()
+	if h == -1 || s == nil {
+		return errors.New(ErrSocketResources)
+	}
+
+	s.l.Lock()
+	defer s.l.Unlock()
+	client := rpcClient{h: h, operator: operator, stat: Connected}
+	err := client.call(operator, addr, rpcmethod, args, reply)
+	s.b = resIdle
+	return err
+}
+
 //OperWrite : 发送数据
 func OperWrite(handle int32, data []byte, n int) error {
 	s := defaultNServer.get(handle)
