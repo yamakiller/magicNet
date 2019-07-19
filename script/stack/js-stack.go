@@ -7,6 +7,11 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
+var (
+	ErrJSNotFindFile = errors.New("script file does not exist")
+	ErrJSNotFileData = errors.New("did not get file data")
+)
+
 // JSStack : javascirpt 虚拟器
 type JSStack struct {
 	state *otto.Otto
@@ -51,12 +56,12 @@ func (js *JSStack) SetFunc(name string, fun interface{}) {
 func (js *JSStack) ExecuteScriptFile(filename string) (otto.Value, error) {
 	tmpFileName := files.GetFullPathForFilename(filename)
 	if !files.IsFileExist(tmpFileName) {
-		return otto.Value{}, errors.New("this [" + filename + "] script file does not exist")
+		return otto.Value{}, ErrJSNotFindFile
 	}
 
 	data := files.GetDataFromFile(tmpFileName)
 	if data.IsNil() {
-		return otto.Value{}, errors.New("did not get " + filename + " file data")
+		return otto.Value{}, ErrJSNotFileData
 	}
 
 	return js.state.Run(string(data.GetBytes()))
