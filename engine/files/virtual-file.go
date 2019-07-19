@@ -39,13 +39,15 @@ func (fd *FileData) close() {
 }
 
 type virtaulFile struct {
-	v     map[string]FileData
-	vpath string
-	lock  sync.RWMutex
+	v          map[string]FileData
+	cachedFile int
+	cachedMem  int64
+	vpath      string
+	lock       sync.RWMutex
 }
 
 var (
-	defaultV = virtaulFile{v: make(map[string]FileData)}
+	defaultV = virtaulFile{v: make(map[string]FileData), cachedFile: 0, cachedMem: 0}
 )
 
 // WithRootPath : 设置虚拟文件系统根目录
@@ -82,6 +84,15 @@ func GetFullPathForFilename(filename string) string {
 	return defaultV.vpath + filename
 }
 
+// GetCachedInfo : 获取虚拟文件系统缓存文件信息
+func GetCachedInfo() (int, int64) {
+	return defaultV.cachedFile, defaultV.cachedMem
+}
+
+func GetVirtualPath() string {
+	return defaultV.vpath
+}
+
 //GetDataFromFile : 获得指定文件的文件数据快
 func GetDataFromFile(fullPath string) FileData {
 	defaultV.lock.RLock()
@@ -112,6 +123,9 @@ func GetDataFromFile(fullPath string) FileData {
 	} else if int64(n) < fm.sz {
 		panic(fmt.Sprintf("Read File Fail[%d:%d]", n, fm.sz))
 	}
+
+	defaultV.cachedFile++
+	defaultV.cachedMem += flen
 
 	defaultV.v[fullPath] = fm
 	return defaultV.v[fullPath]

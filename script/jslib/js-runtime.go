@@ -1,6 +1,7 @@
 package jslib
 
 import (
+	"magicNet/engine/files"
 	"runtime"
 
 	"github.com/robertkrimen/otto"
@@ -12,6 +13,7 @@ func jsruntimeBundle(js otto.FunctionCall) otto.Value {
 	truntime.Set("numGoroutine", numGoroutine)
 	truntime.Set("numCPU", numCPU)
 	truntime.Set("platform", platform)
+	truntime.Set("virtualFile", virtualFileInfo)
 
 	vruntime, err := otto.ToValue(truntime)
 	if err != nil {
@@ -85,4 +87,20 @@ func platform(call otto.FunctionCall) otto.Value {
 		panic(err)
 	}
 	return vstr
+}
+
+func virtualFileInfo(call otto.FunctionCall) otto.Value {
+	fileNum, fileMem := files.GetCachedInfo()
+	filePath := files.GetVirtualPath()
+	result, _ := call.Otto.Object(`({})`)
+	result.Set("FileNum", fileNum)
+	result.Set("FileMem", fileMem)
+	result.Set("VirtualPath", filePath)
+
+	vobj, err := otto.ToValue(result)
+	if err != nil {
+		panic(err)
+	}
+	return vobj
+
 }
