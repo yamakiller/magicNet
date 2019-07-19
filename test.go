@@ -6,7 +6,8 @@ import (
 
 func main() {
 	testing.TestEmpty()
-	testing.TestChan()
+	//testing.TestChan()
+	testing.TestRectPoint()
 	//testing.TestJSStack()
 	//testing.TestDir()
 	//testing.TestActorContext()
