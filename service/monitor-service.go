@@ -106,6 +106,8 @@ func (ms *MonitorService) Stoped(context actor.Context) {
 		logger.Warning(context.Self().ID, "monitor service close error:%v", err)
 	}
 	ms.Service.Stoped(context)
+	//!位置可以考虑一下
+	ms.httpMethod.Close()
 }
 
 // Shutdown 关闭服务
