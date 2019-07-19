@@ -56,11 +56,11 @@ func (mgd *mongoClient) connect(host []string,
 	return nil
 }
 
-// Close : 关闭
 func (mgd *mongoClient) close() {
 	defer mgd.cancel()
 	mgd.c.Disconnect(mgd.ctx)
 	mgd.c = nil
+	mgd.db = nil
 }
 
 // MongoDB :
@@ -101,6 +101,31 @@ func (mgb *MongoDB) Init() error {
 	}
 
 	return nil
+}
+
+// Close : 关闭
+func (mgb *MongoDB) Close() {
+	for {
+		mgb.mx.Lock()
+		if mgb.size == 0 {
+			mgb.mx.Unlock()
+			break
+		}
+
+		n := len(mgb.cs)
+		if n == 0 {
+			mgb.mx.Unlock()
+			time.Sleep(time.Millisecond * 5)
+			continue
+		}
+
+		for _, v := range mgb.cs {
+			v.close()
+		}
+
+		mgb.cs = mgb.cs[n:]
+		mgb.size -= n
+	}
 }
 
 func (mgb *MongoDB) freeClient(free *mongoClient) {
