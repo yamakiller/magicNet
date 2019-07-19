@@ -59,7 +59,7 @@ func (oa *OAuth2) Init(method IHTTPSrvMethod) {
 	oa.s.SetClientInfoHandler(server.ClientFormHandler)
 	oa.m.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
 
-	method.RegisterMethod(oa.AccessURI, func(w http.ResponseWriter, r *http.Request) {
+	method.RegisterMethod(oa.AccessURI, "GET|PUT|POST", func(w http.ResponseWriter, r *http.Request) {
 		err := oa.s.HandleTokenRequest(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -85,8 +85,8 @@ func (oa *OAuth2) RegisterClient(id string, secret string, domain string, userid
 }
 
 // RegisterAuth2Method : 注册受保护的方法
-func (oa *OAuth2) RegisterAuth2Method(method *HTTPSrvMethod, pattern string, f HTTPSrvFunc) {
-	method.RegisterMethod(pattern, validateToken(f, oa.s))
+func (oa *OAuth2) RegisterAuth2Method(method *HTTPSrvMethod, pattern string, httpMetod string, f HTTPSrvFunc) {
+	method.RegisterMethod(pattern, httpMetod, validateToken(f, oa.s))
 }
 
 func validateToken(f HTTPSrvFunc, srv *server.Server) HTTPSrvFunc {

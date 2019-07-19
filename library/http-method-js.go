@@ -7,54 +7,101 @@ import (
 	"magicNet/script/stack"
 	"net/http"
 	"regexp"
+	"strings"
+
+	"github.com/robertkrimen/otto"
 )
 
 // HTTPSrvMethodJS : js服务解析方法
 type HTTPSrvMethodJS struct {
 	HTTPSrvMethod
-	jsChan chan int
-	jsStop chan int
-	jsVim  *stack.JSStack
+	curHTTPRequest *http.Request
+	jsChan         chan int
+	jsStop         chan int
+	jsVim          *stack.JSStack
 }
 
 //NewHTTPSrvMethodJS 新建一个带JS功能的服务方法
 func NewHTTPSrvMethodJS() IHTTPSrvMethod {
 	r := &HTTPSrvMethodJS{}
 	r.suffixRegexp, _ = regexp.Compile(`\.\w+.*`)
-	r.methods = make(map[string]interface{}, 32)
+	r.methods = make(map[string]httpMethodValue, 32)
 	r.jsChan = make(chan int, 1)
 	r.jsStop = make(chan int)
 	r.jsVim = script.NewJSStack()
+
+	r.jsVim.SetFunc("GetHttpMethod", r.getHTTPMethodJS)
+	r.jsVim.SetFunc("GetHttpParam", r.getHTTPParamJS)
 	return r
 }
 
+func (hsm *HTTPSrvMethodJS) getHTTPMethodJS(js otto.FunctionCall) otto.Value {
+	vmst, err := otto.ToValue(hsm.curHTTPRequest.Method)
+	if err != nil {
+		panic(err)
+	}
+
+	return vmst
+}
+
+func (hsm *HTTPSrvMethodJS) getHTTPParamJS(js otto.FunctionCall) otto.Value {
+	r := hsm.curHTTPRequest
+	m := strings.ToLower(r.Method)
+	if m == "post" {
+		result, _ := js.Otto.Object(`({})`)
+		for k, v := range r.PostForm {
+			result.Set(k, v)
+		}
+
+		vmst, err := otto.ToValue(result)
+		if err != nil {
+			panic(err)
+		}
+
+		return vmst
+	}
+
+	i := 0
+	result, _ := js.Otto.Object(`({})`)
+	for k, v := range r.Form {
+		result.Set(k, v)
+		i++
+	}
+
+	if i == 0 {
+		for k, v := range r.URL.Query() {
+			result.Set(k, v)
+			i++
+		}
+	}
+
+	vmst, err := otto.ToValue(result)
+	if err != nil {
+		panic(err)
+	}
+
+	return vmst
+}
+
 func (hsm *HTTPSrvMethodJS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	f := hsm.match(r.RequestURI)
+	f := hsm.match(r.RequestURI, r.Method)
 	if f == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	if v, ok := f.(string); ok {
-
 		hsm.runJs(v, w, r)
 	} else if v, ok := f.(HTTPSrvFunc); ok {
 		v(w, r)
 	}
 }
 
-//RegisterMethod : 注册
-func (hsm *HTTPSrvMethodJS) RegisterMethod(pattern string, f interface{}) {
-	hsm.l.Lock()
-	defer hsm.l.Unlock()
-	hsm.methods[pattern] = f
-}
-
 // Close : 关闭方法注册服务
 func (hsm *HTTPSrvMethodJS) Close() {
 	hsm.l.Lock()
 	defer hsm.l.Unlock()
-	hsm.methods = make(map[string]interface{})
+	hsm.methods = make(map[string]httpMethodValue)
 	close(hsm.jsStop)
 	close(hsm.jsChan)
 	//? 需要吗
@@ -75,6 +122,7 @@ func (hsm *HTTPSrvMethodJS) runJs(jsfile string, w http.ResponseWriter, r *http.
 	}
 
 	defer func() {
+		hsm.curHTTPRequest = nil
 		select {
 		case <-hsm.jsStop:
 			return
@@ -82,6 +130,7 @@ func (hsm *HTTPSrvMethodJS) runJs(jsfile string, w http.ResponseWriter, r *http.
 		}
 	}()
 
+	hsm.curHTTPRequest = r
 	result, err := hsm.jsVim.ExecuteScriptFile(jsfile)
 	if err != nil {
 		if err == stack.ErrJSNotFindFile ||

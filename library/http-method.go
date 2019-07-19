@@ -14,15 +14,20 @@ type HTTPSrvFunc func(arg1 http.ResponseWriter, arg2 *http.Request)
 // IHTTPSrvMethod : HTTP 服务方法接口
 type IHTTPSrvMethod interface {
 	http.Handler
-	RegisterMethod(pattern string, f interface{})
+	RegisterMethod(pattern string, method string, f interface{})
 	Close()
-	match(requestURI string) interface{}
+	match(requestURI string, method string) interface{}
+}
+
+type httpMethodValue struct {
+	httpMethod string
+	f          interface{}
 }
 
 //HTTPSrvMethod : http 服务方法
 type HTTPSrvMethod struct {
 	suffixRegexp *regexp.Regexp
-	methods      map[string]interface{}
+	methods      map[string]httpMethodValue
 	l            sync.RWMutex
 }
 
@@ -30,12 +35,12 @@ type HTTPSrvMethod struct {
 func NewHTTPSrvMethod() IHTTPSrvMethod {
 	r := &HTTPSrvMethod{}
 	r.suffixRegexp, _ = regexp.Compile(`\.\w+.*`)
-	r.methods = make(map[string]interface{}, 32)
+	r.methods = make(map[string]httpMethodValue, 32)
 	return r
 }
 
 func (hsm *HTTPSrvMethod) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	f := hsm.match(r.RequestURI)
+	f := hsm.match(r.RequestURI, r.Method)
 	if f == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -47,20 +52,20 @@ func (hsm *HTTPSrvMethod) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // RegisterMethod : 注册服务方法
-func (hsm *HTTPSrvMethod) RegisterMethod(pattern string, f interface{}) {
+func (hsm *HTTPSrvMethod) RegisterMethod(pattern string, method string, f interface{}) {
 	hsm.l.Lock()
 	defer hsm.l.Unlock()
-	hsm.methods[pattern] = f
+	hsm.methods[pattern] = httpMethodValue{httpMethod: method, f: f}
 }
 
 // Close : 关闭方法服务
 func (hsm *HTTPSrvMethod) Close() {
 	hsm.l.Lock()
 	defer hsm.l.Unlock()
-	hsm.methods = make(map[string]interface{})
+	hsm.methods = make(map[string]httpMethodValue)
 }
 
-func (hsm *HTTPSrvMethod) match(requestURI string) interface{} {
+func (hsm *HTTPSrvMethod) match(requestURI string, method string) interface{} {
 	hsm.l.RLock()
 	defer hsm.l.RUnlock()
 	suffix := hsm.suffixRegexp.FindStringSubmatch(requestURI)
@@ -75,5 +80,11 @@ func (hsm *HTTPSrvMethod) match(requestURI string) interface{} {
 	}
 
 	r := hsm.methods[tmpURI]
-	return r
+
+	if strings.Index(strings.ToLower(r.httpMethod),
+		strings.ToLower(method)) >= 0 {
+		return r.f
+	}
+
+	return nil
 }
