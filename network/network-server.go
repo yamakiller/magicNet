@@ -200,7 +200,15 @@ func OperUDPConnect(operator *actor.PID, srcAddr string, dstAddr string, outChan
 }
 
 // OperRPCListen 打开RPC服务
-func OperRPCListen(operator *actor.PID, addr string) (int32, error) {
+func OperRPCListen(operator *actor.PID,
+	addr string,
+	reg GRpcRegister, /*(注册协议调用函数)*/
+	writeBufSize int, /*(可选项 默认:32 * 1024)*/
+	readBufSize int, /*(可选项 默认:32 * 1024)*/
+	connectionTimeout int, /*(可选项 默认:120 sec)*/
+	maxSendMessageSize int, /*(可选项 默认: math.MaxInt32)*/
+	maxReceiveMessageSize int /*(可选项 默认:1024 * 1024 * 4)*/) (int32, error) {
+
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
 		return h, errors.New(ErrSocketResources)
@@ -208,8 +216,13 @@ func OperRPCListen(operator *actor.PID, addr string) (int32, error) {
 
 	s.l.Lock()
 	defer s.l.Unlock()
-	s.s = &rpcServer{}
-	rpcs, _ := s.s.(*rpcServer)
+	s.s = &grpcServer{register: reg, writeBufSize: writeBufSize,
+		readBufSize:           readBufSize,
+		connectionTimeout:     connectionTimeout,
+		maxSendMessageSize:    maxSendMessageSize,
+		maxReceiveMessageSize: maxReceiveMessageSize}
+
+	rpcs, _ := s.s.(*grpcServer)
 	rpcs.h = h
 	rpcs.so = s
 	rpcs.operator = operator
@@ -222,21 +235,6 @@ func OperRPCListen(operator *actor.PID, addr string) (int32, error) {
 	s.b = resAssigned
 
 	return h, nil
-}
-
-// OperRPCTall RPC调用
-func OperRPCTall(operator *actor.PID, addr string, rpcmethod string, args interface{}, reply interface{}) error {
-	h, s := defaultNServer.grap()
-	if h == -1 || s == nil {
-		return errors.New(ErrSocketResources)
-	}
-
-	s.l.Lock()
-	defer s.l.Unlock()
-	client := rpcClient{h: h, operator: operator, stat: Connected}
-	err := client.call(operator, addr, rpcmethod, args, reply)
-	s.b = resIdle
-	return err
 }
 
 //OperWrite : 发送数据
