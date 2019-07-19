@@ -9,6 +9,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type mongoClient struct {
@@ -109,7 +110,6 @@ func (mgb *MongoDB) freeClient(free *mongoClient) {
 }
 
 func (mgb *MongoDB) getClient() (*mongoClient, error) {
-
 	mgb.mx.Lock()
 	defer mgb.mx.Unlock()
 	if len(mgb.cs) == 0 {
@@ -134,6 +134,13 @@ func (mgb *MongoDB) getClient() (*mongoClient, error) {
 
 	client := mgb.cs[0]
 	mgb.cs = mgb.cs[1:]
+
+	if err := client.c.Ping(client.ctx, readpref.Primary()); err != nil {
+		mgb.size--
+		client.close()
+		return nil, err
+	}
+
 	return client, nil
 }
 
