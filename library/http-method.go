@@ -15,6 +15,7 @@ type HTTPSrvFunc func(arg1 http.ResponseWriter, arg2 *http.Request)
 type IHTTPSrvMethod interface {
 	http.Handler
 	RegisterMethod(pattern string, f interface{})
+	Close()
 	match(requestURI string) interface{}
 }
 
@@ -50,6 +51,13 @@ func (hsm *HTTPSrvMethod) RegisterMethod(pattern string, f interface{}) {
 	hsm.l.Lock()
 	defer hsm.l.Unlock()
 	hsm.methods[pattern] = f
+}
+
+// Close : 关闭方法服务
+func (hsm *HTTPSrvMethod) Close() {
+	hsm.l.Lock()
+	defer hsm.l.Unlock()
+	hsm.methods = make(map[string]interface{})
 }
 
 func (hsm *HTTPSrvMethod) match(requestURI string) interface{} {

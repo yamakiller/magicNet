@@ -1,15 +1,20 @@
 package library
 
 import (
+	"fmt"
 	"magicNet/engine/files"
+	"magicNet/script"
+	"magicNet/script/stack"
 	"net/http"
 	"regexp"
-	"strings"
 )
 
 // HTTPSrvMethodJS : js服务解析方法
 type HTTPSrvMethodJS struct {
 	HTTPSrvMethod
+	jsChan chan int
+	jsStop chan int
+	jsVim  *stack.JSStack
 }
 
 //NewHTTPSrvMethodJS 新建一个带JS功能的服务方法
@@ -17,6 +22,9 @@ func NewHTTPSrvMethodJS() IHTTPSrvMethod {
 	r := &HTTPSrvMethodJS{}
 	r.suffixRegexp, _ = regexp.Compile(`\.\w+.*`)
 	r.methods = make(map[string]interface{}, 32)
+	r.jsChan = make(chan int, 1)
+	r.jsStop = make(chan int)
+	r.jsVim = script.NewJSStack()
 	return r
 }
 
@@ -28,12 +36,8 @@ func (hsm *HTTPSrvMethodJS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v, ok := f.(string); ok {
-		filNme, filFun, err := hsm.decomposeJs(v)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		hsm.runJs(filNme, filFun, w, r)
+
+		hsm.runJs(v, w, r)
 	} else if v, ok := f.(HTTPSrvFunc); ok {
 		v(w, r)
 	}
@@ -46,27 +50,56 @@ func (hsm *HTTPSrvMethodJS) RegisterMethod(pattern string, f interface{}) {
 	hsm.methods[pattern] = f
 }
 
-func (hsm *HTTPSrvMethodJS) runJs(jsfile string, jsfun string, w http.ResponseWriter, r *http.Request) {
+// Close : 关闭方法注册服务
+func (hsm *HTTPSrvMethodJS) Close() {
+	hsm.l.Lock()
+	defer hsm.l.Unlock()
+	hsm.methods = make(map[string]interface{})
+	close(hsm.jsStop)
+	close(hsm.jsChan)
+	//? 需要吗
+	hsm.jsVim = nil
+}
+
+func (hsm *HTTPSrvMethodJS) runJs(jsfile string, w http.ResponseWriter, r *http.Request) {
 	fileFullPath := files.GetFullPathForFilename(jsfile)
 	if !files.IsFileExist(fileFullPath) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	data := files.GetDataFromFile(fileFullPath)
-	if data.IsNil() {
-		w.WriteHeader(http.StatusNotFound)
+	select {
+	case <-hsm.jsStop:
+		return
+	case hsm.jsChan <- 1:
+	}
+
+	defer func() {
+		select {
+		case <-hsm.jsStop:
+			return
+		case <-hsm.jsChan:
+		}
+	}()
+
+	result, err := hsm.jsVim.ExecuteScriptFile(jsfile)
+	if err != nil {
+		if err == stack.ErrJSNotFindFile ||
+			err == stack.ErrJSNotFileData {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		msg := fmt.Sprintf("{code: 140, message:'%s'}", err.Error())
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(msg))
 		return
 	}
 
-	//虚拟机器，获取结果
-}
-
-func (hsm *HTTPSrvMethodJS) decomposeJs(v string) (string, string, error) {
-	s := strings.Split(v, "#")
-	if len(s) != 2 {
-		return "", "", http.ErrNotSupported
+	msg, err := result.ToString()
+	w.WriteHeader(http.StatusOK)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("{code: 141, message:'%s'}", err.Error())))
+		return
 	}
-
-	return s[0], s[1], nil
+	w.Write([]byte(msg))
 }
