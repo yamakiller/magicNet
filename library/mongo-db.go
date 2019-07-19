@@ -13,10 +13,9 @@ import (
 )
 
 type mongoClient struct {
-	c      *mongo.Client
-	db     *mongo.Database
-	ctx    context.Context
-	cancel context.CancelFunc
+	c       *mongo.Client
+	db      *mongo.Database
+	timeSec int
 }
 
 // Connect : 连接服务
@@ -28,9 +27,11 @@ func (mgd *mongoClient) connect(host []string,
 	timeSec int,
 	hbSec int,
 	idleSec int) error {
+	mgd.timeSec = timeSec
 	opt := options.ClientOptions{}
-	mgd.ctx, mgd.cancel = context.WithTimeout(context.Background(), time.Duration(timeSec)*time.Second)
-	client, err := mongo.Connect(mgd.ctx,
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeSec)*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx,
 		opt.ApplyURI(uri),
 		opt.SetHosts(host),
 		opt.SetHeartbeatInterval(time.Duration(hbSec)*time.Second),
@@ -38,16 +39,12 @@ func (mgd *mongoClient) connect(host []string,
 		opt.SetMaxConnIdleTime(time.Duration(idleSec)*time.Second),
 		opt.SetSocketTimeout(time.Duration(sckTimeSec)*time.Second))
 	if err != nil {
-		mgd.cancel()
-		mgd.cancel = nil
 		return err
 	}
 
 	mgd.db = client.Database(dbName)
 	if mgd.db == nil {
-		client.Disconnect(mgd.ctx)
-		mgd.cancel()
-		mgd.cancel = nil
+		client.Disconnect(ctx)
 		return fmt.Errorf("mongoDB Database %s does not exist", dbName)
 	}
 
@@ -57,8 +54,9 @@ func (mgd *mongoClient) connect(host []string,
 }
 
 func (mgd *mongoClient) close() {
-	defer mgd.cancel()
-	mgd.c.Disconnect(mgd.ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgd.timeSec)*time.Second)
+	defer cancel()
+	mgd.c.Disconnect(ctx)
 	mgd.c = nil
 	mgd.db = nil
 }
@@ -160,7 +158,10 @@ func (mgb *MongoDB) getClient() (*mongoClient, error) {
 	client := mgb.cs[0]
 	mgb.cs = mgb.cs[1:]
 
-	if err := client.c.Ping(client.ctx, readpref.Primary()); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	if err := client.c.Ping(ctx, readpref.Primary()); err != nil {
 		mgb.size--
 		client.close()
 		return nil, err
@@ -177,7 +178,10 @@ func (mgb *MongoDB) InsertOne(name string, document interface{}) (interface{}, e
 	}
 	defer mgb.freeClient(client)
 
-	r, rerr := client.db.Collection(name).InsertOne(client.ctx, document)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).InsertOne(ctx, document)
 	if rerr != nil {
 		return nil, rerr
 	}
@@ -193,7 +197,10 @@ func (mgb *MongoDB) InsertMany(name string, document []interface{}) ([]interface
 	}
 	defer mgb.freeClient(client)
 
-	r, rerr := client.db.Collection(name).InsertMany(client.ctx, document)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).InsertMany(ctx, document)
 	if rerr != nil {
 		return nil, rerr
 	}
@@ -208,7 +215,10 @@ func (mgb *MongoDB) FindOne(name string, filter interface{}, out interface{}) er
 	}
 	defer mgb.freeClient(client)
 
-	r := client.db.Collection(name).FindOne(client.ctx, filter)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r := client.db.Collection(name).FindOne(ctx, filter)
 	if derr := r.Decode(out); derr != nil {
 		return derr
 	}
@@ -224,14 +234,17 @@ func (mgb *MongoDB) Find(name string, filter interface{}, decode interface{}) ([
 	}
 	defer mgb.freeClient(client)
 
-	r, rerr := client.db.Collection(name).Find(client.ctx, filter)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).Find(ctx, filter)
 	if rerr != nil {
 		return nil, rerr
 	}
 
-	defer r.Close(client.ctx)
+	defer r.Close(ctx)
 	ary := make([]interface{}, 0, 4)
-	for r.Next(client.ctx) {
+	for r.Next(ctx) {
 		if derr := r.Decode(&decode); derr != nil {
 			return nil, derr
 		}
@@ -249,7 +262,11 @@ func (mgb *MongoDB) UpdateOne(name string, filter interface{}, update interface{
 		return 0, 0, 0, nil, err
 	}
 	defer mgb.freeClient(client)
-	r, rerr := client.db.Collection(name).UpdateOne(client.ctx, filter, update)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).UpdateOne(ctx, filter, update)
 	if rerr != nil {
 		return 0, 0, 0, nil, rerr
 	}
@@ -264,7 +281,11 @@ func (mgb *MongoDB) UpdateMany(name string, filter interface{}, update interface
 		return 0, 0, 0, nil, err
 	}
 	defer mgb.freeClient(client)
-	r, rerr := client.db.Collection(name).UpdateMany(client.ctx, filter, update)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).UpdateMany(ctx, filter, update)
 	if rerr != nil {
 		return 0, 0, 0, nil, rerr
 	}
@@ -280,7 +301,10 @@ func (mgb *MongoDB) ReplaceOne(name string, filter interface{}, replacement inte
 	}
 	defer mgb.freeClient(client)
 
-	r, rerr := client.db.Collection(name).ReplaceOne(client.ctx, filter, replacement)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).ReplaceOne(ctx, filter, replacement)
 
 	if rerr != nil {
 		return 0, 0, 0, nil, rerr
@@ -297,7 +321,10 @@ func (mgb *MongoDB) DeleteOne(name string, filter interface{}) (int64, error) {
 	}
 	defer mgb.freeClient(client)
 
-	r, rerr := client.db.Collection(name).DeleteOne(client.ctx, filter)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).DeleteOne(ctx, filter)
 	if rerr != nil {
 		return 0, rerr
 	}
@@ -313,7 +340,10 @@ func (mgb *MongoDB) DeleteMany(name string, filter interface{}) (int64, error) {
 	}
 	defer mgb.freeClient(client)
 
-	r, rerr := client.db.Collection(name).DeleteMany(client.ctx, filter)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).DeleteMany(ctx, filter)
 	if rerr != nil {
 		return 0, rerr
 	}
@@ -329,7 +359,10 @@ func (mgb *MongoDB) FindOneAndDelete(name string, filter interface{}, out interf
 	}
 	defer mgb.freeClient(client)
 
-	r := client.db.Collection(name).FindOneAndDelete(client.ctx, filter)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r := client.db.Collection(name).FindOneAndDelete(ctx, filter)
 
 	if derr := r.Decode(out); derr != nil {
 		return derr
@@ -346,7 +379,10 @@ func (mgb *MongoDB) FindOneAndUpdate(name string, filter interface{}, update int
 	}
 	defer mgb.freeClient(client)
 
-	r := client.db.Collection(name).FindOneAndUpdate(client.ctx, filter, update)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r := client.db.Collection(name).FindOneAndUpdate(ctx, filter, update)
 	if derr := r.Decode(out); derr != nil {
 		return derr
 	}
@@ -362,7 +398,10 @@ func (mgb *MongoDB) FindOneAndReplace(name string, filter interface{}, replaceme
 	}
 	defer mgb.freeClient(client)
 
-	r := client.db.Collection(name).FindOneAndReplace(client.ctx, filter, replacement)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r := client.db.Collection(name).FindOneAndReplace(ctx, filter, replacement)
 	if derr := r.Decode(out); derr != nil {
 		return derr
 	}
@@ -378,7 +417,10 @@ func (mgb *MongoDB) Distinct(name string, fieldName string, filter interface{}) 
 	}
 	defer mgb.freeClient(client)
 
-	r, rerr := client.db.Collection(name).Distinct(client.ctx, fieldName, filter)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	r, rerr := client.db.Collection(name).Distinct(ctx, fieldName, filter)
 	if rerr != nil {
 		return nil, rerr
 	}
@@ -393,7 +435,10 @@ func (mgb *MongoDB) Drop(name string) error {
 		return err
 	}
 
-	return client.db.Collection(name).Drop(client.ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	return client.db.Collection(name).Drop(ctx)
 }
 
 // CountDocuments : 获取文档总数
@@ -404,5 +449,8 @@ func (mgb *MongoDB) CountDocuments(name string, filter interface{}) (int64, erro
 	}
 	defer mgb.freeClient(client)
 
-	return client.db.Collection(name).CountDocuments(client.ctx, filter)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgb.TimeSec)*time.Second)
+	defer cancel()
+
+	return client.db.Collection(name).CountDocuments(ctx, filter)
 }
