@@ -1,4 +1,4 @@
-package frame
+package core
 
 import (
 	"flag"
@@ -24,17 +24,20 @@ type DefaultCMDLineOption struct {
 
 // LineOption : 命令处理函数
 func (cmdline *DefaultCMDLineOption) LineOption() {
+	fmt.Printf("aaaaaaaaaaaaaaaa1\n")
+
 	showVer := flag.Bool("v", false, "show build version")
 	if *showVer {
 		version.Show()
 		os.Exit(0)
 	}
-
+	fmt.Printf("aaaaaaaaaaaaaaaa2\n")
 	showHelp := flag.Bool("h", false, "show help")
 	if *showHelp {
 		cmdline.usage()
 		os.Exit(0)
 	}
+
 }
 
 func (cmdline *DefaultCMDLineOption) usage() {

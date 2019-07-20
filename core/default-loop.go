@@ -1,4 +1,4 @@
-package frame
+package core
 
 import (
 	"magicNet/engine/monitor"

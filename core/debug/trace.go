@@ -23,9 +23,11 @@ func (t *TraceDebug) Start() {
 
 // Stop : 停止DEBUG跟踪器
 func (t *TraceDebug) Stop() {
-	if err := recover(); err != nil {
-		t.saveCore(err)
-		os.Exit(0)
+	if strings.TrimSpace(strings.ToLower(version.Build)) == "release" {
+		if err := recover(); err != nil {
+			t.saveCore(err)
+			os.Exit(0)
+		}
 	}
 
 	if strings.TrimSpace(strings.ToLower(version.Build)) == "debug" {

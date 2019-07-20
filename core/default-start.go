@@ -1,4 +1,4 @@
-package frame
+package core
 
 import (
 	"flag"
@@ -19,7 +19,7 @@ type DefaultStart struct {
 // Init : 初始化系统
 func (s *DefaultStart) Init() error {
 	logPath := flag.String("logPath", "", "log file path")
-	logLevl := flag.Int("logLevel", int(logger.PANICLEVEL), "log level")
+	logLevl := flag.Int("logLevel", int(logger.TRACELEVEL), "log level")
 	logSize := flag.Int("logSize", 1024, "log mailbox size")
 	virDir := flag.String("v", "", "virtual root directory")
 
@@ -42,6 +42,8 @@ func (s *DefaultStart) Init() error {
 		l.Redirect()
 		return &l
 	})
+	//---------------------
+	go s.sysLogger.Mount()
 	//---------------------
 	logger.WithDefault(s.sysLogger)
 	// 设置虚拟文件系统根目录

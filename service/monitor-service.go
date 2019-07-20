@@ -36,8 +36,9 @@ type MonitorService struct {
 	Addr        string
 	OAuto2      *library.OAuth2
 	MakerMethod MakeHTTPMethod
-	certFile    string
-	keyFile     string
+	CertFile    string
+	KeyFile     string
+	Regiter     func()
 
 	isShutdown bool
 	httpErr    error
@@ -63,6 +64,10 @@ func (ms *MonitorService) Started(context actor.Context) {
 		ms.OAuto2.Init(ms.httpMethod)
 	}
 
+	if ms.Regiter != nil {
+		ms.Regiter()
+	}
+
 	ln, err := ms.listen()
 	ms.httpErr = err
 	if ms.httpErr != nil {
@@ -85,7 +90,7 @@ func (ms *MonitorService) Started(context actor.Context) {
 						ms.httpErr = ms.httpHandle.Serve(tcpKeepAliveListener{ln.(*net.TCPListener)})
 					} else {
 						defer ln.Close()
-						ms.httpErr = ms.httpHandle.ServeTLS(tcpKeepAliveListener{ln.(*net.TCPListener)}, ms.certFile, ms.keyFile)
+						ms.httpErr = ms.httpHandle.ServeTLS(tcpKeepAliveListener{ln.(*net.TCPListener)}, ms.CertFile, ms.KeyFile)
 					}
 				} else {
 					time.Sleep(time.Millisecond * 10)
@@ -131,3 +136,7 @@ func (ms *MonitorService) listen() (net.Listener, error) {
 
 	return net.Listen("tcp", addr)
 }
+
+var (
+	_ IService = &MonitorService{}
+)

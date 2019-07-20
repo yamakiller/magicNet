@@ -59,7 +59,7 @@ func (oa *OAuth2) Init(method IHTTPSrvMethod) {
 	oa.s.SetClientInfoHandler(server.ClientFormHandler)
 	oa.m.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
 
-	method.RegisterMethod(oa.AccessURI, "GET|PUT|POST", func(w http.ResponseWriter, r *http.Request) {
+	method.RegisterMethod(oa.AccessURI, "get|put|post", func(w http.ResponseWriter, r *http.Request) {
 		err := oa.s.HandleTokenRequest(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)

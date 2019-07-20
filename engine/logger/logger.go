@@ -205,7 +205,10 @@ func (log *LogContext) getPrefix(owner uint32) string {
 }
 
 func (log *LogContext) push(data Event) {
-	log.LogMailbox <- data
+	select {
+	case log.LogMailbox <- data:
+	}
+
 	atomic.AddInt32(&log.LogMailNum, 1)
 }
 

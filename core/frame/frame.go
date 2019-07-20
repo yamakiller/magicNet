@@ -4,7 +4,7 @@ package frame
  * @Author: mirliang@my.cn
  * @Date: 2019年07月09日 14:36:58
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月11日 18:25:03
+ * @LastEditTime: 2019年07月20日 18:15:02
  * @Description: 主进程框架基类
  */
 
@@ -43,6 +43,7 @@ type waitPart interface {
 // Framework 主框架接口
 type Framework interface {
 	startPart
+	commandLinePart
 	envPart
 	waitPart
 	servicePart

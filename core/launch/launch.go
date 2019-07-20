@@ -1,8 +1,11 @@
 package launch
 
 import (
+	"fmt"
 	"magicNet/core/debug"
 	"magicNet/core/frame"
+	"magicNet/timer"
+	"os"
 )
 
 // Launch : 系统启动器
@@ -11,16 +14,21 @@ func Launch(f frame.MakeFrame) {
 	debugTrace.Start()
 	defer debugTrace.Stop()
 	fme := f()
+	timer.StartService()
+
 	if err := fme.Init(); err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(0)
 	}
 
 	if err := fme.LoadEnv(); err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(0)
 	}
 
 	if err := fme.InitService(); err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(0)
 	}
 
 	for {
@@ -32,4 +40,5 @@ func Launch(f frame.MakeFrame) {
 	fme.CloseService()
 	fme.UnLoadEnv()
 	fme.Destory()
+	timer.StopService()
 }

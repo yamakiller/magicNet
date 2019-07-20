@@ -1,4 +1,4 @@
-package frame
+package core
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ type DefaultEnv struct {
 // LoadEnv : 载入环境变量
 func (env *DefaultEnv) LoadEnv() error {
 	configPath := ""
-	flag.StringVar(&configPath, "e", "./conf/magicnet.conf", "config full path")
+	flag.StringVar(&configPath, "e", "./env/magicnet.env", "config full path")
 	if configPath == "" {
 		return errors.New("enter the environment variable file path  -e <filePath>")
 	}

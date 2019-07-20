@@ -27,25 +27,44 @@ func WithMonitor(m Monitor) {
 
 // IsShutdown : 系统是否已被终止
 func IsShutdown() bool {
+	if systemMonitor == nil {
+		return defMonitor.IsShutdown()
+	}
 	return systemMonitor.IsShutdown()
 }
 
 // Shutdown : 终止系统
 func Shutdown() {
+	if systemMonitor == nil {
+		defMonitor.Shutdown()
+		return
+	}
 	systemMonitor.Shutdown()
 }
 
 // IncService : 增加一个服务
 func IncService() {
+	if systemMonitor == nil {
+		defMonitor.IncService()
+		return
+	}
 	systemMonitor.IncService()
 }
 
 // DecService : 减少一个服务
 func DecService() {
+	if systemMonitor == nil {
+		defMonitor.DecService()
+		return
+	}
 	systemMonitor.DecService()
 }
 
 // WaitService : 等待所有服务结束
 func WaitService() {
+	if systemMonitor == nil {
+		defMonitor.WaitService()
+		return
+	}
 	systemMonitor.WaitService()
 }
