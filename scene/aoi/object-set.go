@@ -36,7 +36,7 @@ func (oset *objectSet) ToArray() []uint32 {
 }
 
 func (oset *objectSet) Rest() {
-	if oset.count > 100 {
+	if oset.count > 32 {
 		if oset.num > 0 {
 			oset.set = make(map[uint32]interface{}, oset.num)
 		} else {
