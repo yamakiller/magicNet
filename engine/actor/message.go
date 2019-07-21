@@ -1,6 +1,6 @@
 package actor
 
-import "magicNet/engine/mailbox"
+import "github.com/yamakiller/magicNet/engine/mailbox"
 
 // AutoReceiveMessage ： 自动接收消息
 type AutoReceiveMessage interface {

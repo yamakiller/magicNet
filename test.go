@@ -1,9 +1,9 @@
 package main
 
 import (
-	"magicNet/core"
-	"magicNet/core/frame"
-	"magicNet/core/launch"
+	"github.com/yamakiller/magicNet/core"
+	"github.com/yamakiller/magicNet/core/frame"
+	"github.com/yamakiller/magicNet/core/launch"
 )
 
 func main() {

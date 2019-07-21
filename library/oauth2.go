@@ -1,9 +1,11 @@
 package library
 
 import (
-	"magicNet/engine/logger"
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/logger"
 
 	"github.com/dgrijalva/jwt-go"
 	"gopkg.in/oauth2.v3"
@@ -85,17 +87,34 @@ func (oa *OAuth2) RegisterClient(id string, secret string, domain string, userid
 }
 
 // RegisterAuth2Method : 注册受保护的方法
-func (oa *OAuth2) RegisterAuth2Method(method *HTTPSrvMethod, pattern string, httpMetod string, f HTTPSrvFunc) {
-	method.RegisterMethod(pattern, httpMetod, validateToken(f, oa.s))
+func (oa *OAuth2) RegisterAuth2Method(method IHTTPSrvMethod, pattern string, httpMetod string, f HTTPSrvFunc) {
+	method.RegisterMethod(pattern, httpMetod, validateToken(method, f, oa.s))
 }
 
-func validateToken(f HTTPSrvFunc, srv *server.Server) HTTPSrvFunc {
+// RegisterAuth2MethodJS : 注册受保护的JS方法
+func (oa *OAuth2) RegisterAuth2MethodJS(method IHTTPSrvMethod, pattern string, httpMetod string, f string) {
+	method.RegisterMethod(pattern, httpMetod, validateToken(method, f, oa.s))
+}
+
+//HTTPSrvFunc
+func validateToken(method IHTTPSrvMethod, f interface{}, srv *server.Server) HTTPSrvFunc {
 	return HTTPSrvFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := srv.ValidationBearerToken(r)
+		/*_, err := srv.ValidationBearerToken(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		}*/
+
+		if v, ok := f.(string); ok {
+			fmt.Println("run js 1")
+			if jsm, jsmok := method.(*HTTPSrvMethodJS); jsmok {
+				fmt.Println("run js 2")
+				jsm.runJs(v, w, r)
+			}
 		}
-		f(w, r)
+
+		if v, ok := f.(func(http.ResponseWriter, *http.Request)); ok {
+			v(w, r)
+		}
 	})
 }

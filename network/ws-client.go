@@ -1,8 +1,8 @@
 package network
 
 import (
-	"magicNet/engine/actor"
-	"magicNet/timer"
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/timer"
 
 	"github.com/gorilla/websocket"
 )

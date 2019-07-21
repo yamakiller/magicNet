@@ -2,7 +2,8 @@ package stack
 
 import (
 	"errors"
-	"magicNet/engine/files"
+
+	"github.com/yamakiller/magicNet/engine/files"
 
 	"github.com/robertkrimen/otto"
 )

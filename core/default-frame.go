@@ -1,7 +1,7 @@
 package core
 
 import (
-	"magicNet/core/frame"
+	"github.com/yamakiller/magicNet/core/frame"
 )
 
 // DefaultFrame : 默认框架

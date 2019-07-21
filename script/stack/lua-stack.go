@@ -2,10 +2,11 @@ package stack
 
 import (
 	"fmt"
-	"magicNet/engine/files"
-	"magicNet/engine/logger"
-	"magicNet/engine/util"
 	"strings"
+
+	"github.com/yamakiller/magicNet/engine/files"
+	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/engine/util"
 
 	"github.com/yamakiller/mgolua/mlua"
 )

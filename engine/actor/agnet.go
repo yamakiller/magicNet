@@ -1,7 +1,7 @@
 package actor
 
 import (
-	"magicNet/engine/mailbox"
+	"github.com/yamakiller/magicNet/engine/mailbox"
 )
 
 // MakeFunc : 创建ActorContext函数

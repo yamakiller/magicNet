@@ -1,7 +1,7 @@
 package jslib
 
 import (
-	"magicNet/script/stack"
+	"github.com/yamakiller/magicNet/script/stack"
 
 	"github.com/robertkrimen/otto"
 )

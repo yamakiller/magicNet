@@ -1,8 +1,9 @@
 package overload
 
 import (
-	"magicNet/engine/util"
 	"sync"
+
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 // Queue : 无上限队列

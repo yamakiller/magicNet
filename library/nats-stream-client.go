@@ -2,9 +2,10 @@ package library
 
 import (
 	"fmt"
-	"magicNet/engine/actor"
-	"magicNet/engine/logger"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/engine/logger"
 
 	stan "github.com/nats-io/go-nats-streaming"
 )

@@ -2,10 +2,11 @@ package network
 
 import (
 	"errors"
-	"magicNet/engine/actor"
-	"magicNet/engine/util"
 	"net"
 	"sync/atomic"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 const (

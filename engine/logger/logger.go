@@ -199,9 +199,9 @@ func (log *LogContext) write(msg *Event) {
 
 func (log *LogContext) getPrefix(owner uint32) string {
 	if owner == 0 {
-		return "[main]"
+		return "[&main]"
 	}
-	return fmt.Sprintf("%08x", owner)
+	return fmt.Sprintf("[&%08x]", owner)
 }
 
 func (log *LogContext) push(data Event) {

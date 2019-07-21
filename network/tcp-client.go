@@ -1,9 +1,10 @@
 package network
 
 import (
-	"magicNet/engine/actor"
-	"magicNet/timer"
 	"net"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/timer"
 )
 
 type tcpClient struct {

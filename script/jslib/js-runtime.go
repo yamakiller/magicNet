@@ -1,8 +1,9 @@
 package jslib
 
 import (
-	"magicNet/engine/files"
 	"runtime"
+
+	"github.com/yamakiller/magicNet/engine/files"
 
 	"github.com/robertkrimen/otto"
 )

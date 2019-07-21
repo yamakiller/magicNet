@@ -2,8 +2,9 @@ package library
 
 import (
 	"fmt"
-	"magicNet/engine/util"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/util"
 
 	"github.com/gomodule/redigo/redis"
 )

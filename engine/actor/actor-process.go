@@ -4,13 +4,14 @@ package actor
  * @Author: mirliang@my.cn
  * @Date: 2019年07月05日 18:00:31
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月09日 10:09:02
+ * @LastEditTime: 2019年07月21日 10:19:54
  * @Description:Actor 处理消息处理模块
  */
 
 import (
-	"magicNet/engine/mailbox"
 	"sync/atomic"
+
+	"github.com/yamakiller/magicNet/engine/mailbox"
 )
 
 // AtrProcess : Actor 处理模块

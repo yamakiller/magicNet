@@ -1,12 +1,13 @@
 package actor
 
 import (
-	"magicNet/engine/logger"
-	"magicNet/engine/util"
 	"strings"
 	"sync/atomic"
 	"time"
 	"unsafe"
+
+	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 /***************************************

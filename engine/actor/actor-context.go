@@ -4,14 +4,15 @@ package actor
  * @Author: mirliang@my.cn
  * @Date: 2019年07月05日 19:16:28
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月11日 21:39:28
+ * @LastEditTime: 2019年07月21日 10:19:50
  * @Description: Actor Context 对象
  */
 
 import (
-	"magicNet/engine/logger"
-	"magicNet/engine/util"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/engine/util"
 
 	"github.com/emirpasic/gods/stacks/linkedliststack"
 )

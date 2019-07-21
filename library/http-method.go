@@ -1,11 +1,13 @@
 package library
 
 import (
-	"magicNet/engine/util"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 //HTTPSrvFunc : http 服务函数
@@ -40,6 +42,7 @@ func NewHTTPSrvMethod() IHTTPSrvMethod {
 }
 
 func (hsm *HTTPSrvMethod) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("hh-", r.Method)
 	f := hsm.match(r.RequestURI, r.Method)
 	if f == nil {
 		w.WriteHeader(http.StatusNotFound)

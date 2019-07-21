@@ -1,8 +1,9 @@
 package script
 
 import (
-	"magicNet/script/jslib"
-	"magicNet/script/stack"
+	"github.com/yamakiller/magicNet/script/stack"
+
+	"github.com/yamakiller/magicNet/script/jslib"
 )
 
 // NewJSStack : 创建爱你一个js虚拟机

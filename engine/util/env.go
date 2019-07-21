@@ -1,8 +1,8 @@
 package util
 
 import (
+	"fmt"
 	"io/ioutil"
-	"magicNet/engine/logger"
 	"os"
 	"reflect"
 )
@@ -12,28 +12,25 @@ var (
 )
 
 // LoadEnv : 载入环境变量配置信息
-func LoadEnv(filename string) int {
+func LoadEnv(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
-		logger.Error(0, "open env config fail:%s", filename)
-		return -1
+		return fmt.Errorf("open env config fail:%s", filename)
 	}
 	defer f.Close()
 	contents, err := ioutil.ReadAll(f)
 	if err != nil {
-		logger.Error(0, "read env config fail:%s", err.Error())
-		return -1
+		return fmt.Errorf("read env config fail:%s", err.Error())
 	}
 
 	instEnv = make(map[string]interface{})
 	err = JSONUnSerialize(contents, &instEnv)
 	if err != nil {
 		instEnv = nil
-		logger.Error(0, "env unserialize fail:%s", err.Error())
-		return -1
+		return fmt.Errorf("env unserialize fail:%s", err.Error())
 	}
 
-	return 0
+	return nil
 }
 
 // UnLoadEnv : 卸载载入的环境变量

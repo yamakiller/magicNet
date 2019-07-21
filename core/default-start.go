@@ -2,10 +2,11 @@ package core
 
 import (
 	"flag"
-	"magicNet/engine/files"
-	"magicNet/engine/logger"
 	"os"
 	"runtime"
+
+	"github.com/yamakiller/magicNet/engine/files"
+	"github.com/yamakiller/magicNet/engine/logger"
 
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"

@@ -2,10 +2,11 @@ package aoi
 
 import (
 	"container/list"
-	"magicNet/engine/util"
 	"math"
 	"reflect"
 	"unsafe"
+
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 const (

@@ -3,13 +3,14 @@ package network
 import (
 	"errors"
 	"fmt"
-	"magicNet/engine/actor"
-	"magicNet/engine/util"
-	"magicNet/timer"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/timer"
 )
 
 type udpSocket struct {

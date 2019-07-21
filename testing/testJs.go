@@ -2,7 +2,8 @@ package testing
 
 import (
 	"fmt"
-	"magicNet/script"
+
+	"github.com/yamakiller/magicNet/script"
 )
 
 // TestJSStack : xxx

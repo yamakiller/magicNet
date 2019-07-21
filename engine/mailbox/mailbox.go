@@ -4,14 +4,15 @@ package mailbox
  * @Author: mirliang@my.cn
  * @Date: 2019年07月04日 20:34:38
  * @LastEditors: mirliang@my.cn
- * @LastEditTime: 2019年07月09日 10:08:39
+ * @LastEditTime: 2019年07月21日 10:20:27
  * @Description: Actor 的消息队列模块
  */
 
 import (
-	"magicNet/engine/util"
 	"runtime"
 	"sync/atomic"
+
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 // Statistics : 统计接口

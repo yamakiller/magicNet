@@ -1,8 +1,9 @@
 package core
 
 import (
-	"magicNet/engine/monitor"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/monitor"
 )
 
 // DefaultLoop : 默认主循环体

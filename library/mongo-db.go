@@ -3,9 +3,10 @@ package library
 import (
 	"context"
 	"fmt"
-	"magicNet/engine/util"
 	"sync"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/util"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

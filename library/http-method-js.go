@@ -2,12 +2,13 @@ package library
 
 import (
 	"fmt"
-	"magicNet/engine/files"
-	"magicNet/script"
-	"magicNet/script/stack"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/yamakiller/magicNet/engine/files"
+	"github.com/yamakiller/magicNet/script"
+	"github.com/yamakiller/magicNet/script/stack"
 
 	"github.com/robertkrimen/otto"
 )
@@ -92,7 +93,10 @@ func (hsm *HTTPSrvMethodJS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if v, ok := f.(string); ok {
 		hsm.runJs(v, w, r)
-	} else if v, ok := f.(HTTPSrvFunc); ok {
+		return
+	}
+
+	if v, ok := f.(func(http.ResponseWriter, *http.Request)); ok {
 		v(w, r)
 	}
 }

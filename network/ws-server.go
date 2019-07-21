@@ -1,12 +1,13 @@
 package network
 
 import (
-	"magicNet/engine/actor"
-	"magicNet/engine/logger"
-	"magicNet/engine/util"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/engine/util"
 
 	"github.com/gorilla/websocket"
 )

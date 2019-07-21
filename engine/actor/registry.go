@@ -1,9 +1,10 @@
 package actor
 
 import (
-	"magicNet/engine/util"
 	"sync"
 	"sync/atomic"
+
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 type registryValue struct {

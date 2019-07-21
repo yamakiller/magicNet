@@ -2,12 +2,13 @@ package debug
 
 import (
 	"fmt"
-	"magicNet/core/version"
 	"os"
 	"runtime"
 	"runtime/trace"
 	"strings"
 	"time"
+
+	"github.com/yamakiller/magicNet/core/version"
 )
 
 // TraceDebug : Debug 跟踪器

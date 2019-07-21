@@ -2,11 +2,12 @@ package network
 
 import (
 	"errors"
-	"magicNet/engine/actor"
-	"magicNet/timer"
 	"net"
 	"sync"
 	"sync/atomic"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/timer"
 )
 
 type sServer struct {

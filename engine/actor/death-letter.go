@@ -1,9 +1,9 @@
 package actor
 
 import (
-	"magicNet/engine/evtchan"
-	"magicNet/engine/logger"
-	"magicNet/engine/util"
+	"github.com/yamakiller/magicNet/engine/evtchan"
+	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 type deathLetterProcess struct{}

@@ -4,8 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"magicNet/core/version"
 	"os"
+
+	"github.com/yamakiller/magicNet/core/version"
 )
 
 const (

@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "F:\\workspace\\GoSrc\\src\\magicNet",
+            "program": "F:\\workspace\\GoSrc\\src\\github.com\\yamakiller\\magicNet",
             "env": {},
             "args": [],
             "showLog": true,

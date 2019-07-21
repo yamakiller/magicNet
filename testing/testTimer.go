@@ -1,9 +1,10 @@
 package testing
 
 import (
-	"magicNet/engine/monitor"
-	"magicNet/timer"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/monitor"
+	"github.com/yamakiller/magicNet/timer"
 )
 
 func TestTimer() {

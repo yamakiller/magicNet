@@ -2,10 +2,11 @@ package launch
 
 import (
 	"fmt"
-	"magicNet/core/debug"
-	"magicNet/core/frame"
-	"magicNet/timer"
 	"os"
+
+	"github.com/yamakiller/magicNet/core/debug"
+	"github.com/yamakiller/magicNet/core/frame"
+	"github.com/yamakiller/magicNet/timer"
 )
 
 // Launch : 系统启动器

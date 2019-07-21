@@ -1,13 +1,14 @@
 package service
 
 import (
-	"magicNet/engine/actor"
-	"magicNet/engine/logger"
-	"magicNet/library"
 	"net"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/library"
 )
 
 //tcpKeepAliveListener : 重载net/http tcpKeepAliveListener
@@ -38,7 +39,7 @@ type MonitorService struct {
 	MakerMethod MakeHTTPMethod
 	CertFile    string
 	KeyFile     string
-	Regiter     func()
+	Regiter     func(pid *actor.PID, m library.IHTTPSrvMethod)
 
 	isShutdown bool
 	httpErr    error
@@ -48,8 +49,15 @@ type MonitorService struct {
 	httpHandle *http.Server
 }
 
+// Init : 初始化服务
+func (ms *MonitorService) Init() {
+	ms.Service.Init()
+	ms.RegisterMethod(&actor.Started{}, ms.Started)
+	ms.RegisterMethod(&actor.Stopped{}, ms.Stoped)
+}
+
 // Started : 监视器启动函数
-func (ms *MonitorService) Started(context actor.Context) {
+func (ms *MonitorService) Started(context actor.Context, message interface{}) {
 	ms.isShutdown = false
 	ms.httpMutex = http.NewServeMux()
 	ms.httpHandle = &http.Server{Addr: ms.Addr, Handler: ms.httpMutex}
@@ -62,24 +70,28 @@ func (ms *MonitorService) Started(context actor.Context) {
 
 	if ms.OAuto2 != nil {
 		ms.OAuto2.Init(ms.httpMethod)
+		logger.Info(context.Self().ID, "OAuto2 Config Auth-token-exp:%d Sec", ms.OAuto2.TokenExp)
+		logger.Info(context.Self().ID, "OAuto2 Config Auth-refresh-token-exp:%d Sec", ms.OAuto2.RefreshTokenExp)
+		logger.Info(context.Self().ID, "OAuto2 Config Auth-is-generate-refresh-token:%v Sec", ms.OAuto2.IsGenerateRefresh)
+		logger.Info(context.Self().ID, "OAuto2 Config S256key:%s", ms.OAuto2.S256Key)
+		logger.Info(context.Self().ID, "OAuto2 Config Access-token-url:%s", ms.OAuto2.AccessURI)
 	}
 
 	if ms.Regiter != nil {
-		ms.Regiter()
+		ms.Regiter(context.Self(), ms.httpMethod)
 	}
 
 	ln, err := ms.listen()
 	ms.httpErr = err
 	if ms.httpErr != nil {
-		logger.Error(context.Self().ID, "monitor %s service start fail:%v", ms.Proto, ms.httpErr)
+		logger.Error(context.Self().ID, "%s %s service start fail:%v", ms.name, ms.Proto, ms.httpErr)
 		goto end_lable
 	}
 
-	logger.Info(context.Self().ID, "monitor %s service start success[addr:%s]", ms.Proto, ms.Addr)
-	if err != nil {
+	logger.Info(context.Self().ID, "%s %s service start success[addr:%s]", ms.name, ms.Proto, ms.Addr)
+	if err == nil {
 		ms.httpWait.Add(1)
 		go func() {
-
 			for {
 				if ms.isShutdown {
 					break
@@ -101,16 +113,16 @@ func (ms *MonitorService) Started(context actor.Context) {
 		}()
 	}
 end_lable:
-	ms.Service.Started(context)
+	ms.Service.Started(context, message)
 }
 
 // Stoped : 停止服务
-func (ms *MonitorService) Stoped(context actor.Context) {
+func (ms *MonitorService) Stoped(context actor.Context, message interface{}) {
 	err := ms.httpHandle.Close()
 	if err != http.ErrServerClosed {
 		logger.Warning(context.Self().ID, "monitor service close error:%v", err)
 	}
-	ms.Service.Stoped(context)
+	ms.Service.Stoped(context, message)
 	//!位置可以考虑一下
 	ms.httpMethod.Close()
 }

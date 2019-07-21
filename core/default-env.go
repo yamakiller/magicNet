@@ -3,8 +3,8 @@ package core
 import (
 	"errors"
 	"flag"
-	"fmt"
-	"magicNet/engine/util"
+
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 // DefaultEnv : 默认的环境变量管理器
@@ -19,8 +19,8 @@ func (env *DefaultEnv) LoadEnv() error {
 		return errors.New("enter the environment variable file path  -e <filePath>")
 	}
 
-	if util.LoadEnv(configPath) != 0 {
-		return errors.New(fmt.Sprint("failed to open environment variable configuration file:", configPath))
+	if err := util.LoadEnv(configPath); err != nil {
+		return err
 	}
 
 	return nil

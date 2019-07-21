@@ -1,11 +1,12 @@
 package testing
 
 import (
-	"magicNet/engine/actor"
-	"magicNet/engine/logger"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/engine/logger"
 )
 
 var wait sync.WaitGroup

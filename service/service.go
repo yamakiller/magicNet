@@ -1,11 +1,13 @@
 package service
 
 import (
-	"magicNet/engine/actor"
-	"magicNet/engine/logger"
-	"magicNet/engine/util"
+	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/engine/util"
 )
 
 // MethodFunc : 服务方法函数
@@ -19,9 +21,10 @@ type IService interface {
 	Key() string
 	ID() uint32
 
-	Started(context actor.Context)
-	Stoped(context actor.Context)
-	Terminated(context actor.Context)
+	//Started(context actor.Context)
+	//Stoped(context actor.Context)
+	//Terminated(context actor.Context)
+	Init()
 	Shutdown()
 
 	RegisterMethod(key interface{}, method MethodFunc)
@@ -39,19 +42,19 @@ type Service struct {
 	method map[interface{}]MethodFunc
 }
 
+// Init : 初始化服务
+func (srv *Service) Init() {
+	srv.method = make(map[interface{}]MethodFunc, 16)
+	//srv.RegisterMethod(&actor.Started{}, srv.Started)
+	//srv.RegisterMethod(&actor.Stopped{}, srv.Stoped)
+	srv.RegisterMethod(&actor.Terminated{}, srv.Terminated)
+}
+
 // Receive : 接收消息
 func (srv *Service) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
-	case *actor.Started:
-		srv.Started(context)
-		break
-	case *actor.Stopped:
-		srv.Stoped(context)
-		break
-	case *actor.Terminated:
-		srv.Terminated(context)
 	default:
-		f, ok := srv.method[msg]
+		f, ok := srv.method[reflect.TypeOf(msg)]
 		if ok {
 			f(context, msg)
 			break
@@ -61,7 +64,7 @@ func (srv *Service) Receive(context actor.Context) {
 }
 
 // Started : 服务的启动函数
-func (srv *Service) Started(context actor.Context) {
+func (srv *Service) Started(context actor.Context, message interface{}) {
 	srv.pid = context.Self()
 	srv.name = srv.name + "$" + srv.pid.String()
 	if srv.wait != nil {
@@ -70,14 +73,14 @@ func (srv *Service) Started(context actor.Context) {
 }
 
 // Stoped : 服务停止收尾处理函数
-func (srv *Service) Stoped(context actor.Context) {
+func (srv *Service) Stoped(context actor.Context, message interface{}) {
 	for k := range srv.method {
 		delete(srv.method, k)
 	}
 }
 
 // Terminated : 服务被终止可以被销毁
-func (srv *Service) Terminated(context actor.Context) {
+func (srv *Service) Terminated(context actor.Context, message interface{}) {
 	if srv.wait != nil {
 		srv.wait.Done()
 	}
@@ -114,7 +117,7 @@ func (srv *Service) ID() uint32 {
 
 // RegisterMethod : 注册(约定/协议)方法
 func (srv *Service) RegisterMethod(key interface{}, method MethodFunc) {
-	srv.method[key] = method
+	srv.method[reflect.TypeOf(key)] = method
 }
 
 func (srv *Service) withName(n string) {
