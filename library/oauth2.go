@@ -1,7 +1,6 @@
 package library
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -61,12 +60,12 @@ func (oa *OAuth2) Init(method IHTTPSrvMethod) {
 	oa.s.SetClientInfoHandler(server.ClientFormHandler)
 	oa.m.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
 
-	method.RegisterMethod(oa.AccessURI, "get|put|post", func(w http.ResponseWriter, r *http.Request) {
+	method.RegisterMethod(oa.AccessURI, "get|put|post", HTTPSrvFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := oa.s.HandleTokenRequest(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-	})
+	}))
 }
 
 // SetErrorHandle : xxx
@@ -104,11 +103,8 @@ func validateToken(method IHTTPSrvMethod, f interface{}, srv *server.Server) HTT
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}*/
-
 		if v, ok := f.(string); ok {
-			fmt.Println("run js 1")
 			if jsm, jsmok := method.(*HTTPSrvMethodJS); jsmok {
-				fmt.Println("run js 2")
 				jsm.runJs(v, w, r)
 			}
 		}

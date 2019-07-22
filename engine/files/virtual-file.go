@@ -3,6 +3,7 @@ package files
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 )
@@ -53,6 +54,20 @@ var (
 // WithRootPath : 设置虚拟文件系统根目录
 func WithRootPath(rootPath string) {
 	defaultV.vpath = rootPath
+	fmt.Println(runtime.GOOS)
+	if runtime.GOOS == "windows" {
+		defaultV.vpath = strings.ReplaceAll(defaultV.vpath, "/", "\\")
+		last := defaultV.vpath[len(defaultV.vpath)-1:]
+		if last != "\\" {
+			defaultV.vpath += "\\"
+		}
+	} else {
+		defaultV.vpath = strings.ReplaceAll(defaultV.vpath, "\\", "/")
+		last := defaultV.vpath[len(defaultV.vpath)-1:]
+		if last != "/" {
+			defaultV.vpath += "/"
+		}
+	}
 }
 
 // IsFileExist : 判断在根目录下此文件是否存在
@@ -75,10 +90,21 @@ func IsFileExist(filename string) bool {
 
 // GetFullPathForFilename : 获取文件的全路径
 func GetFullPathForFilename(filename string) string {
-	if strings.HasPrefix(filename, "./") {
-		filename = strings.Replace(filename, "./", "", 1)
-	} else if strings.HasPrefix(filename, "/") {
-		filename = strings.Replace(filename, "/", "", 1)
+	check := ""
+	if runtime.GOOS == "windows" {
+		check = "\\"
+		filename = strings.ReplaceAll(filename, "/", check)
+
+	} else {
+		check = "/"
+		filename = strings.ReplaceAll(filename, "\\", check)
+	}
+
+	first := filename[0:1]
+	if first == check {
+		filename = filename[1:]
+	} else if first == "." && len(filename) > 2 {
+		filename = filename[2:]
 	}
 
 	return defaultV.vpath + filename
@@ -89,6 +115,7 @@ func GetCachedInfo() (int, int64) {
 	return defaultV.cachedFile, defaultV.cachedMem
 }
 
+// GetVirtualPath : 获取虚拟文件系统默认根路径
 func GetVirtualPath() string {
 	return defaultV.vpath
 }

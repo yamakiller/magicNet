@@ -1,7 +1,6 @@
 package library
 
 import (
-	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -42,7 +41,6 @@ func NewHTTPSrvMethod() IHTTPSrvMethod {
 }
 
 func (hsm *HTTPSrvMethod) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("hh-", r.Method)
 	f := hsm.match(r.RequestURI, r.Method)
 	if f == nil {
 		w.WriteHeader(http.StatusNotFound)
