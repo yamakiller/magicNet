@@ -54,18 +54,6 @@ type coObject struct {
 	id    int
 }
 
-/*var (
-	taskLimit int
-	maxCoNum  int
-	minCoNum  int
-
-	taskQueue chan task
-	sep       int
-	cos       []coObject
-	wait      sync.WaitGroup
-	quit      chan int
-)*/
-
 // CoroutinePool : 协程池
 type CoroutinePool struct {
 	TaskLimit int

@@ -1,9 +1,10 @@
 package core
 
 import (
-	"flag"
 	"os"
 	"runtime"
+
+	"github.com/yamakiller/magicNet/engine/util"
 
 	"github.com/yamakiller/magicNet/engine/files"
 	"github.com/yamakiller/magicNet/engine/logger"
@@ -19,18 +20,27 @@ type DefaultStart struct {
 
 // Init : 初始化系统
 func (s *DefaultStart) Init() error {
-	logPath := flag.String("logPath", "", "log file path")
-	logLevl := flag.Int("logLevel", int(logger.TRACELEVEL), "log level")
-	logSize := flag.Int("logSize", 1024, "log mailbox size")
-	virDir := flag.String("v", "", "virtual root directory")
 
+	coLimit := util.GetArgInt("colimit", util.MCCOPOOLDEFLIMIT)
+	coMax := util.GetArgInt("comax", util.MCCOPOOLDEFMAX)
+	coMin := util.GetArgInt("comin", util.MCCOPOOLDEFMIN)
+
+	logPath := util.GetArgString("logPath", "")
+	logLevl := util.GetArgInt("logLevel", int(logger.TRACELEVEL))
+	logSize := util.GetArgInt("logSize", 1024)
+	virDir := util.GetArgString("dir", "")
+
+	//初始化协程池
+	util.InitCoPool(coLimit, coMax, coMin)
 	//设置系统日志
 	s.sysLogger = logger.New(func() logger.Logger {
-		l := logger.LogContext{FilName: *logPath,
+		l := logger.LogContext{FilName: logPath,
 			LogHandle:  logrus.New(),
-			LogMailbox: make(chan logger.Event, *logSize),
+			LogMailbox: make(chan logger.Event, logSize),
 			LogStop:    make(chan struct{})}
-		l.LogHandle.SetLevel(logrus.Level(*logLevl))
+
+		l.LogHandle.SetLevel(logrus.Level(logLevl))
+
 		formatter := new(prefixed.TextFormatter)
 		formatter.FullTimestamp = true
 		if runtime.GOOS == "windows" {
@@ -48,15 +58,14 @@ func (s *DefaultStart) Init() error {
 	//---------------------
 	logger.WithDefault(s.sysLogger)
 	// 设置虚拟文件系统根目录
-	if *virDir == "" {
+	if virDir == "" {
 		dir, err := os.Getwd()
 		if err != nil {
 			return err
 		}
-
 		files.WithRootPath(dir)
 	} else {
-		files.WithRootPath(*virDir)
+		files.WithRootPath(virDir)
 	}
 
 	return nil
@@ -69,4 +78,5 @@ func (s *DefaultStart) Destory() {
 	}
 
 	files.Close()
+	util.DestoryCoPool()
 }

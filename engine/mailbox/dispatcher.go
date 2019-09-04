@@ -1,15 +1,20 @@
 package mailbox
 
+import (
+	"github.com/yamakiller/magicNet/engine/util"
+)
+
 // Dispatcher : 分发器接口
 type Dispatcher interface {
-	Schedule(fn func())
+	Schedule(fn func([]interface{}))
 	Throughput() int
 }
 
 type goroutineDispatcher int
 
-func (d goroutineDispatcher) Schedule(fn func()) {
-	go fn()
+func (d goroutineDispatcher) Schedule(fn func([]interface{})) {
+	//! 修改为协程池
+	util.Go(fn) //go fn()
 }
 
 func (d goroutineDispatcher) Throughput() int {
@@ -23,8 +28,8 @@ func NewGoroutineDispatcher(throughput int) Dispatcher {
 
 type synchronizedDispatcher int
 
-func (synchronizedDispatcher) Schedule(fn func()) {
-	fn()
+func (synchronizedDispatcher) Schedule(fn func([]interface{})) {
+	fn(nil)
 }
 
 func (d synchronizedDispatcher) Throughput() int {
