@@ -1,6 +1,7 @@
 package launch
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -11,10 +12,15 @@ import (
 
 // Launch : 系统启动器
 func Launch(f frame.MakeFrame) {
+	fme := f()
+	fme.VarValue()
+	flag.Parse()
+	fme.LineOption()
+
 	debugTrace := debug.TraceDebug{}
 	debugTrace.Start()
 	defer debugTrace.Stop()
-	fme := f()
+
 	timer.StartService()
 
 	if err := fme.Init(); err != nil {

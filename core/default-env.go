@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"flag"
 
 	"github.com/yamakiller/magicNet/engine/util"
 )
@@ -13,8 +12,7 @@ type DefaultEnv struct {
 
 // LoadEnv : 载入环境变量
 func (env *DefaultEnv) LoadEnv() error {
-	configPath := ""
-	flag.StringVar(&configPath, "e", "./env/magicnet.env", "config full path")
+	configPath := util.GetArgString("e", "./env/magicnet.env")
 	if configPath == "" {
 		return errors.New("enter the environment variable file path  -e <filePath>")
 	}

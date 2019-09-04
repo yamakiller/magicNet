@@ -23,6 +23,7 @@ type startPart interface {
 }
 
 type commandLinePart interface {
+	VarValue()
 	LineOption()
 }
 

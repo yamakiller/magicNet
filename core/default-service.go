@@ -18,14 +18,16 @@ type DefaultService struct {
 
 // InitService : 初始化服务模块
 func (ds *DefaultService) InitService() error {
-	logger.Info(0, "Service Start:")
-	ds.spawnMonitorService()
-	return nil
+	return ds.spawnMonitorService()
 }
 
 // CloseService : 关闭服务系统
 func (ds *DefaultService) CloseService() {
+	if ds.monitorSrv == nil {
+		return
+	}
 
+	ds.monitorSrv.Shutdown()
 }
 
 func (ds *DefaultService) spawnMonitorService() error {
