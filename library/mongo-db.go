@@ -36,7 +36,7 @@ func (mgd *mongoClient) connect(host []string,
 		opt.ApplyURI(uri),
 		opt.SetHosts(host),
 		opt.SetHeartbeatInterval(time.Duration(hbSec)*time.Second),
-		opt.SetMaxPoolSize(poolSize),
+		opt.SetMaxPoolSize(uint64(poolSize)),
 		opt.SetMaxConnIdleTime(time.Duration(idleSec)*time.Second),
 		opt.SetSocketTimeout(time.Duration(sckTimeSec)*time.Second))
 	if err != nil {

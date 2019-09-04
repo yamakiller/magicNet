@@ -54,7 +54,6 @@ var (
 // WithRootPath : 设置虚拟文件系统根目录
 func WithRootPath(rootPath string) {
 	defaultV.vpath = rootPath
-	fmt.Println(runtime.GOOS)
 	if runtime.GOOS == "windows" {
 		defaultV.vpath = strings.ReplaceAll(defaultV.vpath, "/", "\\")
 		last := defaultV.vpath[len(defaultV.vpath)-1:]

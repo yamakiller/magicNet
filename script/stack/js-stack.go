@@ -9,7 +9,9 @@ import (
 )
 
 var (
+	// ErrJSNotFindFile :
 	ErrJSNotFindFile = errors.New("script file does not exist")
+	// ErrJSNotFileData :
 	ErrJSNotFileData = errors.New("did not get file data")
 )
 

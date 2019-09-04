@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 )
 

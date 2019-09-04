@@ -213,12 +213,12 @@ func (S *LuaStack) loadBuffer(chunk *byte, chunkSize uint, chunkName string) int
 
 	if r != 0 {
 		switch r {
-		case int(mlua.LUA_ERRSYNTAX):
+		case int(mlua.LUAERRSYNTAX):
 			//错误日志
 			break
-		case int(mlua.LUA_ERRMEM):
+		case int(mlua.LUAERRMEM):
 			break
-		case int(mlua.LUA_ERRFILE):
+		case int(mlua.LUAERRFILE):
 			break
 		default:
 			break

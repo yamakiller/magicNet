@@ -93,7 +93,7 @@ func (m *defaultMailbox) schedule() {
 	}
 }
 
-func (m *defaultMailbox) processMessages() {
+func (m *defaultMailbox) processMessages([]interface{}) {
 process_lable:
 	m.run()
 
