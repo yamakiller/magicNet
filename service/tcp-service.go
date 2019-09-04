@@ -55,12 +55,5 @@ func (ts *TCPService) Stoped(context actor.Context, message interface{}) {
 
 // Shutdown 终止服务
 func (ts *TCPService) Shutdown() {
-	//if ms.pid == nil {
-	//	return
-	//}
-
-	/*ms.isShutdown = true
-	ms.pid.Stop()
-	ms.httpWait.Wait()
-	ms.wait.Wait()*/
+	ts.Service.Shutdown()
 }
