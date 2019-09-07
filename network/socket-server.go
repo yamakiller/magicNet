@@ -56,8 +56,8 @@ func (ss *sServer) accept(conn interface{},
 
 	ss.conns.Store(handle, int32(1))
 
-	ip, _ := net.ResolveIPAddr(network, address)
-	actor.DefaultSchedulerContext.Send(ss.operator, &NetAccept{Handle: handle, Addr: ip.IP.To16()})
+	tpc, _ := net.ResolveTCPAddr(network, address)
+	actor.DefaultSchedulerContext.Send(ss.operator, &NetAccept{Handle: handle, Addr: tpc.IP.To16(), Port: tpc.Port})
 
 	return nil
 }
