@@ -51,6 +51,7 @@ type NetChunk struct {
 type NetAccept struct {
 	Handle int32
 	Addr   net.IP
+	Port   int
 }
 
 // NetClose : Socket 关闭消息
