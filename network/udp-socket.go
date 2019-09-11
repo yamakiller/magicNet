@@ -90,7 +90,7 @@ func (ups *udpSocket) recv() {
 
 		udpAddr, _ := net.ResolveUDPAddr(addr.Network(), addr.String())
 
-		actor.DefaultSchedulerContext.Send(ups.operator, &NetChunk{Data: inBuf, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)})
+		actor.DefaultSchedulerContext.Send(ups.operator, &NetChunk{Handle: ups.h, Data: inBuf, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)})
 	}
 read_error:
 	ups.stat = Closing

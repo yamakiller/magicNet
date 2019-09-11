@@ -65,7 +65,7 @@ func (sc *sConn) recv() {
 		sc.i.ReadBytes += uint64(n)
 		sc.i.ReadLastTime = timer.Now()
 		//数据包丢给 Actor
-		actor.DefaultSchedulerContext.Send(sc.o, &NetChunk{Data: data})
+		actor.DefaultSchedulerContext.Send(sc.o, &NetChunk{Handle: sc.h, Data: data})
 	}
 read_error:
 	sc.stat = Closing

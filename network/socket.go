@@ -42,9 +42,10 @@ const (
 
 // NetChunk : 网络数据消息
 type NetChunk struct {
-	Data []byte
-	Addr net.IP
-	Port uint16
+	Handle int32
+	Data   []byte
+	Addr   net.IP
+	Port   uint16
 }
 
 // NetAccept : 连接数据包
