@@ -19,7 +19,7 @@ type TCPService struct {
 	OnClose  MethodFunc //NetClose
 }
 
-// Init : 初始化TCP服务
+// Init TCP network service initialization
 func (ts *TCPService) Init() {
 	ts.Service.Init()
 	ts.RegisterMethod(&actor.Started{}, ts.Started)
@@ -29,7 +29,7 @@ func (ts *TCPService) Init() {
 	ts.RegisterMethod(&network.NetClose{}, ts.OnClose)
 }
 
-// Started : TCP服务启动
+// Started TCP network service is enabled
 func (ts *TCPService) Started(context actor.Context, message interface{}) {
 	logger.Info(context.Self().GetID(), "Network[TCP/IP] Service Start %s", ts.Addr)
 	sock, err := network.OperTCPListen(context.Self(), ts.Addr, ts.CCMax)
@@ -43,7 +43,7 @@ func (ts *TCPService) Started(context actor.Context, message interface{}) {
 	logger.Info(context.Self().GetID(), "Network[TCP/IP] Service Success")
 }
 
-// Stoped : TCP服务停止
+// Stoped TCP network service stops
 func (ts *TCPService) Stoped(context actor.Context, message interface{}) {
 	logger.Info(context.Self().GetID(), "Network[TCP/IP] Service Stoping %s", ts.Addr)
 	if ts.sock != 0 {
@@ -53,7 +53,7 @@ func (ts *TCPService) Stoped(context actor.Context, message interface{}) {
 	logger.Info(context.Self().GetID(), "Network[TCP/IP] Service Stoped")
 }
 
-// Shutdown 终止服务
+// Shutdown TCP network service termination
 func (ts *TCPService) Shutdown() {
 	ts.Service.Shutdown()
 }
