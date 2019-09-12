@@ -73,6 +73,11 @@ func (nh *NetHandle) GetValue() uint64 {
 	return nh.value
 }
 
+// SetValue : Set Handle Value
+func (nh *NetHandle) SetValue(v uint64) {
+	nh.value = v
+}
+
 // IsEmpty : is empty
 func (nh *NetHandle) IsEmpty() bool {
 	if nh.value == 0 {

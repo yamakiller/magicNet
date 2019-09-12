@@ -256,7 +256,7 @@ func OperWrite(handle int32, data []byte, n int) error {
 		return errors.New(ErrUnConnected)
 	}
 
-	s.s.push(&NetChunk{Data: data}, n)
+	s.s.push(&NetChunk{Handle: handle, Data: data}, n)
 
 	return nil
 }
@@ -283,7 +283,7 @@ func OperUDPWrite(handle int32, addr string, data []byte, n int) error {
 	if err != nil {
 		return err
 	}
-	s.s.push(&NetChunk{Data: data, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)}, n)
+	s.s.push(&NetChunk{Handle: handle, Data: data, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)}, n)
 
 	return nil
 }

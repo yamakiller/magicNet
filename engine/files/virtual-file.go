@@ -131,7 +131,6 @@ func GetDataFromFile(fullPath string) FileData {
 
 	defaultV.lock.Lock()
 	defer defaultV.lock.Unlock()
-
 	f, err := os.Open(fullPath)
 	if err != nil {
 		return FileData{}

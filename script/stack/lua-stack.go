@@ -1,11 +1,11 @@
 package stack
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/yamakiller/magicNet/engine/files"
-	"github.com/yamakiller/magicNet/engine/logger"
 	"github.com/yamakiller/magicNet/engine/util"
 
 	"github.com/yamakiller/mgolua/mlua"
@@ -21,6 +21,11 @@ type LuaStack struct {
 	_l *mlua.State
 }
 
+// NewLuaStack create a lua stack
+func NewLuaStack() *LuaStack {
+	return &LuaStack{_l: mlua.NewState()}
+}
+
 // GetLuaState : 获取LUA虚拟机C对象
 func (S *LuaStack) GetLuaState() *mlua.State {
 	return S._l
@@ -28,7 +33,7 @@ func (S *LuaStack) GetLuaState() *mlua.State {
 
 // AddSreachPath : 添加LUA搜索路径
 func (S *LuaStack) AddSreachPath(path string) {
-	S._l.GetGlobal("searchers")
+	S._l.GetGlobal("package")
 	S._l.GetField(-1, "path")
 	curPath := S._l.ToString(-1)
 	newPath := fmt.Sprintf("%s;%s/?.lua", curPath, path)
@@ -42,8 +47,8 @@ func (S *LuaStack) AddLuaLoader(f *mlua.LuaGoFunction) {
 	if f == nil {
 		return
 	}
-	S._l.GetGlobal("searchers")
-	S._l.GetField(-1, "loaders")
+	S._l.GetGlobal("package")
+	S._l.GetField(-1, "preload")
 
 	S._l.PushGoFunction(*f)
 	for i := S._l.RawLen(-2) + 1; i > 2; {
@@ -53,21 +58,21 @@ func (S *LuaStack) AddLuaLoader(f *mlua.LuaGoFunction) {
 	}
 	S._l.RawSetI(-2, 2)
 
-	S._l.SetField(-2, "loaders")
+	S._l.SetField(-2, "preload")
 	S._l.Pop(1)
 }
 
-// ExecuteFunction : 执行LUA函数
-func (S *LuaStack) ExecuteFunction(numArgs int) int {
+// ExecuteFunction : 执行LUA 函数
+func (S *LuaStack) ExecuteFunction(numArgs int) (int, error) {
 	funcIndex := -(numArgs + 1)
-	if !S._l.IsGFunction(funcIndex) {
+	if !S._l.IsFunction(funcIndex) {
 		S._l.Pop(numArgs + 1)
-		return 0
+		return 0, nil
 	}
 
 	traceback := 0
 	S._l.GetGlobal("__G__TRACKBACK__")
-	if !S._l.IsGFunction(-1) {
+	if !S._l.IsFunction(-1) {
 		S._l.Pop(1)
 	} else {
 		S._l.Insert(funcIndex - 1)
@@ -77,17 +82,17 @@ func (S *LuaStack) ExecuteFunction(numArgs int) int {
 	error := S._l.PCall(numArgs, 1, traceback)
 	if error != 0 {
 		if traceback == 0 {
-			logger.Error(0, S._l.ToString(-1))
+			err := S._l.ToString(-1)
 			S._l.Pop(1)
-		} else {
-			S._l.Pop(2)
+			return 0, errors.New(err)
 		}
-		return 0
+		S._l.Pop(2)
+		return 0, errors.New("lua unknown error")
 	}
 
 	ret := 0
 	if S._l.IsNumber(-1) {
-		ret = S._l.ToInteger(-1)
+		ret = int(S._l.ToInteger(-1))
 	} else if S._l.IsBoolean(-1) {
 		if S._l.ToBoolean(-1) {
 			ret = 1
@@ -101,17 +106,22 @@ func (S *LuaStack) ExecuteFunction(numArgs int) int {
 	if traceback != 0 {
 		S._l.Pop(1)
 	}
-	return ret
+
+	return ret, nil
 }
 
 // ExecuteString : 执行LUA字符串
-func (S *LuaStack) ExecuteString(codes string) int {
-	S._l.LoadString(codes)
+func (S *LuaStack) ExecuteString(codes string) (int, error) {
+	if S._l.LoadString(codes) != 0 {
+		err := errors.New(S._l.ToString(-1))
+		S._l.Pop(1)
+		return 0, err
+	}
 	return S.ExecuteFunction(0)
 }
 
 // ExecuteScriptFile ： 执行LUA脚本文件
-func (S *LuaStack) ExecuteScriptFile(fileName string) int {
+func (S *LuaStack) ExecuteScriptFile(fileName string) (int, error) {
 	tmp := fileName
 	pos := strings.LastIndex(tmp, byteLuaFileExt)
 	if pos != -1 {
@@ -129,20 +139,22 @@ func (S *LuaStack) ExecuteScriptFile(fileName string) int {
 		tmp = tmpFileName
 	} else {
 		tmpFileName = tmp + notByteLuaFileExt
-		if files.IsFileExist(tmpFileName) {
-			tmp = tmpFileName
+		if !files.IsFileExist(tmpFileName) {
+			return 0, fmt.Errorf("cannot open %s:No such file or directory", tmpFileName)
 		}
+		tmp = tmpFileName
 	}
 
 	data := files.GetDataFromFile(tmp)
-	rn := 0
-	if !data.IsNil() {
-		if S.loadBuffer(&data.GetBytes()[0], uint(data.GetSize()), tmp) == 0 {
-			rn = S.ExecuteFunction(0)
-		}
+	if data.IsNil() {
+		return 0, fmt.Errorf("%s script not executed correctly", tmp)
 	}
 
-	return rn
+	if _, err := S.loadBuffer(&data.GetBytes()[0], uint(data.GetSize()), tmp); err != nil {
+		return 0, err
+	}
+
+	return S.ExecuteFunction(0)
 }
 
 // Clean : 清空堆栈
@@ -186,13 +198,12 @@ func (S *LuaStack) PushNil() {
 }
 
 // ReLoad : 重新载入
-func (S *LuaStack) ReLoad(moduleFileName string) int {
+func (S *LuaStack) ReLoad(moduleFileName string) (int, error) {
 	if len(moduleFileName) == 0 {
-		logger.Error(0, "reload %s fail.", moduleFileName)
-		return 1
+		return 0, fmt.Errorf("reload %s fail", moduleFileName)
 	}
 
-	S._l.GetGlobal("searchers")
+	S._l.GetGlobal("package")
 	S._l.GetField(-1, "loaded")
 	S._l.PushString(moduleFileName)
 	S._l.GetTable(-2)
@@ -208,21 +219,25 @@ func (S *LuaStack) ReLoad(moduleFileName string) int {
 	return S.ExecuteString(require)
 }
 
-func (S *LuaStack) loadBuffer(chunk *byte, chunkSize uint, chunkName string) int {
+func (S *LuaStack) loadBuffer(chunk *byte, chunkSize uint, chunkName string) (int, error) {
 	r := S._l.LoadBuffer(chunk, chunkSize, chunkName)
 
 	if r != 0 {
+
+		err := S._l.ToString(-1)
+		S._l.Pop(1)
+
 		switch r {
 		case int(mlua.LUAERRSYNTAX):
-			//错误日志
-			break
+			return r, fmt.Errorf("Lua syntax error in buffer %s: %s", chunkName, err)
 		case int(mlua.LUAERRMEM):
-			break
+			return r, fmt.Errorf("Could not load Lua buffer %s", chunkName)
 		case int(mlua.LUAERRFILE):
-			break
 		default:
 			break
 		}
+
+		return r, errors.New(err)
 	}
-	return r
+	return r, nil
 }
