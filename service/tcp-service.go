@@ -31,26 +31,26 @@ func (ts *TCPService) Init() {
 
 // Started TCP network service is enabled
 func (ts *TCPService) Started(context actor.Context, message interface{}) {
-	logger.Info(context.Self().GetID(), "Network[TCP/IP] Service Start %s", ts.Addr)
+	logger.Info(context.Self().GetID(), "Network Listen [TCP/IP] Service Startup %s", ts.Addr)
 	sock, err := network.OperTCPListen(context.Self(), ts.Addr, ts.CCMax)
 	if err != nil {
-		logger.Error(context.Self().GetID(), "Network[TCP/IP] Service Start Fail:%s", err.Error())
+		logger.Error(context.Self().GetID(), "Network Listen [TCP/IP] Service Startup failed:%s", err.Error())
 		return
 	}
 
 	ts.sock = sock
 	ts.Service.Started(context, message)
-	logger.Info(context.Self().GetID(), "Network[TCP/IP] Service Success")
+	logger.Info(context.Self().GetID(), "Network Listen [TCP/IP] Service Startup completed")
 }
 
 // Stoped TCP network service stops
 func (ts *TCPService) Stoped(context actor.Context, message interface{}) {
-	logger.Info(context.Self().GetID(), "Network[TCP/IP] Service Stoping %s", ts.Addr)
+	logger.Info(context.Self().GetID(), "Network Listen [TCP/IP] Service Stoping %s", ts.Addr)
 	if ts.sock != 0 {
 		network.OperClose(ts.sock)
 		ts.sock = 0
 	}
-	logger.Info(context.Self().GetID(), "Network[TCP/IP] Service Stoped")
+	logger.Info(context.Self().GetID(), "Network Listen [TCP/IP] Service Stoped")
 }
 
 // Shutdown TCP network service termination
