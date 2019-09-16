@@ -6,13 +6,13 @@ import (
 	"github.com/yamakiller/magicNet/network"
 )
 
-// TCPService : 网络服务
+// TCPService :  TCP network listening service
 type TCPService struct {
 	Service
 	sock int32
 	//
-	Addr  string //监听地址[IP:Port]
-	CCMax int    //连接者管道缓冲区到小
+	Addr  string //listening address  [IP:Port]
+	CCMax int    //Connector pipe buffer to small
 	//
 	OnAccept MethodFunc //NetAccept
 	OnRecv   MethodFunc //NetChunk
