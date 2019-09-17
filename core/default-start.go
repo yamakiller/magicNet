@@ -4,7 +4,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/util"
 
 	"github.com/yamakiller/magicNet/engine/files"
 	"github.com/yamakiller/magicNet/engine/logger"

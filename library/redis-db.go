@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/util"
 
 	"github.com/gomodule/redigo/redis"
 )

@@ -3,7 +3,7 @@ package core
 import (
 	"errors"
 
-	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/util"
 )
 
 // DefaultEnv : 默认的环境变量管理器

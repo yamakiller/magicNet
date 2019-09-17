@@ -7,7 +7,7 @@ import (
 
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/util"
 )
 
 // MethodFunc : 服务方法函数

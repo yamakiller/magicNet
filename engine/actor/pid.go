@@ -7,7 +7,7 @@ import (
 	"unsafe"
 
 	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/util"
 )
 
 /***************************************

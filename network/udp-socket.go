@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/engine/util"
 	"github.com/yamakiller/magicNet/timer"
+	"github.com/yamakiller/magicNet/util"
 )
 
 type udpSocket struct {

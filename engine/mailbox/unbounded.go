@@ -2,7 +2,7 @@ package mailbox
 
 import (
 	"github.com/yamakiller/magicNet/engine/overload"
-	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/util"
 )
 
 type unboundedMailboxQueue struct {

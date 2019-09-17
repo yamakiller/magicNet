@@ -1,7 +1,7 @@
 package mailbox
 
 import (
-	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/util"
 )
 
 // Dispatcher : 分发器接口

@@ -6,8 +6,8 @@ import (
 	"sync/atomic"
 
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/engine/util"
 	"github.com/yamakiller/magicNet/timer"
+	"github.com/yamakiller/magicNet/util"
 )
 
 type sConn struct {

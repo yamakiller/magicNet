@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/yamakiller/magicNet/engine/util"
+	"github.com/yamakiller/magicNet/util"
 )
 
 //HTTPSrvFunc : http 服务函数

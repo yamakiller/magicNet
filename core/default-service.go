@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/engine/util"
 	"github.com/yamakiller/magicNet/library"
 	"github.com/yamakiller/magicNet/service"
+	"github.com/yamakiller/magicNet/util"
 
 	"github.com/yamakiller/magicNet/engine/logger"
 )
