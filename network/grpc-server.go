@@ -118,7 +118,7 @@ rpc_end:
 
 	rpcs.so.l.Unlock()
 
-	actor.DefaultSchedulerContext.Send(closeOperator, NetClose{Handle: closeHandle})
+	actor.DefaultSchedulerContext.Send(closeOperator, &NetClose{Handle: closeHandle})
 }
 
 func (rpcs *grpcServer) connect(operator *actor.PID, addr string) error {

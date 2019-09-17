@@ -42,7 +42,7 @@ func tcpConnRecv(s interface{}) (int, []byte, error) {
 	if !ok {
 		return 0, nil, errors.New("socket conn object exception")
 	}
-	var inBuf []byte
+	inBuf := make([]byte, 256)
 	n, err := conn.Read(inBuf)
 	if err != nil {
 		return 0, nil, err
@@ -52,15 +52,15 @@ func tcpConnRecv(s interface{}) (int, []byte, error) {
 }
 
 func tcpConnWrite(s interface{}, data []byte) (int, error) {
+
 	conn, ok := s.(*net.TCPConn)
 	if !ok {
 		return 0, errors.New("socket conn object exception")
 	}
-
+	
 	n, err := conn.Write(data)
 	if err != nil {
 		return 0, err
 	}
-
 	return n, nil
 }

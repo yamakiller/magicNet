@@ -59,7 +59,7 @@ func (srv *Service) Receive(context actor.Context) {
 			f(context, msg)
 			break
 		}
-		logger.Error(context.Self().ID, "service unknown message:%v", msg)
+		logger.Error(context.Self().ID, "service unknown message:%+v", msg)
 	}
 }
 

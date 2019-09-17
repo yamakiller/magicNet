@@ -42,9 +42,9 @@ const (
 
 // Generate : Generate Handle
 func (nh *NetHandle) Generate(gatewayID int32, worldID int32, handleID int32, sock int32) {
-	nh.value = ((uint64(gatewayID) & constNetHandleGatewayIDMask) << constNetHandleGatewayIDShift) &
-		((uint64(worldID) & constNetHandleWorldIDMask) << constNetHandleWorldIDShift) &
-		((uint64(handleID) & constNetHandleIDMask) << constNetHandleIDShift) &
+	nh.value = ((uint64(gatewayID) & constNetHandleGatewayIDMask) << constNetHandleGatewayIDShift) |
+		((uint64(worldID) & constNetHandleWorldIDMask) << constNetHandleWorldIDShift) |
+		((uint64(handleID) & constNetHandleIDMask) << constNetHandleIDShift) |
 		(uint64(sock) & constNetHandleSocketIDMask)
 }
 

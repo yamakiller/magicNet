@@ -19,22 +19,22 @@ const (
 	resAssigned = 2
 )
 
-const (
-	// ErrSocketResources : 套接字资源不足
-	ErrSocketResources = "lack of socket resources"
+var (
+	// ErrSocketResources : Insufficient socket resources
+	ErrSocketResources = errors.New("Insufficient socket resources")
 	// ErrUnknownSocket :
-	ErrUnknownSocket = "unknown socket"
+	ErrUnknownSocket = errors.New("unknown socket")
 	// ErrClosedSocket :
-	ErrClosedSocket = "socket is closed"
+	ErrClosedSocket = errors.New("socket is closed")
 	// ErrUnConnected :
-	ErrUnConnected = "socket is not connected"
+	ErrUnConnected = errors.New("socket is not connected")
 )
 
-// OperWSListen : 开启一个websocket 监听
+// OperWSListen : Open a websocket listening service and return the handle corresponding to the socket
 func OperWSListen(operator *actor.PID, addr string, outChanSize int) (int32, error) {
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
-		return h, errors.New(ErrSocketResources)
+		return h, ErrSocketResources
 	}
 
 	s.l.Lock()
@@ -56,11 +56,11 @@ func OperWSListen(operator *actor.PID, addr string, outChanSize int) (int32, err
 	return h, nil
 }
 
-// OperWSConnect : 创建一个websocket 客户端连接
+// OperWSConnect : Open an external connection to a websocket and return the handle corresponding to the socket
 func OperWSConnect(operator *actor.PID, addr string, outChanSize int) (int32, error) {
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
-		return h, errors.New(ErrSocketResources)
+		return h, ErrSocketResources
 	}
 
 	client := &wsClient{}
@@ -85,11 +85,11 @@ func OperWSConnect(operator *actor.PID, addr string, outChanSize int) (int32, er
 	return h, nil
 }
 
-// OperTCPListen : 开启一个 tcp socket 监听
+// OperTCPListen : Open a socket TCP listening service and return the handle of the socket
 func OperTCPListen(operator *actor.PID, addr string, outChanSize int) (int32, error) {
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
-		return h, errors.New(ErrSocketResources)
+		return h, ErrSocketResources
 	}
 
 	s.l.Lock()
@@ -111,11 +111,11 @@ func OperTCPListen(operator *actor.PID, addr string, outChanSize int) (int32, er
 	return h, nil
 }
 
-// OperTCPConnect : 创建一个tcp socket 客户端连接
+// OperTCPConnect : Open a TCP connection to a socket and return the handle of the socket
 func OperTCPConnect(operator *actor.PID, addr string, outChanSize int) (int32, error) {
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
-		return h, errors.New(ErrSocketResources)
+		return h, ErrSocketResources
 	}
 
 	client := &tcpClient{}
@@ -141,11 +141,11 @@ func OperTCPConnect(operator *actor.PID, addr string, outChanSize int) (int32, e
 	return h, nil
 }
 
-// OperUDPListen : 开启一个 udp socket 监听
+// OperUDPListen : Open a socket UDP listening service and return the handle of the socket
 func OperUDPListen(operator *actor.PID, addr string, outChanSize int) (int32, error) {
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
-		return h, errors.New(ErrSocketResources)
+		return h, ErrSocketResources
 	}
 
 	s.l.Lock()
@@ -169,12 +169,12 @@ func OperUDPListen(operator *actor.PID, addr string, outChanSize int) (int32, er
 	return h, nil
 }
 
-// OperUDPConnect : 创建一个udp socket 客户端连接
+// OperUDPConnect : Open the UDP client of a socket and return the handle of the socket
 func OperUDPConnect(operator *actor.PID, srcAddr string, dstAddr string, outChanSize int) (int32, error) {
 
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
-		return h, errors.New(ErrSocketResources)
+		return h, ErrSocketResources
 	}
 
 	client := &udpSocket{}
@@ -200,19 +200,19 @@ func OperUDPConnect(operator *actor.PID, srcAddr string, dstAddr string, outChan
 	return h, nil
 }
 
-// OperRPCListen 打开RPC服务
+// OperRPCListen Start an RPC service and return to handle. This RPC is based on gRPC
 func OperRPCListen(operator *actor.PID,
 	addr string,
-	reg GRpcRegister, /*(注册协议调用函数)*/
-	writeBufSize int, /*(可选项 默认:32 * 1024)*/
-	readBufSize int, /*(可选项 默认:32 * 1024)*/
-	connectionTimeout int, /*(可选项 默认:120 sec)*/
-	maxSendMessageSize int, /*(可选项 默认: math.MaxInt32)*/
-	maxReceiveMessageSize int /*(可选项 默认:1024 * 1024 * 4)*/) (int32, error) {
+	reg GRpcRegister, /*(Registration Protocol Call Function)*/
+	writeBufSize int, /*(Optional default: 32 * 1024)*/
+	readBufSize int, /*(Optional default: 32 * 1024)*/
+	connectionTimeout int, /*(Optional default: 120 sec)*/
+	maxSendMessageSize int, /*(Optional default: math.MaxInt32)*/
+	maxReceiveMessageSize int /*(Optional default: 1024 * 1024 * 4)*/) (int32, error) {
 
 	h, s := defaultNServer.grap()
 	if h == -1 || s == nil {
-		return h, errors.New(ErrSocketResources)
+		return h, ErrSocketResources
 	}
 
 	s.l.Lock()
@@ -238,22 +238,22 @@ func OperRPCListen(operator *actor.PID,
 	return h, nil
 }
 
-//OperWrite : 发送数据
+//OperWrite : Send data to the socket corresponding to handle
 func OperWrite(handle int32, data []byte, n int) error {
 	s := defaultNServer.get(handle)
 	if s == nil {
-		return errors.New(ErrUnknownSocket)
+		return ErrUnknownSocket
 	}
 
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	if s.b != resAssigned || s.s == nil {
-		return errors.New(ErrUnknownSocket)
+		return ErrUnknownSocket
 	}
 
 	if s.s.getStat() != Connected {
-		return errors.New(ErrUnConnected)
+		return ErrUnConnected
 	}
 
 	s.s.push(&NetChunk{Handle: handle, Data: data}, n)
@@ -261,22 +261,22 @@ func OperWrite(handle int32, data []byte, n int) error {
 	return nil
 }
 
-// OperUDPWrite : 发送udp数据
+// OperUDPWrite : Send UDP data to the socket corresponding to handle
 func OperUDPWrite(handle int32, addr string, data []byte, n int) error {
 	s := defaultNServer.get(handle)
 	if s == nil {
-		return errors.New(ErrUnknownSocket)
+		return ErrUnknownSocket
 	}
 
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	if s.b != resAssigned || s.s == nil {
-		return errors.New(ErrUnknownSocket)
+		return ErrUnknownSocket
 	}
 
 	if s.s.getStat() != Connected {
-		return errors.New(ErrUnConnected)
+		return ErrUnConnected
 	}
 
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
@@ -288,40 +288,40 @@ func OperUDPWrite(handle int32, addr string, data []byte, n int) error {
 	return nil
 }
 
-// OperKeep : 获取 socket 得Keep
+// OperKeep : Returns Socket Keep information corresponding to handle
 func OperKeep(handle int32) (uint64, error) {
 	s := defaultNServer.get(handle)
 	if s == nil {
-		return 0, errors.New(ErrUnknownSocket)
+		return 0, ErrUnknownSocket
 	}
 
 	s.l.Lock()
 	defer s.l.Unlock()
 	if s.b != resAssigned || s.s == nil {
-		return 0, errors.New(ErrUnknownSocket)
+		return 0, ErrUnknownSocket
 	}
 
 	if s.s.getStat() != Connecting && s.s.getStat() != Connected {
-		return 0, errors.New(ErrClosedSocket)
+		return 0, ErrClosedSocket
 	}
 	return s.s.getKeepAive(), nil
 }
 
-// OperSetKeep : 设置socket keep
+// OperSetKeep : Setting keep of handle corresponding socket
 func OperSetKeep(handle int32, keep uint64) error {
 	s := defaultNServer.get(handle)
 	if s == nil {
-		return errors.New(ErrUnknownSocket)
+		return ErrUnknownSocket
 	}
 
 	s.l.Lock()
 	defer s.l.Unlock()
 	if s.b != resAssigned || s.s == nil {
-		return errors.New(ErrUnknownSocket)
+		return ErrUnknownSocket
 	}
 
 	if s.s.getStat() != Connecting && s.s.getStat() != Connected {
-		return errors.New(ErrClosedSocket)
+		return ErrClosedSocket
 	}
 
 	s.s.setKeepAive(keep)
@@ -329,46 +329,46 @@ func OperSetKeep(handle int32, keep uint64) error {
 	return nil
 }
 
-// OperLastActivedTime : 获取 socket 最后的活动事件
+// OperLastActivedTime : Returns the last active time of the handle corresponding socket
 func OperLastActivedTime(handle int32) (uint64, error) {
 	s := defaultNServer.get(handle)
 	if s == nil {
-		return 0, errors.New(ErrUnknownSocket)
+		return 0, ErrUnknownSocket
 	}
 
 	s.l.Lock()
 	defer s.l.Unlock()
 	if s.b != resAssigned || s.s == nil {
-		return 0, errors.New(ErrUnknownSocket)
+		return 0, ErrUnknownSocket
 	}
 
 	if s.s.getStat() != Connecting && s.s.getStat() != Connected {
-		return 0, errors.New(ErrClosedSocket)
+		return 0, ErrClosedSocket
 	}
 
 	return s.s.getLastActivedTime(), nil
 }
 
-// OperOpen : 打开socket
+// OperOpen : Modify the connected state of the socket corresponding to handle
 func OperOpen(handle int32) error {
 	s := defaultNServer.get(handle)
 	if s == nil {
-		return errors.New(ErrUnknownSocket)
+		return ErrUnknownSocket
 	}
 
 	s.l.Lock()
 	defer s.l.Unlock()
 	if s.b != resAssigned || s.s == nil {
-		return errors.New(ErrUnknownSocket)
+		return ErrUnknownSocket
 	}
 
 	if !s.s.setConnected() {
-		return errors.New(ErrClosedSocket)
+		return ErrClosedSocket
 	}
 	return nil
 }
 
-// OperClose : 关闭一个Socket
+// OperClose : Close the socket corresponding to handle
 func OperClose(handle int32) {
 	s := operGet(handle)
 	if s == nil {
@@ -405,11 +405,10 @@ type slot struct {
 	l util.SpinLock
 }
 
-// NetServer : 网络服务器管理器
+// NetServer : Network Server Manager
 type NetServer struct {
 	ss []slot
 	fi int32
-	//sl util.SpinLock
 }
 
 var (

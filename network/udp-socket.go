@@ -117,7 +117,7 @@ read_end:
 	ups.so.b = resIdle
 	ups.so.l.Unlock()
 
-	actor.DefaultSchedulerContext.Send(closeOperator, NetClose{Handle: closeHandle})
+	actor.DefaultSchedulerContext.Send(closeOperator, &NetClose{Handle: closeHandle})
 }
 
 func (ups *udpSocket) write() {

@@ -94,6 +94,7 @@ func (tps *tcpServer) makeConn(handle int32, s interface{}, operator *actor.PID,
 	conn.quit = make(chan int)
 	conn.i.ReadLastTime = now
 	conn.i.WriteLastTime = now
+	conn.w.Add(2)
 	return conn
 }
 

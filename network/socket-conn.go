@@ -53,19 +53,19 @@ func (sc *sConn) recv() {
 
 		n, data, err := sc.rv(sc.s)
 		if err != nil {
-			//记录错误日志
+			//? Log error log
 			goto read_error
 		}
 
-		// 丢弃数据包
+		// Discard data
 		if sc.stat != Connected {
 			continue
 		}
 
 		sc.i.ReadBytes += uint64(n)
 		sc.i.ReadLastTime = timer.Now()
-		//数据包丢给 Actor
-		actor.DefaultSchedulerContext.Send(sc.o, &NetChunk{Handle: sc.h, Data: data})
+		//Forwarding data  message
+		actor.DefaultSchedulerContext.Send(sc.o, &NetChunk{Handle: sc.h, Data: data[:n]})
 	}
 read_error:
 	sc.stat = Closing
@@ -75,17 +75,18 @@ read_end:
 		closeHandle   int32
 		closeOperator *actor.PID
 	)
-
 	sc.so.l.Lock()
 	closeHandle = sc.h
 	closeOperator = sc.o
 	close(sc.quit)
-	//-----等待写协程结束------
+
+	//-----Waiting for the end of the write corout------
 	for {
 		if atomic.CompareAndSwapInt32(&sc.outStat, 1, 1) {
 			break
 		}
 	}
+	
 	close(sc.out)
 	//----------------------
 	if sc.srv != nil {
@@ -96,10 +97,11 @@ read_end:
 	sc.so.b = resIdle
 	sc.so.l.Unlock()
 
-	actor.DefaultSchedulerContext.Send(closeOperator, NetClose{Handle: closeHandle})
+	actor.DefaultSchedulerContext.Send(closeOperator, &NetClose{Handle: closeHandle})
 }
 
 func (sc *sConn) write() {
+	defer sc.w.Done()
 	for {
 		if sc.stat != Connecting && sc.stat != Connected {
 			goto write_end
@@ -125,7 +127,6 @@ func (sc *sConn) write() {
 write_error:
 	sc.stat = Closing
 write_end:
-	sc.w.Done()
 	sc.outStat = 1
 }
 
