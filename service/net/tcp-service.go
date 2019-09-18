@@ -1,22 +1,23 @@
-package service
+package netservice
 
 import (
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/engine/logger"
 	"github.com/yamakiller/magicNet/network"
+	"github.com/yamakiller/magicNet/service"
 )
 
 // TCPService :  TCP network listening service
 type TCPService struct {
-	Service
+	service.Service
 	sock int32
 	//
 	Addr  string //listening address  [IP:Port]
 	CCMax int    //Connector pipe buffer to small
 	//
-	OnAccept MethodFunc //NetAccept
-	OnRecv   MethodFunc //NetChunk
-	OnClose  MethodFunc //NetClose
+	OnAccept service.MethodFunc //NetAccept
+	OnRecv   service.MethodFunc //NetChunk
+	OnClose  service.MethodFunc //NetClose
 }
 
 // Init TCP network service initialization

@@ -1,16 +1,17 @@
-package service
+package netservice
 
 import (
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/network"
+	"github.com/yamakiller/magicNet/service"
 )
 
 //TCPConnection connection service
 type TCPConnection struct {
-	Service
+	service.Service
 
-	OnRecv  MethodFunc //NetChunk
-	OnClose MethodFunc //NetClose
+	OnRecv  service.MethodFunc //NetChunk
+	OnClose service.MethodFunc //NetClose
 }
 
 // Init TCP network service initialization
