@@ -29,6 +29,8 @@ type IService interface {
 
 	RegisterMethod(key interface{}, method MethodFunc)
 
+	GetMethod(key interface{}) MethodFunc
+
 	withName(n string)
 
 	withWait(wait *sync.WaitGroup)
@@ -110,14 +112,22 @@ func (srv *Service) Key() string {
 	return util.SubStr2(srv.name, 0, ix)
 }
 
-// ID : 获取服务的唯一编号
+// ID : returns the unique number of the service
 func (srv *Service) ID() uint32 {
 	return srv.pid.ID
 }
 
-// RegisterMethod : 注册(约定/协议)方法
+// RegisterMethod : Registration (convention/agreement) method
 func (srv *Service) RegisterMethod(key interface{}, method MethodFunc) {
 	srv.method[reflect.TypeOf(key)] = method
+}
+
+//GetMethod Return the method corresponding to the protocol
+func (srv *Service) GetMethod(key interface{}) MethodFunc {
+	if r, ok := srv.method[key]; ok {
+		return r
+	}
+	return nil
 }
 
 func (srv *Service) withName(n string) {
@@ -128,7 +138,7 @@ func (srv *Service) withWait(wait *sync.WaitGroup) {
 	srv.wait = wait
 }
 
-// Make : 服务创建器
+// Make : Service creator
 func Make(name string, f func() IService) IService {
 	wgn := &sync.WaitGroup{}
 	srv := f()
