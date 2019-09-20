@@ -34,6 +34,10 @@ type IService interface {
 	withName(n string)
 
 	withWait(wait *sync.WaitGroup)
+
+	LogInfo(frmt, args...interface{})
+	LogError(frmt, args...interface{})
+	LogDebug(frmt, args...interface{})
 }
 
 // Service 服务基类
