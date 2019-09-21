@@ -10,10 +10,10 @@ import (
 	"github.com/yamakiller/magicNet/util"
 )
 
-// MethodFunc : 服务方法函数
+// MethodFunc : Service method function
 type MethodFunc func(self actor.Context, message interface{})
 
-// IService 服务基础类接口
+// IService  Service base class interface
 type IService interface {
 	actor.Actor
 
@@ -21,9 +21,6 @@ type IService interface {
 	Key() string
 	ID() uint32
 
-	//Started(context actor.Context)
-	//Stoped(context actor.Context)
-	//Terminated(context actor.Context)
 	Init()
 	Shutdown()
 
@@ -35,9 +32,11 @@ type IService interface {
 
 	withWait(wait *sync.WaitGroup)
 
-	LogInfo(frmt, args...interface{})
-	LogError(frmt, args...interface{})
-	LogDebug(frmt, args...interface{})
+	LogInfo(frmt string, args ...interface{})
+	LogError(frmt string, args ...interface{})
+	LogDebug(frmt string, args ...interface{})
+	LogTrace(frmt string, args ...interface{})
+	LogWarning(frmt string, args ...interface{})
 }
 
 // Service 服务基类
@@ -51,8 +50,6 @@ type Service struct {
 // Init : 初始化服务
 func (srv *Service) Init() {
 	srv.method = make(map[interface{}]MethodFunc, 16)
-	//srv.RegisterMethod(&actor.Started{}, srv.Started)
-	//srv.RegisterMethod(&actor.Stopped{}, srv.Stoped)
 	srv.RegisterMethod(&actor.Terminated{}, srv.Terminated)
 }
 
@@ -140,6 +137,27 @@ func (srv *Service) withName(n string) {
 
 func (srv *Service) withWait(wait *sync.WaitGroup) {
 	srv.wait = wait
+}
+
+func(srv *Service) LogInfo(frmt string, args ...interface{}) {
+	logger.Info(srv.ID(), frmt, args)
+}
+
+func(srv *Service) LogError(frmt string, args ...interface{}) {
+	logger.Error(srv.ID(), frmt, args)
+}
+
+func(srv *Service) LogDebug(frmt string, args ...interface{}) {
+	logger.Debug(srv.ID(), frmt, args)
+}
+
+
+func(srv *Service) LogTrace(frmt string, args ...interface{}) {
+	logger.Trace(srv.ID(), frmt, args)
+}
+
+func(srv *Service) LogWarning(frmt string, args ...interface{}) {
+	logger.Warning(srv.ID(),frmt, args)
 }
 
 // Make : Service creator

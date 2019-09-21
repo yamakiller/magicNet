@@ -1,4 +1,4 @@
-package netservice
+package net
 
 import (
 	"github.com/yamakiller/magicNet/engine/actor"
