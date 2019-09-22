@@ -1,4 +1,4 @@
-package service
+package implement
 
 import (
 	"net"
@@ -9,6 +9,7 @@ import (
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/engine/logger"
 	"github.com/yamakiller/magicNet/library"
+	"github.com/yamakiller/magicNet/service"
 )
 
 //tcpKeepAliveListener : 重载net/http tcpKeepAliveListener
@@ -32,7 +33,7 @@ type MakeHTTPMethod func() library.IHTTPSrvMethod
 
 // MonitorService : 监视去服务
 type MonitorService struct {
-	Service
+	service.Service
 	Proto       string
 	Addr        string
 	OAuto2      *library.OAuth2
@@ -84,11 +85,11 @@ func (ms *MonitorService) Started(context actor.Context, message interface{}) {
 	ln, err := ms.listen()
 	ms.httpErr = err
 	if ms.httpErr != nil {
-		logger.Error(context.Self().ID, "%s %s service start fail:%v", ms.name, ms.Proto, ms.httpErr)
+		logger.Error(context.Self().ID, "%s %s service start fail:%v", ms.Name(), ms.Proto, ms.httpErr)
 		goto end_lable
 	}
 
-	logger.Info(context.Self().ID, "%s %s service start success[addr:%s]", ms.name, ms.Proto, ms.Addr)
+	logger.Info(context.Self().ID, "%s %s service start success[addr:%s]", ms.Name(), ms.Proto, ms.Addr)
 	if err == nil {
 		ms.httpWait.Add(1)
 		go func() {
@@ -129,14 +130,9 @@ func (ms *MonitorService) Stoped(context actor.Context, message interface{}) {
 
 // Shutdown 关闭服务
 func (ms *MonitorService) Shutdown() {
-	if ms.pid == nil {
-		return
-	}
-
 	ms.isShutdown = true
-	ms.pid.Stop()
+	ms.Service.Shutdown()
 	ms.httpWait.Wait()
-	ms.wait.Wait()
 }
 
 // 启动监听 addr 格式 ip:port
@@ -150,5 +146,5 @@ func (ms *MonitorService) listen() (net.Listener, error) {
 }
 
 var (
-	_ IService = &MonitorService{}
+	_ service.IService = &MonitorService{}
 )

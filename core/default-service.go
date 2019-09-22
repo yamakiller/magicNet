@@ -6,6 +6,7 @@ import (
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/library"
 	"github.com/yamakiller/magicNet/service"
+	"github.com/yamakiller/magicNet/service/implement"
 	"github.com/yamakiller/magicNet/util"
 
 	"github.com/yamakiller/magicNet/engine/logger"
@@ -13,7 +14,7 @@ import (
 
 // DefaultService : 默认服务系统
 type DefaultService struct {
-	monitorSrv *service.MonitorService
+	monitorSrv *implement.MonitorService
 }
 
 // InitService : 初始化服务模块
@@ -39,7 +40,7 @@ func (ds *DefaultService) spawnMonitorService() error {
 		monitorPort := util.GetEnvString(monitorEnv, "port", "8001")
 		logger.Info(0, "%s->%s://%s:%s", monitorName, monitorProto, monitorAddr, monitorPort)
 		ds.monitorSrv = service.Make(monitorName, func() service.IService {
-			srv := &service.MonitorService{Proto: monitorProto, Addr: monitorAddr + ":" + monitorPort}
+			srv := &implement.MonitorService{Proto: monitorProto, Addr: monitorAddr + ":" + monitorPort}
 			srv.Init()
 			if monitorProto == "https" {
 				srv.CertFile = util.GetEnvString(monitorEnv, "cert-file", "")
@@ -96,7 +97,7 @@ func (ds *DefaultService) spawnMonitorService() error {
 			}
 
 			return srv
-		}).(*service.MonitorService)
+		}).(*implement.MonitorService)
 	}
 
 	return nil
