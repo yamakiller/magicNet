@@ -1,6 +1,7 @@
 package net
 
-import (
+//TODO:将删除
+/*import (
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/engine/logger"
 	"github.com/yamakiller/magicNet/network"
@@ -57,4 +58,4 @@ func (ts *TCPService) Stoped(context actor.Context, message interface{}) {
 // Shutdown TCP network service termination
 func (ts *TCPService) Shutdown() {
 	ts.Service.Shutdown()
-}
+}*/

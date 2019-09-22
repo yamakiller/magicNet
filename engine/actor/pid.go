@@ -115,7 +115,7 @@ func (pid *PID) sendSysMessage(message interface{}) {
 }
 
 func (pid *PID) String() string {
-	return ""
+	return idToHex(pid.ID)
 }
 
 // Stop ： 停止PID既停止Actor

@@ -2,6 +2,7 @@ package service
 
 import (
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -22,6 +23,7 @@ type IService interface {
 	ID() uint32
 
 	Init()
+	Assignment(context actor.Context)
 	Shutdown()
 
 	RegisterMethod(key interface{}, method MethodFunc)
@@ -66,10 +68,17 @@ func (srv *Service) Receive(context actor.Context) {
 	}
 }
 
-// Started : 服务的启动函数
-func (srv *Service) Started(context actor.Context, message interface{}) {
+//Assignment Service initial value association
+func (srv *Service) Assignment(context actor.Context) {
 	srv.pid = context.Self()
-	srv.name = srv.name + "$" + srv.pid.String()
+	srv.name = srv.name + "$" + strconv.Itoa(int(srv.pid.ID))
+}
+
+// Started : Service start function
+func (srv *Service) Started(context actor.Context, message interface{}) {
+	if srv.pid == nil {
+		srv.Assignment(context)
+	}
 	if srv.wait != nil {
 		srv.wait.Done()
 	}
@@ -82,14 +91,14 @@ func (srv *Service) Stoped(context actor.Context, message interface{}) {
 	}
 }
 
-// Terminated : 服务被终止可以被销毁
+// Terminated : The service is terminated and can be destroyed
 func (srv *Service) Terminated(context actor.Context, message interface{}) {
 	if srv.wait != nil {
 		srv.wait.Done()
 	}
 }
 
-// Shutdown : 主动关闭服务
+// Shutdown : Proactively shut down the service
 func (srv *Service) Shutdown() {
 	if srv.pid == nil {
 		return
@@ -98,12 +107,12 @@ func (srv *Service) Shutdown() {
 	srv.wait.Wait()
 }
 
-// Name : 获取服务的名字
+// Name : Get the name of the service
 func (srv *Service) Name() string {
 	return srv.name
 }
 
-// Key : 获取服务的Key 名字
+// Key : Get the Key name of the service
 func (srv *Service) Key() string {
 	ix := strings.IndexByte(srv.name, '$')
 	if ix <= 0 {
@@ -139,25 +148,29 @@ func (srv *Service) withWait(wait *sync.WaitGroup) {
 	srv.wait = wait
 }
 
-func(srv *Service) LogInfo(frmt string, args ...interface{}) {
-	logger.Info(srv.ID(), frmt, args)
+//LogInfo Log information
+func (srv *Service) LogInfo(frmt string, args ...interface{}) {
+	logger.Info(srv.ID(), frmt, args...)
 }
 
-func(srv *Service) LogError(frmt string, args ...interface{}) {
-	logger.Error(srv.ID(), frmt, args)
+//LogError Record error log information
+func (srv *Service) LogError(frmt string, args ...interface{}) {
+	logger.Error(srv.ID(), frmt, args...)
 }
 
-func(srv *Service) LogDebug(frmt string, args ...interface{}) {
-	logger.Debug(srv.ID(), frmt, args)
+//LogDebug Record debug log information
+func (srv *Service) LogDebug(frmt string, args ...interface{}) {
+	logger.Debug(srv.ID(), frmt, args...)
 }
 
-
-func(srv *Service) LogTrace(frmt string, args ...interface{}) {
-	logger.Trace(srv.ID(), frmt, args)
+//LogTrace Record trace log information
+func (srv *Service) LogTrace(frmt string, args ...interface{}) {
+	logger.Trace(srv.ID(), frmt, args...)
 }
 
-func(srv *Service) LogWarning(frmt string, args ...interface{}) {
-	logger.Warning(srv.ID(),frmt, args)
+//LogWarning Record warning log information
+func (srv *Service) LogWarning(frmt string, args ...interface{}) {
+	logger.Warning(srv.ID(), frmt, args...)
 }
 
 // Make : Service creator

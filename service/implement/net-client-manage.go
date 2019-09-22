@@ -12,6 +12,7 @@ type IAllocer interface {
 
 //INetClientManager Network client management interface
 type INetClientManager interface {
+	Init()
 	Size() int
 	Grap(h *util.NetHandle) INetClient
 	GrapSocket(sock int32) INetClient
@@ -22,11 +23,12 @@ type INetClientManager interface {
 	Allocer() IAllocer
 }
 
-//NetClientManager
+//NetClientManager server client management base class
 type NetClientManager struct {
 	Malloc IAllocer
 }
 
+//Allocer Return to the distributor interface
 func (ncm *NetClientManager) Allocer() IAllocer {
 	return ncm.Malloc
 }

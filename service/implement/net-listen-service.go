@@ -15,9 +15,9 @@ import (
 
 //INetListenDeleate Network listening commission
 type INetListenDeleate interface {
-	Handshake(sock int32)
+	Handshake(sock int32) error
 	Analysis(context actor.Context, nets *NetListenService, c INetClient) error
-	UnOnline(h util.NetHandle)
+	UnOnlineNotification(h util.NetHandle) error
 }
 
 // NetListenService Network monitoring service
@@ -46,25 +46,26 @@ func (nets *NetListenService) Init() {
 }
 
 func (nets *NetListenService) getDesc() string {
-	return fmt.Sprintf("Network Listen [%s]", nets.NetListen.Name())
+	return fmt.Sprintf("Network Listen [%s] ", nets.NetListen.Name())
 }
 
 //Started Turn on network monitoring service
 func (nets *NetListenService) Started(context actor.Context, message interface{}) {
-	nets.LogInfo("%s Service Startup %s", nets.getDesc(), nets.Addr)
+	nets.Assignment(context)
+	nets.LogInfo("Service Startup %s", nets.Addr)
 	err := nets.NetListen.Listen(context, nets.Addr, nets.CCMax)
 	if err != nil {
-		nets.LogError("%s Service Startup failed:%s", nets.getDesc(), err.Error())
+		nets.LogError("Service Startup failed:%s", err.Error())
 		return
 	}
 
 	nets.Service.Started(context, message)
-	nets.LogInfo("%s Service Startup completed", nets.getDesc(), nets.Name())
+	nets.LogInfo("%s Service Startup completed", nets.Name())
 }
 
 //Stoped Turn off network monitoring service
 func (nets *NetListenService) Stoped(context actor.Context, message interface{}) {
-	nets.LogInfo("%s Service Stoping %s", nets.getDesc(), nets.Addr)
+	nets.LogInfo("Service Stoping %s", nets.Addr)
 
 	hls := nets.NetClients.GetHandles()
 	if hls != nil && len(hls) > 0 {
@@ -86,7 +87,7 @@ func (nets *NetListenService) Stoped(context actor.Context, message interface{})
 					break
 				}
 
-				nets.LogInfo("%s Service The remaining %d connections need to be closed", nets.getDesc(), nets.NetClients.Size())
+				nets.LogInfo("Service The remaining %d connections need to be closed", nets.NetClients.Size())
 				ick++
 				if ick > 6 {
 					break
@@ -95,28 +96,29 @@ func (nets *NetListenService) Stoped(context actor.Context, message interface{})
 		}
 	}
 	nets.NetListen.Close()
-	nets.LogInfo("%s Service Stoped", nets.getDesc())
+	nets.LogInfo("Service Stoped")
 }
 
 //OnAccept Receive connection event
 func (nets *NetListenService) OnAccept(context actor.Context, message interface{}) {
 	accepter := message.(*network.NetAccept)
 	if nets.NetClients.Size()+1 > nets.MaxClient {
-		nets.LogWarning("%s OnAccept client fulled:%d", nets.getDesc(), nets.NetClients.Size())
+		nets.LogWarning("OnAccept client fulled:%d", nets.NetClients.Size())
 		network.OperClose(accepter.Handle)
 		return
 	}
 
 	c := nets.NetClients.Allocer().New()
 	if c == nil {
-		nets.LogError("%s OnAccept client closed: insufficient memory", nets.getDesc())
+		nets.LogError("OnAccept client closed: insufficient memory")
 		network.OperClose(accepter.Handle)
 		return
 	}
 
 	h, err := nets.NetClients.Occupy(c)
 	if err != nil {
-		nets.LogError("%s OnAccept client closed: %v, %d-%s:%d", nets.getDesc(), err,
+		nets.LogError("OnAccept client closed: %v, %d-%s:%d",
+			err,
 			accepter.Handle,
 			accepter.Addr.String(),
 			accepter.Port)
@@ -132,23 +134,25 @@ func (nets *NetListenService) OnAccept(context actor.Context, message interface{
 	network.OperOpen(accepter.Handle)
 	network.OperSetKeep(accepter.Handle, nets.ClientKeep)
 
-	nets.NetDeleate.Handshake(accepter.Handle)
+	if err = nets.NetDeleate.Handshake(accepter.Handle); err != nil {
+		nets.LogError("OnAccept client fail:%s", err)
+	}
 
 	c.GetStat().UpdateOnline(timer.Now())
 
 	nets.NetClients.Release(c)
 
-	nets.LogDebug("%s OnAccept client %d-%s:%d", nets.getDesc(), accepter.Handle, accepter.Addr.String(), accepter.Port)
+	nets.LogDebug("OnAccept client %d-%s:%d", accepter.Handle, accepter.Addr.String(), accepter.Port)
 }
 
 //OnRecv Receiving data events
 func (nets *NetListenService) OnRecv(context actor.Context, message interface{}) {
-	defer nets.LogDebug("%s onRecv complete", nets.getDesc())
+	defer nets.LogDebug("onRecv complete")
 
 	data := message.(*network.NetChunk)
 	c := nets.NetClients.GrapSocket(data.Handle)
 	if c == nil {
-		nets.LogError("%s OnRecv No target [%d] client object was found", nets.getDesc(), data.Handle)
+		nets.LogError("OnRecv No target [%d] client object was found", data.Handle)
 		return
 	}
 
@@ -173,7 +177,7 @@ func (nets *NetListenService) OnRecv(context actor.Context, message interface{})
 
 			_, err = c.GetRecvBuffer().Write(data.Data[pos : pos+space])
 			if err != nil {
-				nets.LogError("%s OnRecv error %+v socket %d", nets.getDesc(), err, data.Handle)
+				nets.LogError("OnRecv error %+v socket %d", err, data.Handle)
 				network.OperClose(data.Handle)
 				break
 			}
@@ -191,7 +195,7 @@ func (nets *NetListenService) OnRecv(context actor.Context, message interface{})
 				if err == ErrAnalysisSuccess {
 					continue
 				} else if err != ErrAnalysisProceed {
-					nets.LogError("%s OnRecv error %+v socket %d closing client", nets.getDesc(), err, data.Handle)
+					nets.LogError("OnRecv error %+v socket %d closing client", err, data.Handle)
 					network.OperClose(data.Handle)
 					return
 				}
@@ -209,10 +213,10 @@ func (nets *NetListenService) OnRecv(context actor.Context, message interface{})
 //OnClose Close connection event
 func (nets *NetListenService) OnClose(context actor.Context, message interface{}) {
 	closer := message.(*network.NetClose)
-	nets.LogDebug("%s close socket:%d", nets.getDesc(), closer.Handle)
+	nets.LogDebug("close socket:%d", closer.Handle)
 	c := nets.NetClients.GrapSocket(closer.Handle)
 	if c == nil {
-		nets.LogError("%s close unfind map-id socket %d", nets.getDesc(), closer.Handle)
+		nets.LogError("close unfind map-id socket %d", closer.Handle)
 		return
 	}
 
@@ -221,7 +225,34 @@ func (nets *NetListenService) OnClose(context actor.Context, message interface{}
 
 	nets.NetClients.Erase(&hClose)
 
-	nets.NetDeleate.UnOnline(hClose)
+	if err := nets.NetDeleate.UnOnlineNotification(hClose); err != nil {
+		nets.LogDebug("closed client Notification %+v", err)
+	}
 
-	nets.LogDebug("%s closed client: %+v", nets.getDesc(), hClose.GetValue())
+	nets.LogDebug("closed client: %+v", hClose.GetValue())
+}
+
+//LogInfo Log information
+func (nets *NetListenService) LogInfo(frmt string, args ...interface{}) {
+	nets.Service.LogInfo(nets.getDesc()+frmt, args...)
+}
+
+//LogError Record error log information
+func (nets *NetListenService) LogError(frmt string, args ...interface{}) {
+	nets.Service.LogError(nets.getDesc()+frmt, args...)
+}
+
+//LogDebug Record debug log information
+func (nets *NetListenService) LogDebug(frmt string, args ...interface{}) {
+	nets.Service.LogDebug(nets.getDesc()+frmt, args...)
+}
+
+//LogTrace Record trace log information
+func (nets *NetListenService) LogTrace(frmt string, args ...interface{}) {
+	nets.Service.LogTrace(nets.getDesc()+frmt, args...)
+}
+
+//LogWarning Record warning log information
+func (nets *NetListenService) LogWarning(frmt string, args ...interface{}) {
+	nets.Service.LogWarning(nets.getDesc()+frmt, args...)
 }

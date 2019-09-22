@@ -29,33 +29,33 @@ func (sc *SchedulerContext) Actor() Actor {
 	return nil
 }
 
-// Message : 消息块[无效]
+// Message : Message block [invalid]
 func (sc *SchedulerContext) Message() interface{} {
 	return nil
 }
 
-// MessageHeader : 消息头
+// MessageHeader : Header
 func (sc *SchedulerContext) MessageHeader() ReadOnlyMessageHeader {
 	return sc.headers
 }
 
-//SetHeaders : 设置基础消息头
+//SetHeaders : Set the basic message header
 func (sc *SchedulerContext) SetHeaders(headers map[string]string) *SchedulerContext {
 	sc.headers = headers
 	return sc
 }
 
-// Send : 发送消息
+// Send : Sending message to actor
 func (sc *SchedulerContext) Send(pid *PID, message interface{}) {
 	sc.sendUsrMessage(pid, message)
 }
 
-// Request : 请求消息
+// Request : Request message
 func (sc *SchedulerContext) Request(pid *PID, message interface{}) {
 	sc.sendUsrMessage(pid, message)
 }
 
-// RequestWithCustomSender : 请求自定义发件人
+// RequestWithCustomSender : Request a custom sender
 func (sc *SchedulerContext) RequestWithCustomSender(pid *PID, message interface{}, sender *PID) {
 	e := &MessagePack{
 		Header:  nil,
@@ -65,7 +65,7 @@ func (sc *SchedulerContext) RequestWithCustomSender(pid *PID, message interface{
 	sc.sendUsrMessage(pid, e)
 }
 
-// RequestFuture : 请求等待回复
+// RequestFuture : Request pending reply
 func (sc *SchedulerContext) RequestFuture(pid *PID, message interface{}, timeout time.Duration) *Future {
 	future := NewFuture(timeout)
 	e := &MessagePack{
@@ -77,12 +77,12 @@ func (sc *SchedulerContext) RequestFuture(pid *PID, message interface{}, timeout
 	return future
 }
 
-// sendUsrMessage : 发送消息
+// sendUsrMessage : Send a message
 func (sc *SchedulerContext) sendUsrMessage(pid *PID, message interface{}) {
 	pid.sendUsrMessage(message)
 }
 
-// Make : 制作器
+// Make : Maker
 func (sc *SchedulerContext) Make(agnet *Agnets) *PID {
 	pid, err := sc.MakeNamed(agnet, "")
 	if err != nil {
@@ -91,17 +91,17 @@ func (sc *SchedulerContext) Make(agnet *Agnets) *PID {
 	return pid
 }
 
-// MakeNamed : 带名字的制作器
+// MakeNamed : Maker with name
 func (sc *SchedulerContext) MakeNamed(agnet *Agnets, name string) (*PID, error) {
 	return agnet.make()
 }
 
-// Stop : 发送停止消息
+// Stop : Send stop message
 func (sc *SchedulerContext) Stop(pid *PID) {
 	pid.ref().Stop(pid)
 }
 
-// StopFuture : 发送停止消息，并等待回复
+// StopFuture : Send a stop message and wait for a reply
 func (sc *SchedulerContext) StopFuture(pid *PID) *Future {
 	future := NewFuture(10 * time.Second)
 
@@ -111,12 +111,12 @@ func (sc *SchedulerContext) StopFuture(pid *PID) *Future {
 	return future
 }
 
-// Kill : 杀死 Actor
+// Kill : Kill Actor
 func (sc *SchedulerContext) Kill(pid *PID) {
 	pid.sendUsrMessage(&Kill{})
 }
 
-// KillFuture : 杀死 Actor 并等待回复
+// KillFuture : Kill the Actor and wait for a reply
 func (sc *SchedulerContext) KillFuture(pid *PID) *Future {
 	future := NewFuture(10 * time.Second)
 

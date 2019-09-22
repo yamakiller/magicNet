@@ -13,12 +13,18 @@ var (
 
 //HashTable Hash allocation table
 type HashTable struct {
-	Mask   int32
-	Max    int32
+	Mask   uint32
+	Max    uint32
 	Comp   comparator.Comparator
-	seqID  int32
+	seqID  uint32
 	sz     int
 	arrays []interface{}
+}
+
+// Init Initialize the hashtable
+func (ht *HashTable) Init() {
+	ht.arrays = make([]interface{}, ht.Max)
+	ht.seqID = 1
 }
 
 //Size returns the hashtable is number
@@ -28,7 +34,7 @@ func (ht *HashTable) Size() int {
 
 //Push Insert an value
 func (ht *HashTable) Push(v interface{}) (uint32, error) {
-	var i int32
+	var i uint32
 	for i = 0; i < ht.Max; i++ {
 		key := ((i + ht.seqID) & ht.Max)
 		if key >= ht.Mask {
