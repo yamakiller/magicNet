@@ -52,6 +52,8 @@ type Service struct {
 // Init : 初始化服务
 func (srv *Service) Init() {
 	srv.method = make(map[interface{}]MethodFunc, 16)
+	srv.RegisterMethod(&actor.Started{}, srv.Started)
+	srv.RegisterMethod(&actor.Stopped{}, srv.Stoped)
 	srv.RegisterMethod(&actor.Terminated{}, srv.Terminated)
 }
 

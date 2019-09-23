@@ -1,6 +1,8 @@
 package implement
 
 import (
+	"fmt"
+
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/network"
 	"github.com/yamakiller/magicNet/service"
@@ -8,39 +10,52 @@ import (
 	"github.com/yamakiller/magicNet/timer"
 )
 
-type NetConnStat int32
+//NetConnectEtat Connection Status
+type NetConnectEtat int32
 
 var (
-	UnConnected = NetConnStat(0)
-	Connecting  = NetConnStat(1)
-	Connected   = NetConnStat(2)
+	//UnConnected Not connected or failed to connect
+	UnConnected = NetConnectEtat(0)
+	//Connecting Connecting target
+	Connecting = NetConnectEtat(1)
+	//Verify Performing a certification login
+	Verify = NetConnectEtat(2)
+	//Connected Connection has been completed
+	Connected = NetConnectEtat(3)
 )
 
-type INetConnectionTarget interface {
+//INetConnectTarget Connection target interface
+type INetConnectTarget interface {
 	GetAddr() string
 	GetOutSize() int
-	SetStatus(stat NetConnStat)
+	IsTimeout() uint64
+	SetEtat(stat NetConnectEtat)
+	GetEtat() NetConnectEtat
 }
 
-type NetConnectionEvent struct {
-	Target INetConnectionTarget
+//NetConnectEvent Connection event
+type NetConnectEvent struct {
+	Target INetConnectTarget
 }
 
-type NetConnForwadEvent struct {
+//NetConnectForwardEvent Data transmission event
+type NetConnectForwardEvent struct {
 	Wrap []byte
 }
 
+//INetConnectDeleate Commission
 type INetConnectDeleate interface {
 	Connected(context actor.Context, nets *NetConnectService) error
-	Forawd(context actor.Context, nets *NetConnectService, message interface{}) error
+	Forward(context actor.Context, nets *NetConnectService, message interface{}) error
 	Analysis(context actor.Context, nets *NetConnectService) error
 }
 
+//NetConnectService Internet connection service
 type NetConnectService struct {
 	service.Service
 	Handle     net.INetConnection
 	Deleate    INetConnectDeleate
-	Target     INetConnectionTarget
+	Target     INetConnectTarget
 	isShutdown bool
 }
 
@@ -49,34 +64,67 @@ func (nets *NetConnectService) Init() {
 	nets.Service.Init()
 	nets.RegisterMethod(&actor.Started{}, nets.Started)
 	nets.RegisterMethod(&actor.Stopped{}, nets.Stoped)
-	nets.RegisterMethod(&NetConnectionEvent{}, nets.OnConnection)
-	nets.RegisterMethod(&NetConnForwadEvent{}, nets.OnForwad)
+	nets.RegisterMethod(&NetConnectEvent{}, nets.OnConnection)
+	nets.RegisterMethod(&NetConnectForwardEvent{}, nets.OnForward)
 	nets.RegisterMethod(&network.NetChunk{}, nets.OnRecv)
 	nets.RegisterMethod(&network.NetClose{}, nets.OnClose)
 }
 
+//Started Turn on network connect service
+func (nets *NetConnectService) Started(context actor.Context, message interface{}) {
+	nets.Assignment(context)
+	nets.LogInfo("Service Startup address:%s read-buffer-limit:%d chan-buffer-size:%d",
+		nets.Target.GetAddr(),
+		nets.Handle.GetRecvBufferLimit(),
+		nets.Target.GetOutSize())
+	nets.Service.Started(context, message)
+	nets.LogInfo("Service Startup completed")
+}
+
+//Stoped Out of service
+func (nets *NetConnectService) Stoped(context actor.Context, message interface{}) {
+	nets.LogInfo("[%s] %s Connection Service Stoping %s",
+		nets.Handle.Name(),
+		nets.Name(),
+		nets.Target.GetAddr())
+
+	nets.Handle.Close()
+
+	nets.LogInfo("Connection Service Stoped %s", nets.Target.GetAddr())
+}
+
 //OnConnection Request connection event
 func (nets *NetConnectService) OnConnection(context actor.Context, message interface{}) {
-	t := message.(*NetConnectionEvent)
+	t := message.(*NetConnectEvent)
+	nets.LogInfo("OnConnection %s", nets.Target.GetAddr())
+
 	err := nets.Handle.Connection(context, t.Target.GetAddr(), t.Target.GetOutSize())
 	if err != nil {
+		nets.LogError("OnConnection fail:%+v", err)
 		goto unend
 	}
 
 	err = nets.Deleate.Connected(context, nets)
 	if err != nil {
+		nets.LogError("OnConnection fail:%+v", err)
+		nets.Handle.Close()
 		goto unend
 	}
 	return
 unend:
-	t.Target.SetStatus(UnConnected)
+	t.Target.SetEtat(UnConnected)
 }
 
 //OnRecv Connection read data
 func (nets *NetConnectService) OnRecv(context actor.Context, message interface{}) {
 	defer nets.LogDebug("onRecv complete")
-
 	wrap := message.(*network.NetChunk)
+	if wrap.Handle != nets.Handle.Socket() {
+		nets.LogDebug("[%d:%d]Discard the data because this data is the current connection authorization data.",
+			wrap.Handle,
+			nets.Handle.Socket())
+		return
+	}
 
 	var (
 		space  int
@@ -88,6 +136,10 @@ func (nets *NetConnectService) OnRecv(context actor.Context, message interface{}
 	)
 
 	for {
+		if nets.isShutdown {
+			break
+		}
+
 		space = nets.Handle.GetRecvBufferLimit() - nets.Handle.GetRecvBuffer().Len()
 		wby = len(wrap.Data) - writed
 		if space > 0 && wby > 0 {
@@ -97,7 +149,7 @@ func (nets *NetConnectService) OnRecv(context actor.Context, message interface{}
 
 			_, err = nets.Handle.GetRecvBuffer().Write(wrap.Data[pos : pos+space])
 			if err != nil {
-				network.OperClose(wrap.Handle)
+				nets.Handle.Close()
 				break
 			}
 
@@ -114,7 +166,7 @@ func (nets *NetConnectService) OnRecv(context actor.Context, message interface{}
 				if err == ErrAnalysisSuccess {
 					continue
 				} else if err != ErrAnalysisProceed {
-					network.OperClose(wrap.Handle)
+					nets.Handle.Close()
 					return
 				}
 			}
@@ -128,31 +180,59 @@ func (nets *NetConnectService) OnRecv(context actor.Context, message interface{}
 	}
 }
 
-//OnForwad send data
-func (nets *NetConnectService) OnForwad(context actor.Context, message interface{}) {
-	m, ok := message.(*NetConnForwadEvent)
-	if !ok {
-		return
-	}
-
-	err := nets.Deleate.Forawd(context, nets, m)
+//OnForward Send data
+func (nets *NetConnectService) OnForward(context actor.Context, message interface{}) {
+	m := message.(*NetConnectForwardEvent)
+	err := nets.Deleate.Forward(context, nets, m)
 	if err != nil {
+		nets.LogError("OnForward error:%+v", err)
 		return
 	}
 
-	//logger
+	nets.LogDebug("OnForward Data Complete")
 }
 
 //OnClose Handling closed connection events
 func (nets *NetConnectService) OnClose(context actor.Context, message interface{}) {
-	nets.Handle.Close()
-	nets.Target.SetStatus(UnConnected)
+	//Release buffer resources
+	nets.Handle.GetRecvBuffer().Next(nets.Handle.GetRecvBuffer().Len())
+	nets.Target.SetEtat(UnConnected)
 }
 
 // Shutdown : Proactively shut down the service
 func (nets *NetConnectService) Shutdown() {
+	nets.isShutdown = true
 	if nets.Handle.Socket() != 0 {
 		network.OperClose(nets.Handle.Socket())
 	}
 	nets.Service.Shutdown()
+}
+
+func (nets *NetConnectService) getDesc() string {
+	return fmt.Sprintf("[%s] %s ", nets.Handle.Name(), nets.Name())
+}
+
+//LogInfo Log information
+func (nets *NetConnectService) LogInfo(frmt string, args ...interface{}) {
+	nets.Service.LogInfo(nets.getDesc()+frmt, args...)
+}
+
+//LogError Record error log information
+func (nets *NetConnectService) LogError(frmt string, args ...interface{}) {
+	nets.Service.LogError(nets.getDesc()+frmt, args...)
+}
+
+//LogDebug Record debug log information
+func (nets *NetConnectService) LogDebug(frmt string, args ...interface{}) {
+	nets.Service.LogDebug(nets.getDesc()+frmt, args...)
+}
+
+//LogTrace Record trace log information
+func (nets *NetConnectService) LogTrace(frmt string, args ...interface{}) {
+	nets.Service.LogTrace(nets.getDesc()+frmt, args...)
+}
+
+//LogWarning Record warning log information
+func (nets *NetConnectService) LogWarning(frmt string, args ...interface{}) {
+	nets.Service.LogWarning(nets.getDesc()+frmt, args...)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/yamakiller/magicNet/engine/actor"
 )
 
+//INetConnectionDataStat Connector data status maintenance interface
 type INetConnectionDataStat interface {
 	UpdateWrite(tts uint64, bytes uint64)
 	UpdateRead(tts uint64, bytes uint64)
@@ -17,10 +18,15 @@ type INetConnectionDataStat interface {
 type INetConnection interface {
 	Name() string
 	Socket() int32
-	Connection(context actor.Context, addr string, outChanSize int) error
+	Connection(context actor.Context,
+		addr string, /*Connection address*/
+		outChanSize int /*Receive pipe buffer size*/) error
 	Write(wrap []byte, length int) error
 	GetRecvBufferLimit() int
 	GetRecvBuffer() *bytes.Buffer
 	GetDataStat() INetConnectionDataStat
+	GetAuth() uint64
+	SetAuth(auth uint64)
+	GetTimeOut() uint64
 	Close()
 }
