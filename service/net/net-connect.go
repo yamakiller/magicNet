@@ -27,6 +27,5 @@ type INetConnection interface {
 	GetDataStat() INetConnectionDataStat
 	GetAuth() uint64
 	SetAuth(auth uint64)
-	GetTimeOut() uint64
 	Close()
 }

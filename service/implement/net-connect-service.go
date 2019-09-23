@@ -26,9 +26,11 @@ var (
 
 //INetConnectTarget Connection target interface
 type INetConnectTarget interface {
+	GetName() string
 	GetAddr() string
 	GetOutSize() int
 	IsTimeout() uint64
+	RestTimeout()
 	SetEtat(stat NetConnectEtat)
 	GetEtat() NetConnectEtat
 }
@@ -38,15 +40,9 @@ type NetConnectEvent struct {
 	Target INetConnectTarget
 }
 
-//NetConnectForwardEvent Data transmission event
-type NetConnectForwardEvent struct {
-	Wrap []byte
-}
-
 //INetConnectDeleate Commission
 type INetConnectDeleate interface {
 	Connected(context actor.Context, nets *NetConnectService) error
-	Forward(context actor.Context, nets *NetConnectService, message interface{}) error
 	Analysis(context actor.Context, nets *NetConnectService) error
 }
 
@@ -64,10 +60,9 @@ func (nets *NetConnectService) Init() {
 	nets.Service.Init()
 	nets.RegisterMethod(&actor.Started{}, nets.Started)
 	nets.RegisterMethod(&actor.Stopped{}, nets.Stoped)
-	nets.RegisterMethod(&NetConnectEvent{}, nets.OnConnection)
-	nets.RegisterMethod(&NetConnectForwardEvent{}, nets.OnForward)
-	nets.RegisterMethod(&network.NetChunk{}, nets.OnRecv)
-	nets.RegisterMethod(&network.NetClose{}, nets.OnClose)
+	nets.RegisterMethod(&NetConnectEvent{}, nets.onConnection)
+	nets.RegisterMethod(&network.NetChunk{}, nets.onRecv)
+	nets.RegisterMethod(&network.NetClose{}, nets.onClose)
 }
 
 //Started Turn on network connect service
@@ -87,36 +82,47 @@ func (nets *NetConnectService) Stoped(context actor.Context, message interface{}
 		nets.Handle.Name(),
 		nets.Name(),
 		nets.Target.GetAddr())
-
+	nets.isShutdown = false
 	nets.Handle.Close()
 
 	nets.LogInfo("Connection Service Stoped %s", nets.Target.GetAddr())
 }
 
-//OnConnection Request connection event
-func (nets *NetConnectService) OnConnection(context actor.Context, message interface{}) {
-	t := message.(*NetConnectEvent)
-	nets.LogInfo("OnConnection %s", nets.Target.GetAddr())
+//IsShutdown Whether the service has been terminated
+func (nets *NetConnectService) IsShutdown() bool {
+	return nets.isShutdown
+}
 
-	err := nets.Handle.Connection(context, t.Target.GetAddr(), t.Target.GetOutSize())
+//AutoConnect  auto connect
+func (nets *NetConnectService) AutoConnect(context actor.Context) error {
+	err := nets.Handle.Connection(context, nets.Target.GetAddr(), nets.Target.GetOutSize())
 	if err != nil {
-		nets.LogError("OnConnection fail:%+v", err)
 		goto unend
 	}
 
 	err = nets.Deleate.Connected(context, nets)
 	if err != nil {
-		nets.LogError("OnConnection fail:%+v", err)
 		nets.Handle.Close()
 		goto unend
 	}
-	return
+	return nil
 unend:
-	t.Target.SetEtat(UnConnected)
+	nets.Target.SetEtat(UnConnected)
+	return err
+}
+
+//onConnection Request connection event
+func (nets *NetConnectService) onConnection(context actor.Context, message interface{}) {
+	//t := message.(*NetConnectEvent)
+	nets.LogInfo("onConnection: %s", nets.Target.GetAddr())
+	err := nets.AutoConnect(context)
+	if err != nil {
+		nets.LogError("onConnection: fail-%+v", err)
+	}
 }
 
 //OnRecv Connection read data
-func (nets *NetConnectService) OnRecv(context actor.Context, message interface{}) {
+func (nets *NetConnectService) onRecv(context actor.Context, message interface{}) {
 	defer nets.LogDebug("onRecv complete")
 	wrap := message.(*network.NetChunk)
 	if wrap.Handle != nets.Handle.Socket() {
@@ -180,20 +186,8 @@ func (nets *NetConnectService) OnRecv(context actor.Context, message interface{}
 	}
 }
 
-//OnForward Send data
-func (nets *NetConnectService) OnForward(context actor.Context, message interface{}) {
-	m := message.(*NetConnectForwardEvent)
-	err := nets.Deleate.Forward(context, nets, m)
-	if err != nil {
-		nets.LogError("OnForward error:%+v", err)
-		return
-	}
-
-	nets.LogDebug("OnForward Data Complete")
-}
-
-//OnClose Handling closed connection events
-func (nets *NetConnectService) OnClose(context actor.Context, message interface{}) {
+//onClose Handling closed connection events
+func (nets *NetConnectService) onClose(context actor.Context, message interface{}) {
 	//Release buffer resources
 	nets.Handle.GetRecvBuffer().Next(nets.Handle.GetRecvBuffer().Len())
 	nets.Target.SetEtat(UnConnected)
