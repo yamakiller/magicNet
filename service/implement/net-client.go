@@ -26,6 +26,9 @@ type INetClient interface {
 	GetAddr() string
 	GetRecvBuffer() *bytes.Buffer
 	SetRecvBuffer(b *bytes.Buffer)
+	GetKeyPair() interface{}
+	BuildKeyPair()
+	GetKeyPublic() string
 	GetStat() *NetStat
 	SetRef(v int)
 	IncRef()

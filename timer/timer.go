@@ -15,10 +15,10 @@ const (
 	timeLevelMask  = (timeLevel - 1)
 )
 
-// TimeGoFunction : 定时器执行函数
+// TimeGoFunction Timer execution function
 type TimeGoFunction func(parm interface{})
 
-// Timer : 定时器
+// Timer  Timer
 type Timer struct {
 	near         [timeNear]*list.List
 	t            [4][timeLevel]*list.List
@@ -31,7 +31,7 @@ type Timer struct {
 	shutdown     chan struct{}
 }
 
-// Node : 定时器节点
+// Node : Timer node
 type Node struct {
 	expire uint32
 	param  interface{}
@@ -40,7 +40,7 @@ type Node struct {
 
 var instTime *Timer
 
-// StartService  : 初始化定时器对象
+// StartService  Start timer system
 func StartService() {
 	instTime = &Timer{}
 	instTime.timeDur = 0
@@ -62,12 +62,12 @@ func StartService() {
 	instTime.start()
 }
 
-// StopService : 关闭定时器
+// StopService Off timer
 func StopService() {
 	instTime.stop()
 }
 
-// TimeOut : 设置定时事件
+// TimeOut Set timed events
 func TimeOut(tm int, f TimeGoFunction, param interface{}) int {
 	if tm <= 0 {
 		f(param)
@@ -77,17 +77,17 @@ func TimeOut(tm int, f TimeGoFunction, param interface{}) int {
 	return 0
 }
 
-// StartTime : 获取定时器开始时间
+// StartTime : Get timer start time
 func StartTime() uint32 {
 	return instTime.getStartTime()
 }
 
-// Now : 获取当前时间
+// Now : Get current time
 func Now() uint64 {
 	return instTime.getNow()
 }
 
-// Start : 启动定时器
+// Start : Start timer
 func (tm *Timer) start() {
 	tnow := time.Now()
 	tm.startTime = uint32(tnow.Unix())

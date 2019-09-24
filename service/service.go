@@ -114,7 +114,7 @@ func (srv *Service) Name() string {
 	return srv.name
 }
 
-// Key : Get the Key name of the service
+// Key : Returns the Key name of the service
 func (srv *Service) Key() string {
 	ix := strings.IndexByte(srv.name, '$')
 	if ix <= 0 {
@@ -124,7 +124,12 @@ func (srv *Service) Key() string {
 	return util.SubStr2(srv.name, 0, ix)
 }
 
-// ID : returns the unique number of the service
+//GetPID Return the pid object
+func (srv *Service) GetPID() *actor.PID {
+	return srv.pid
+}
+
+// ID Returns the unique number of the service
 func (srv *Service) ID() uint32 {
 	return srv.pid.ID
 }

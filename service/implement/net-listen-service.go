@@ -15,7 +15,7 @@ import (
 
 //INetListenDeleate Network listening commission
 type INetListenDeleate interface {
-	Handshake(sock int32) error
+	Handshake(c INetClient) error
 	Analysis(context actor.Context, nets *NetListenService, c INetClient) error
 	UnOnlineNotification(h util.NetHandle) error
 }
@@ -134,7 +134,7 @@ func (nets *NetListenService) OnAccept(context actor.Context, message interface{
 	network.OperOpen(accepter.Handle)
 	network.OperSetKeep(accepter.Handle, nets.ClientKeep)
 
-	if err = nets.NetDeleate.Handshake(accepter.Handle); err != nil {
+	if err = nets.NetDeleate.Handshake(c); err != nil {
 		nets.LogError("OnAccept client fail:%s", err)
 	}
 

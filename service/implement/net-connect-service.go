@@ -62,7 +62,7 @@ func (nets *NetConnectService) Init() {
 	nets.RegisterMethod(&actor.Stopped{}, nets.Stoped)
 	nets.RegisterMethod(&NetConnectEvent{}, nets.onConnection)
 	nets.RegisterMethod(&network.NetChunk{}, nets.onRecv)
-	nets.RegisterMethod(&network.NetClose{}, nets.onClose)
+	nets.RegisterMethod(&network.NetClose{}, nets.OnClose)
 }
 
 //Started Turn on network connect service
@@ -186,8 +186,8 @@ func (nets *NetConnectService) onRecv(context actor.Context, message interface{}
 	}
 }
 
-//onClose Handling closed connection events
-func (nets *NetConnectService) onClose(context actor.Context, message interface{}) {
+//OnClose Handling closed connection events
+func (nets *NetConnectService) OnClose(context actor.Context, message interface{}) {
 	//Release buffer resources
 	nets.Handle.GetRecvBuffer().Next(nets.Handle.GetRecvBuffer().Len())
 	nets.Target.SetEtat(UnConnected)
