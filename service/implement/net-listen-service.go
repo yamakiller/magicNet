@@ -28,11 +28,10 @@ type NetListenService struct {
 	NetClients INetClientManager
 	NetDeleate INetListenDeleate
 
-	Addr                  string //listening address
-	CCMax                 int    //Connector pipe buffer to small
-	MaxClient             int
-	ClientKeep            uint64
-	ClientRecvBufferLimit int
+	Addr       string //listening address
+	CCMax      int    //Connector pipe buffer to small
+	MaxClient  int
+	ClientKeep uint64
 }
 
 //Init Initialize the network listening service
@@ -168,7 +167,7 @@ func (nets *NetListenService) OnRecv(context actor.Context, message interface{})
 	)
 
 	for {
-		space = nets.ClientRecvBufferLimit - c.GetRecvBuffer().Len()
+		space = c.GetRecvBuffer().Cap() - c.GetRecvBuffer().Len()
 		wby = len(data.Data) - writed
 		if space > 0 && wby > 0 {
 			if space > wby {

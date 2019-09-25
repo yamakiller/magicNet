@@ -189,7 +189,7 @@ func (nets *NetConnectService) onRecv(context actor.Context, message interface{}
 //OnClose Handling closed connection events
 func (nets *NetConnectService) OnClose(context actor.Context, message interface{}) {
 	//Release buffer resources
-	nets.Handle.GetRecvBuffer().Next(nets.Handle.GetRecvBuffer().Len())
+	nets.Handle.GetRecvBuffer().Reset()
 	nets.Target.SetEtat(UnConnected)
 }
 

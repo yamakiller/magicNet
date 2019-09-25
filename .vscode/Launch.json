@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch", // 名称可以随意写
+            "name": "Launch", //
             "type": "go",
             "request": "launch",
             "mode": "auto",
