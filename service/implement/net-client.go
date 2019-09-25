@@ -3,8 +3,6 @@ package implement
 import (
 	"bytes"
 	"errors"
-
-	"github.com/yamakiller/magicNet/util"
 )
 
 var (
@@ -16,8 +14,8 @@ var (
 
 //INetClient Network client interface
 type INetClient interface {
-	SetID(h *util.NetHandle)
-	GetID() *util.NetHandle
+	SetID(uint64)
+	GetID() uint64
 	GetAuth() uint64
 	SetAuth(v uint64)
 	GetSocket() int32
@@ -30,6 +28,7 @@ type INetClient interface {
 	BuildKeyPair()
 	GetKeyPublic() string
 	GetStat() *NetStat
+	Shutdown()
 	SetRef(v int)
 	IncRef()
 	DecRef() int
@@ -82,4 +81,9 @@ func (nc *NetClient) DecRef() int {
 //GetStat returns status
 func (nc *NetClient) GetStat() *NetStat {
 	return &nc.stat
+}
+
+//Shutdown termination client
+func (nc *NetClient) Shutdown() {
+
 }

@@ -1,9 +1,5 @@
 package implement
 
-import (
-	"github.com/yamakiller/magicNet/util"
-)
-
 //IAllocer Distributor interface
 type IAllocer interface {
 	New() INetClient
@@ -14,11 +10,11 @@ type IAllocer interface {
 type INetClientManager interface {
 	Init()
 	Size() int
-	Grap(h *util.NetHandle) INetClient
+	Grap(h uint64) INetClient
 	GrapSocket(sock int32) INetClient
-	GetHandles() []util.NetHandle
-	Erase(h *util.NetHandle)
-	Occupy(c INetClient) (*util.NetHandle, error)
+	GetHandles() []uint64
+	Erase(h uint64)
+	Occupy(c INetClient) (uint64, error)
 	Release(net INetClient)
 	Allocer() IAllocer
 }

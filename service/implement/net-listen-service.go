@@ -17,7 +17,7 @@ import (
 type INetListenDeleate interface {
 	Handshake(c INetClient) error
 	Analysis(context actor.Context, nets *NetListenService, c INetClient) error
-	UnOnlineNotification(h util.NetHandle) error
+	UnOnlineNotification(h uint64) error
 }
 
 // NetListenService Network monitoring service
@@ -66,12 +66,14 @@ func (nets *NetListenService) Started(context actor.Context, message interface{}
 func (nets *NetListenService) Stoped(context actor.Context, message interface{}) {
 	nets.LogInfo("Service Stoping %s", nets.Addr)
 
+	h := util.NetHandle{}
 	hls := nets.NetClients.GetHandles()
 	if hls != nil && len(hls) > 0 {
 		for nets.NetClients.Size() > 0 {
 			ick := 0
 			for i := 0; i < len(hls); i++ {
-				c := nets.NetClients.Grap(&hls[i])
+				h.SetValue(hls[i])
+				c := nets.NetClients.Grap(h.GetValue())
 				if c == nil {
 					continue
 				}
@@ -114,7 +116,10 @@ func (nets *NetListenService) OnAccept(context actor.Context, message interface{
 		return
 	}
 
-	h, err := nets.NetClients.Occupy(c)
+	c.SetSocket(accepter.Handle)
+	c.SetAddr(accepter.Addr.String() + strconv.Itoa(accepter.Port))
+
+	_, err := nets.NetClients.Occupy(c)
 	if err != nil {
 		nets.LogError("OnAccept client closed: %v, %d-%s:%d",
 			err,
@@ -125,10 +130,6 @@ func (nets *NetListenService) OnAccept(context actor.Context, message interface{
 		network.OperClose(accepter.Handle)
 		return
 	}
-
-	c.SetSocket(accepter.Handle)
-	c.SetAddr(accepter.Addr.String() + strconv.Itoa(accepter.Port))
-	c.SetID(h)
 
 	network.OperOpen(accepter.Handle)
 	network.OperSetKeep(accepter.Handle, nets.ClientKeep)
@@ -220,15 +221,16 @@ func (nets *NetListenService) OnClose(context actor.Context, message interface{}
 	}
 
 	defer nets.NetClients.Release(c)
-	hClose := *c.GetID()
 
-	nets.NetClients.Erase(&hClose)
+	hClose := c.GetID()
+
+	nets.NetClients.Erase(hClose)
 
 	if err := nets.NetDeleate.UnOnlineNotification(hClose); err != nil {
 		nets.LogDebug("closed client Notification %+v", err)
 	}
 
-	nets.LogDebug("closed client: %+v", hClose.GetValue())
+	nets.LogDebug("closed client: %+v", hClose)
 }
 
 //LogInfo Log information
