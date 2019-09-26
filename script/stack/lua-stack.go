@@ -197,6 +197,12 @@ func (S *LuaStack) PushNil() {
 	S._l.PushNil()
 }
 
+// Register : 注册闭包函数
+func (S *LuaStack) Register(f mlua.LuaGoFunction, name string, args ...interface{}) {
+	S._l.PushGoClosure(f, args...)
+	S._l.SetGlobal(name)
+}
+
 // ReLoad : 重新载入
 func (S *LuaStack) ReLoad(moduleFileName string) (int, error) {
 	if len(moduleFileName) == 0 {

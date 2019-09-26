@@ -104,14 +104,14 @@ func (nets *NetListenService) Stoped(context actor.Context, message interface{})
 func (nets *NetListenService) OnAccept(context actor.Context, message interface{}) {
 	accepter := message.(*network.NetAccept)
 	if nets.NetClients.Size()+1 > nets.MaxClient {
-		nets.LogWarning("OnAccept client fulled:%d", nets.NetClients.Size())
+		nets.LogWarning("OnAccept: client fulled:%d", nets.NetClients.Size())
 		network.OperClose(accepter.Handle)
 		return
 	}
 
 	c := nets.NetClients.Allocer().New()
 	if c == nil {
-		nets.LogError("OnAccept client closed: insufficient memory")
+		nets.LogError("OnAccept: client closed: insufficient memory")
 		network.OperClose(accepter.Handle)
 		return
 	}
@@ -121,7 +121,7 @@ func (nets *NetListenService) OnAccept(context actor.Context, message interface{
 
 	_, err := nets.NetClients.Occupy(c)
 	if err != nil {
-		nets.LogError("OnAccept client closed: %v, %d-%s:%d",
+		nets.LogError("OnAccept: client closed: %v, %d-%s:%d",
 			err,
 			accepter.Handle,
 			accepter.Addr.String(),
@@ -135,24 +135,24 @@ func (nets *NetListenService) OnAccept(context actor.Context, message interface{
 	network.OperSetKeep(accepter.Handle, nets.ClientKeep)
 
 	if err = nets.NetDeleate.Handshake(c); err != nil {
-		nets.LogError("OnAccept client fail:%s", err)
+		nets.LogError("OnAccept: client fail:%s", err)
 	}
 
 	c.GetStat().UpdateOnline(timer.Now())
 
 	nets.NetClients.Release(c)
 
-	nets.LogDebug("OnAccept client %d-%s:%d", accepter.Handle, accepter.Addr.String(), accepter.Port)
+	nets.LogDebug("OnAccept: client %d-%s:%d", accepter.Handle, accepter.Addr.String(), accepter.Port)
 }
 
 //OnRecv Receiving data events
 func (nets *NetListenService) OnRecv(context actor.Context, message interface{}) {
-	defer nets.LogDebug("onRecv complete")
+	defer nets.LogDebug("onRecv: complete")
 
-	data := message.(*network.NetChunk)
-	c := nets.NetClients.GrapSocket(data.Handle)
+	wrap := message.(*network.NetChunk)
+	c := nets.NetClients.GrapSocket(wrap.Handle)
 	if c == nil {
-		nets.LogError("OnRecv No target [%d] client object was found", data.Handle)
+		nets.LogError("OnRecv: No target [%d] client object was found", wrap.Handle)
 		return
 	}
 
@@ -169,16 +169,16 @@ func (nets *NetListenService) OnRecv(context actor.Context, message interface{})
 
 	for {
 		space = c.GetRecvBuffer().Cap() - c.GetRecvBuffer().Len()
-		wby = len(data.Data) - writed
+		wby = len(wrap.Data) - writed
 		if space > 0 && wby > 0 {
 			if space > wby {
 				space = wby
 			}
 
-			_, err = c.GetRecvBuffer().Write(data.Data[pos : pos+space])
+			_, err = c.GetRecvBuffer().Write(wrap.Data[pos : pos+space])
 			if err != nil {
-				nets.LogError("OnRecv error %+v socket %d", err, data.Handle)
-				network.OperClose(data.Handle)
+				nets.LogError("OnRecv: error %+v socket %d", err, wrap.Handle)
+				network.OperClose(wrap.Handle)
 				break
 			}
 
@@ -195,13 +195,13 @@ func (nets *NetListenService) OnRecv(context actor.Context, message interface{})
 				if err == ErrAnalysisSuccess {
 					continue
 				} else if err != ErrAnalysisProceed {
-					nets.LogError("OnRecv error %+v socket %d closing client", err, data.Handle)
-					network.OperClose(data.Handle)
+					nets.LogError("OnRecv: error %+v socket %d closing client", err, wrap.Handle)
+					network.OperClose(wrap.Handle)
 					return
 				}
 			}
 
-			if writed >= len(data.Data) {
+			if writed >= len(wrap.Data) {
 				return
 			}
 

@@ -36,10 +36,7 @@ func (ht *HashTable) Size() int {
 func (ht *HashTable) Push(v interface{}) (uint32, error) {
 	var i uint32
 	for i = 0; i < ht.Max; i++ {
-		key := ((i + ht.seqID) & ht.Max)
-		if key >= ht.Mask {
-			key &= ht.Mask
-		}
+		key := ((i + ht.seqID) & ht.Mask)
 		hash := key & (ht.Max - 1)
 		if ht.arrays[hash] == nil {
 			ht.seqID = key + 1
