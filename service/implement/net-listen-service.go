@@ -233,6 +233,15 @@ func (nets *NetListenService) OnClose(context actor.Context, message interface{}
 	nets.LogDebug("closed client: %+v", hClose)
 }
 
+//Shutdown Termination of service
+func (nets *NetListenService) Shutdown() {
+	if nets.NetListen != nil {
+		nets.NetListen.Close()
+	}
+
+	nets.Service.Shutdown()
+}
+
 //LogInfo Log information
 func (nets *NetListenService) LogInfo(frmt string, args ...interface{}) {
 	nets.Service.LogInfo(nets.getDesc()+frmt, args...)
