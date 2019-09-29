@@ -52,6 +52,7 @@ type NetConnectService struct {
 	Handle     net.INetConnection
 	Deleate    INetConnectDeleate
 	Target     INetConnectTarget
+	NetMethod  NetMethodDispatch
 	isShutdown bool
 }
 
@@ -84,7 +85,7 @@ func (nets *NetConnectService) Stoped(context actor.Context, message interface{}
 		nets.Target.GetAddr())
 	nets.isShutdown = false
 	nets.Handle.Close()
-
+	nets.NetMethod.Clear()
 	nets.LogInfo("Connection Service Stoped %s", nets.Target.GetAddr())
 }
 

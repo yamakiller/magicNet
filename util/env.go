@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+
+	"github.com/yamakiller/magicNet/engine/files"
 )
 
 var (
@@ -13,9 +15,10 @@ var (
 
 // LoadEnv : 载入环境变量配置信息
 func LoadEnv(filename string) error {
-	f, err := os.Open(filename)
+	fullpath := files.GetFullPathForFilename(filename)
+	f, err := os.Open(fullpath)
 	if err != nil {
-		return fmt.Errorf("open env config fail:%s", filename)
+		return fmt.Errorf("open env config fail:%s", fullpath)
 	}
 	defer f.Close()
 	contents, err := ioutil.ReadAll(f)

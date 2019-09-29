@@ -71,7 +71,7 @@ func WithRootPath(rootPath string) {
 
 // IsFileExist : 判断在根目录下此文件是否存在
 func IsFileExist(filename string) bool {
-	fullPath := GetFullPathForFilename(filename)
+	fullPath := filename //GetFullPathForFilename(filename)
 	defaultV.lock.RLock()
 	_, ok := defaultV.v[fullPath]
 	if ok {

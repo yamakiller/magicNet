@@ -114,7 +114,6 @@ func (hsm *HTTPSrvMethodJS) Close() {
 
 func (hsm *HTTPSrvMethodJS) runJs(jsfile string, w http.ResponseWriter, r *http.Request) {
 	fileFullPath := files.GetFullPathForFilename(jsfile)
-	fmt.Println("path:", fileFullPath)
 	if !files.IsFileExist(fileFullPath) {
 		w.WriteHeader(http.StatusNotFound)
 		return

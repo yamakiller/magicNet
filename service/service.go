@@ -28,8 +28,6 @@ type IService interface {
 
 	RegisterMethod(key interface{}, method MethodFunc)
 
-	GetMethod(key interface{}) MethodFunc
-
 	withName(n string)
 
 	withWait(wait *sync.WaitGroup)
@@ -137,14 +135,6 @@ func (srv *Service) ID() uint32 {
 // RegisterMethod : Registration (convention/agreement) method
 func (srv *Service) RegisterMethod(key interface{}, method MethodFunc) {
 	srv.method[reflect.TypeOf(key)] = method
-}
-
-//GetMethod Return the method corresponding to the protocol
-func (srv *Service) GetMethod(key interface{}) MethodFunc {
-	if r, ok := srv.method[key]; ok {
-		return r
-	}
-	return nil
 }
 
 func (srv *Service) withName(n string) {

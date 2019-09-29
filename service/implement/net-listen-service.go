@@ -27,6 +27,7 @@ type NetListenService struct {
 	NetListen  net.INetListen
 	NetClients INetClientManager
 	NetDeleate INetListenDeleate
+	NetMethod  NetMethodDispatch
 
 	Addr       string //listening address
 	CCMax      int    //Connector pipe buffer to small

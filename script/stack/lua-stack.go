@@ -26,9 +26,14 @@ func NewLuaStack() *LuaStack {
 	return &LuaStack{_l: mlua.NewState()}
 }
 
-// GetLuaState : 获取LUA虚拟机C对象
+// GetLuaState Get LUA virtual machine C object
 func (S *LuaStack) GetLuaState() *mlua.State {
 	return S._l
+}
+
+//OpenLibs  library
+func (S *LuaStack) OpenLibs() {
+	S._l.OpenLibs()
 }
 
 // AddSreachPath : 添加LUA搜索路径
@@ -139,6 +144,7 @@ func (S *LuaStack) ExecuteScriptFile(fileName string) (int, error) {
 		tmp = tmpFileName
 	} else {
 		tmpFileName = tmp + notByteLuaFileExt
+		tmpFileName = files.GetFullPathForFilename(tmpFileName)
 		if !files.IsFileExist(tmpFileName) {
 			return 0, fmt.Errorf("cannot open %s:No such file or directory", tmpFileName)
 		}
@@ -246,4 +252,9 @@ func (S *LuaStack) loadBuffer(chunk *byte, chunkSize uint, chunkName string) (in
 		return r, errors.New(err)
 	}
 	return r, nil
+}
+
+//Shutdown Close lua_state
+func (S *LuaStack) Shutdown() {
+	S._l.Close()
 }
