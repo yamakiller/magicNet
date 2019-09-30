@@ -24,6 +24,11 @@ func SpawnMethodDispatch() NetMethodDispatch {
 	return NetMethodDispatch{m: make(map[interface{}]NetMethodFun)}
 }
 
+//NewMethodDispatch Newing a network method scheduler
+func NewMethodDispatch() *NetMethodDispatch {
+	return &NetMethodDispatch{m: make(map[interface{}]NetMethodFun)}
+}
+
 //NetMethodDispatch Network Method Scheduler
 type NetMethodDispatch struct {
 	m    map[interface{}]NetMethodFun

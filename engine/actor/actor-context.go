@@ -270,7 +270,7 @@ func (ctx *actorContext) EscalateFailure(reason interface{}, message interface{}
 }
 
 func (ctx *actorContext) tryTerminate() {
-	if ctx.state == stateStopped {
+	if ctx.state == stateStopping {
 		ctx.finalizeStop()
 	}
 }

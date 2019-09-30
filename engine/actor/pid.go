@@ -123,13 +123,6 @@ func (pid *PID) Stop() {
 	pid.ref().Stop(pid)
 }
 
-// NewPID ：新建一个PID
-/*func NewPID() *PID {
-	pid := &PID{}
-	globalRegistry.Register(pid)
-	return pid
-}*/
-
 // Tell : 调用
 func (pid *PID) Tell(message interface{}) {
 	ctx := DefaultSchedulerContext

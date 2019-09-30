@@ -8,24 +8,24 @@ package actor
  * @Description: Actor 基础接口
  */
 
-// Actor : 基础接口
+// Actor Basic interface
 type Actor interface {
 	Receive(c Context)
 }
 
-// MakeActor : 创建 Actor函数
+// MakeActor Create an Actor function
 type MakeActor func() Actor
 
-// AtrFunc : Actor 接收代理函数
+// AtrFunc Actor Receive Agent Function
 type AtrFunc func(c Context)
 
-// Receive : Actor 接收函数外壳
+// Receive : Actor receive function shell
 func (f AtrFunc) Receive(c Context) {
 	f(c)
 }
 
-// ReceiverFunc : Actor 接收函数定义
+// ReceiverFunc : Actor receive function definition
 type ReceiverFunc func(c ReceiverContext, pack *MessagePack)
 
-// SenderFunc : Actor 发送者函数定义
+// SenderFunc : Actor sender function definition
 type SenderFunc func(c SenderContext, target *PID, pack *MessagePack)

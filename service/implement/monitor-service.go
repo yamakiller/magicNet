@@ -54,6 +54,7 @@ type MonitorService struct {
 func (ms *MonitorService) Init() {
 	ms.Service.Init()
 	ms.RegisterMethod(&actor.Started{}, ms.Started)
+	ms.RegisterMethod(&actor.Stopping{}, ms.Stopping)
 	ms.RegisterMethod(&actor.Stopped{}, ms.Stoped)
 }
 
@@ -117,15 +118,19 @@ end_lable:
 	ms.Service.Started(context, message)
 }
 
-// Stoped : 停止服务
-func (ms *MonitorService) Stoped(context actor.Context, message interface{}) {
+// Stopping : 停止服务
+func (ms *MonitorService) Stopping(context actor.Context, message interface{}) {
 	err := ms.httpHandle.Close()
 	if err != http.ErrServerClosed {
 		logger.Warning(context.Self().ID, "monitor service close error:%v", err)
 	}
-	ms.Service.Stoped(context, message)
-	//!位置可以考虑一下
+
 	ms.httpMethod.Close()
+}
+
+//Stoped 服务已停止
+func (ms *MonitorService) Stoped(context actor.Context, message interface{}) {
+	ms.Service.Stoped(context, message)
 }
 
 // Shutdown 关闭服务

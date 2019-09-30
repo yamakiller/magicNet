@@ -4,27 +4,27 @@ import (
 	"time"
 )
 
-// SchedulerContext : 调度器
+// SchedulerContext scheduler
 type SchedulerContext struct {
 	headers messageHeader
 }
 
-// DefaultSchedulerContext :  默认推送Context
+// DefaultSchedulerContext  Default push Context
 var DefaultSchedulerContext = &SchedulerContext{
 	headers: DefaultMessageHeader,
 }
 
-// Sender : 推送者[无效]
+// Sender : Pusher [invalid]
 func (sc *SchedulerContext) Sender() *PID {
 	return nil
 }
 
-// Self : 自己[无效]
+// Self : Own [invalid]
 func (sc *SchedulerContext) Self() *PID {
 	return nil
 }
 
-// Actor :  自己的Actor对象[无效]
+// Actor :  Own Actor object [invalid]
 func (sc *SchedulerContext) Actor() Actor {
 	return nil
 }

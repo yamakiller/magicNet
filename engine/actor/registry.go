@@ -24,23 +24,23 @@ const (
 	registerDefaultSize = 32
 )
 
-// globalRegistry : Actor 全局注册表
+// globalRegistry : Global registry
 var globalRegistry = &Registry{
 	localSequence: 1,
 	localItem:     make([]registryValue, registerDefaultSize),
 }
 
-// SetLocalAddress : 设置本地服务器地址
+// SetLocalAddress Set the local server address
 func (r *Registry) SetLocalAddress(addr uint32) {
 	r.localAddress = addr
 }
 
-// GetLocalAddress : 获取本地服务器地址信息
+// GetLocalAddress Get local server address information
 func (r *Registry) GetLocalAddress() uint32 {
 	return r.localAddress
 }
 
-// Register : 注册一个Actor并生成PID
+// Register Register an Actor and generate a PID
 func (r *Registry) Register(pid *PID, process Process) bool {
 	r.localItemMutex.Lock()
 	for {
@@ -79,7 +79,7 @@ func (r *Registry) Register(pid *PID, process Process) bool {
 	}
 }
 
-// UnRegister : 注销 PID
+// UnRegister Logout PID
 func (r *Registry) UnRegister(pid *PID) bool {
 	r.localItemMutex.Lock()
 	defer r.localItemMutex.Unlock()
@@ -96,7 +96,7 @@ func (r *Registry) UnRegister(pid *PID) bool {
 	return false
 }
 
-// Get : 获取PID的处理对象
+// Get  Return the processing object of the PID
 func (r *Registry) Get(pid *PID) (Process, bool) {
 	r.localItemMutex.RLock()
 	defer r.localItemMutex.RUnlock()

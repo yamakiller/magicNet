@@ -60,7 +60,7 @@ type NetConnectService struct {
 func (nets *NetConnectService) Init() {
 	nets.Service.Init()
 	nets.RegisterMethod(&actor.Started{}, nets.Started)
-	nets.RegisterMethod(&actor.Stopped{}, nets.Stoped)
+	nets.RegisterMethod(&actor.Stopping{}, nets.Stopping)
 	nets.RegisterMethod(&NetConnectEvent{}, nets.onConnection)
 	nets.RegisterMethod(&network.NetChunk{}, nets.onRecv)
 	nets.RegisterMethod(&network.NetClose{}, nets.OnClose)
@@ -77,8 +77,8 @@ func (nets *NetConnectService) Started(context actor.Context, message interface{
 	nets.LogInfo("Service Startup completed")
 }
 
-//Stoped Out of service
-func (nets *NetConnectService) Stoped(context actor.Context, message interface{}) {
+//Stopping Out of service
+func (nets *NetConnectService) Stopping(context actor.Context, message interface{}) {
 	nets.LogInfo("[%s] %s Connection Service Stoping %s",
 		nets.Handle.Name(),
 		nets.Name(),

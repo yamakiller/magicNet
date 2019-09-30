@@ -14,33 +14,33 @@ import (
 	"github.com/yamakiller/magicNet/engine/mailbox"
 )
 
-// AtrProcess : Actor 处理模块
+// AtrProcess Actor Processing module
 type AtrProcess struct {
 	mailbox mailbox.Mailbox
 	death   int32
 }
 
-// NewActorProcess : 创建一个 ActorProcess
+// NewActorProcess Create an Actor processor
 func NewActorProcess(mailbox mailbox.Mailbox) *AtrProcess {
 	return &AtrProcess{mailbox: mailbox}
 }
 
-// SendUsrMessage : 发送用户级消息
+// SendUsrMessage Send user level messages
 func (a *AtrProcess) SendUsrMessage(pid *PID, message interface{}) {
 	a.mailbox.PostUsrMessage(message)
 }
 
-// SendSysMessage : 发送系统级消息
+// SendSysMessage Send system level messages
 func (a *AtrProcess) SendSysMessage(pid *PID, message interface{}) {
 	a.mailbox.PostSysMessage(message)
 }
 
-// OverloadUsrMessage : 检测用户邮箱是否有扩容的警告
+// OverloadUsrMessage A warning to detect if a user's mailbox has been expanded
 func (a *AtrProcess) OverloadUsrMessage() int {
 	return a.mailbox.OverloadUsrMessage()
 }
 
-// Stop : 发送停止Actor消息
+// Stop Send stop Actor message
 func (a *AtrProcess) Stop(pid *PID) {
 	atomic.StoreInt32(&a.death, 1)
 	a.SendSysMessage(pid, stopMessage)

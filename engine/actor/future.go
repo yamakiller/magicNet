@@ -8,10 +8,10 @@ import (
 	"unsafe"
 )
 
-// ErrTimeout  : 定义默认超时错误
+// ErrTimeout  : Define default timeout error
 var ErrTimeout = errors.New("future: timeout")
 
-// NewFuture :  创建一个Future
+// NewFuture :  Create a Future
 func NewFuture(d time.Duration) *Future {
 	ref := &futureProcess{Future{cond: sync.NewCond(&sync.Mutex{})}}
 	pid := &PID{}
@@ -28,7 +28,7 @@ func NewFuture(d time.Duration) *Future {
 	return &ref.Future
 }
 
-// Future : Future 对象
+// Future : Future object
 type Future struct {
 	pid  *PID
 	cond *sync.Cond
@@ -41,7 +41,7 @@ type Future struct {
 	completions []func(res interface{}, err error)
 }
 
-// PID : 获取对象的PID
+// PID Get the PID of the object
 func (f *Future) PID() *PID {
 	return f.pid
 }
@@ -83,13 +83,13 @@ func (f *Future) wait() {
 	}
 }
 
-// Result : 获取结果
+// Result : Get results
 func (f *Future) Result() (interface{}, error) {
 	f.wait()
 	return f.result, f.err
 }
 
-// Wait : 等待结果
+// Wait Waiting for results
 func (f *Future) Wait() error {
 	f.wait()
 	return f.err

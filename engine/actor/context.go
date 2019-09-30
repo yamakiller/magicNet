@@ -16,7 +16,7 @@ type infoPart interface {
 	Actor() Actor
 }
 
-// Context : Context 基础接口
+// Context Context interface
 type Context interface {
 	infoPart
 	basePart
@@ -27,48 +27,48 @@ type Context interface {
 	stopperPart
 }
 
-// SenderContext ： 发送者Context基础接口
+// SenderContext Sender Context Base Interface
 type SenderContext interface {
 	infoPart
 	senderPart
 	messagePart
 }
 
-// ReceiverContext : 接收者Context基础接口
+// ReceiverContext Receiver Context Basic Interface
 type ReceiverContext interface {
 	infoPart
 	receiverPart
 	messagePart
 }
 
-// MakerContext : 创建者Context基础接口
+// MakerContext  Creator Context base interface
 type MakerContext interface {
 	infoPart
 	makerPart
 }
 
-// basePart : 所有对象的基础接口
+// basePart Basic interface for all objects
 type basePart interface {
 	//ReceiveTimeout() time.Duration
 
 	Respond(response interface{})
 
-	//将当前的消息，存放到stack上
+	//Store the current message on the stack
 	Stash()
 
-	//注册监视器
+	//Registration monitor
 	Watch(pid *PID)
 
 	//注销监视器
 	Unwatch(pid *PID)
 
-	//设置定时器
+	//Set timer
 	//SetReceiveTimeout(d time.Duration)
 
-	//取消定时器
+	//Cancel timer
 	//CancelReceiveTimeout()
 
-	//将当前消息转发给指定的PID
+	//Forward the current message to the specified PID
 	Forward(pid *PID)
 
 	AwaitFuture(f *Future, continuation func(res interface{}, err error))

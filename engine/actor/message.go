@@ -2,7 +2,7 @@ package actor
 
 import "github.com/yamakiller/magicNet/engine/mailbox"
 
-// AutoReceiveMessage ： 自动接收消息
+// AutoReceiveMessage Receive messages automatically
 type AutoReceiveMessage interface {
 	AutoReceiveMessage()
 }
@@ -22,28 +22,28 @@ type continuation struct {
 	f       func()
 }
 
-// AutoReceiveMessage  : 停止中消息 定义AutoReceiveMessage 函数对象
+// AutoReceiveMessage  Stop message Defines the AutoReceiveMessage function object
 func (*Stopping) AutoReceiveMessage() {}
 
-// AutoReceiveMessage : 已停止消息  定义AutoReceiveMessage 函数对象
+// AutoReceiveMessage Stopped message Defines the AutoReceiveMessage function object
 func (*Stopped) AutoReceiveMessage() {}
 
-// SystemMessage : 已经开始消息   定义SystemMessage 函数对象
+// SystemMessage Started message Defining the SystemMessage function object
 func (*Started) SystemMessage() {}
 
-// SystemMessage : 停止消息   定义SystemMessage 函数对象
+// SystemMessage Stop message Define SystemMessage function object
 func (*Stop) SystemMessage() {}
 
-// SystemMessage : 进入观察/加入观察消息   定义SystemMessage 函数对象
+// SystemMessage Enter observation/join observation message Define SystemMessage function object
 func (*Watch) SystemMessage() {}
 
-// SystemMessage : 取消观察/推出观察消息   定义SystemMessage 函数对象
+// SystemMessage Unobserve/Export Watch Message Define SystemMessage Function Object
 func (*Unwatch) SystemMessage() {}
 
-// SystemMessage : 终止消息   定义SystemMessage 函数对象
+// SystemMessage Terminate message Define SystemMessage function object
 func (*Terminated) SystemMessage() {}
 
-// SystemMessage : 代理调用   定义SystemMessage 函数对象
+// SystemMessage Proxy call Defines the SystemMessage function object
 func (*continuation) SystemMessage() {}
 
 var (

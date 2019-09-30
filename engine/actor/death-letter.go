@@ -31,7 +31,7 @@ func init() {
 	})
 }
 
-// DeadLetterEvent : 死亡消息
+// DeadLetterEvent Death news
 type DeadLetterEvent struct {
 	PID     *PID
 	Message interface{}

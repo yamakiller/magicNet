@@ -39,7 +39,7 @@ type NetListenService struct {
 func (nets *NetListenService) Init() {
 	nets.Service.Init()
 	nets.RegisterMethod(&actor.Started{}, nets.Started)
-	nets.RegisterMethod(&actor.Stopped{}, nets.Stoped)
+	nets.RegisterMethod(&actor.Stopping{}, nets.Stopping)
 	nets.RegisterMethod(&network.NetAccept{}, nets.OnAccept)
 	nets.RegisterMethod(&network.NetChunk{}, nets.OnRecv)
 	nets.RegisterMethod(&network.NetClose{}, nets.OnClose)
@@ -63,8 +63,8 @@ func (nets *NetListenService) Started(context actor.Context, message interface{}
 	nets.LogInfo("%s Service Startup completed", nets.Name())
 }
 
-//Stoped Turn off network monitoring service
-func (nets *NetListenService) Stoped(context actor.Context, message interface{}) {
+//Stopping Turn off network monitoring service
+func (nets *NetListenService) Stopping(context actor.Context, message interface{}) {
 	nets.LogInfo("Service Stoping %s", nets.Addr)
 
 	h := util.NetHandle{}

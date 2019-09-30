@@ -2,6 +2,7 @@ package library
 
 import (
 	"database/sql"
+	"log"
 	"time"
 
 	// import mysql driver
@@ -36,7 +37,7 @@ func (msd *MySQLDB) Query(strSQL string, args ...interface{}) (map[string]interf
 		return nil, perr
 	}
 
-	rows, err := msd.db.Query(strSQL, args)
+	rows, err := msd.db.Query(strSQL, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,11 +67,13 @@ func (msd *MySQLDB) Query(strSQL string, args ...interface{}) (map[string]interf
 // Insert : 插入语句
 func (msd *MySQLDB) Insert(strSQL string, args ...interface{}) (int64, error) {
 	if perr := msd.db.Ping(); perr != nil {
+		log.Println(perr)
 		return 0, perr
 	}
 
-	r, err := msd.db.Exec(strSQL, args)
+	r, err := msd.db.Exec(strSQL, args...)
 	if err != nil {
+		log.Println(err)
 		return 0, err
 	}
 

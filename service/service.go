@@ -18,6 +18,7 @@ type MethodFunc func(self actor.Context, message interface{})
 type IService interface {
 	actor.Actor
 
+	GetPID() *actor.PID
 	Name() string
 	Key() string
 	ID() uint32
@@ -47,15 +48,16 @@ type Service struct {
 	method map[interface{}]MethodFunc
 }
 
-// Init : 初始化服务
+// Init : Initialization service
 func (srv *Service) Init() {
 	srv.method = make(map[interface{}]MethodFunc, 16)
 	srv.RegisterMethod(&actor.Started{}, srv.Started)
+	srv.RegisterMethod(&actor.Stopping{}, srv.Stopping)
 	srv.RegisterMethod(&actor.Stopped{}, srv.Stoped)
 	srv.RegisterMethod(&actor.Terminated{}, srv.Terminated)
 }
 
-// Receive : 接收消息
+// Receive : Receive message
 func (srv *Service) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	default:
@@ -84,18 +86,24 @@ func (srv *Service) Started(context actor.Context, message interface{}) {
 	}
 }
 
-// Stoped : 服务停止收尾处理函数
+//Stopping : Service stopped
+func (srv *Service) Stopping(context actor.Context, message interface{}) {
+}
+
+// Stoped : Service stop closing handler
 func (srv *Service) Stoped(context actor.Context, message interface{}) {
 	for k := range srv.method {
 		delete(srv.method, k)
+	}
+
+	if srv.wait != nil {
+		srv.wait.Done()
 	}
 }
 
 // Terminated : The service is terminated and can be destroyed
 func (srv *Service) Terminated(context actor.Context, message interface{}) {
-	if srv.wait != nil {
-		srv.wait.Done()
-	}
+	srv.Shutdown()
 }
 
 // Shutdown : Proactively shut down the service
