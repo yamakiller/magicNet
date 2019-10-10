@@ -40,10 +40,9 @@ func (rdb *RedisDB) Init(host string, db int, maxIdle int, maxActive int, idleSe
 }
 
 // Do : 执行Redis
-func (rdb *RedisDB) Do(commandName string, args... interface{}) (interface{}, error) {
+func (rdb *RedisDB) Do(commandName string, args ...interface{}) (interface{}, error) {
 	c := rdb.c.Get()
 	defer c.Close()
-//	log.Println(commandName,args)
 	return c.Do(commandName, args...)
 }
 
