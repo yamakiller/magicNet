@@ -84,6 +84,6 @@ func (nc *NetClient) GetStat() *NetStat {
 }
 
 //Shutdown termination client
-func (nc *NetClient) Shutdown() {
+/*func (nc *NetClient) Shutdown() {
 
-}
+}*/

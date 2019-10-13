@@ -10,7 +10,6 @@ import (
 	"github.com/yamakiller/magicNet/service"
 	"github.com/yamakiller/magicNet/service/net"
 	"github.com/yamakiller/magicNet/timer"
-	"github.com/yamakiller/magicNet/util"
 )
 
 //INetListenDeleate Network listening commission
@@ -67,7 +66,7 @@ func (nets *NetListenService) Started(context actor.Context, message interface{}
 func (nets *NetListenService) Stopping(context actor.Context, message interface{}) {
 	nets.LogInfo("Service Stoping %s", nets.Addr)
 
-	h := util.NetHandle{}
+	h := NetHandle{}
 	hls := nets.NetClients.GetHandles()
 	if hls != nil && len(hls) > 0 {
 		for nets.NetClients.Size() > 0 {
