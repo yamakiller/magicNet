@@ -67,18 +67,18 @@ func (nets *NetConnectService) Init() {
 }
 
 //Started Turn on network connect service
-func (nets *NetConnectService) Started(context actor.Context, message interface{}) {
+func (nets *NetConnectService) Started(context actor.Context, sender *actor.PID, message interface{}) {
 	nets.Assignment(context)
 	nets.LogInfo("Service Startup address:%s read-buffer-limit:%d chan-buffer-size:%d",
 		nets.Target.GetAddr(),
 		nets.Handle.GetRecvBufferLimit(),
 		nets.Target.GetOutSize())
-	nets.Service.Started(context, message)
+	nets.Service.Started(context, sender, message)
 	nets.LogInfo("Service Startup completed")
 }
 
 //Stopping Out of service
-func (nets *NetConnectService) Stopping(context actor.Context, message interface{}) {
+func (nets *NetConnectService) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
 	nets.LogInfo("[%s] %s Connection Service Stoping %s",
 		nets.Handle.Name(),
 		nets.Name(),
@@ -113,7 +113,7 @@ unend:
 }
 
 //onConnection Request connection event
-func (nets *NetConnectService) onConnection(context actor.Context, message interface{}) {
+func (nets *NetConnectService) onConnection(context actor.Context, sender *actor.PID, message interface{}) {
 	//t := message.(*NetConnectEvent)
 	nets.LogInfo("onConnection: %s", nets.Target.GetAddr())
 	err := nets.AutoConnect(context)
@@ -123,7 +123,7 @@ func (nets *NetConnectService) onConnection(context actor.Context, message inter
 }
 
 //OnRecv Connection read data
-func (nets *NetConnectService) onRecv(context actor.Context, message interface{}) {
+func (nets *NetConnectService) onRecv(context actor.Context, sender *actor.PID, message interface{}) {
 	defer nets.LogDebug("onRecv complete")
 	wrap := message.(*network.NetChunk)
 	if wrap.Handle != nets.Handle.Socket() {
@@ -188,7 +188,7 @@ func (nets *NetConnectService) onRecv(context actor.Context, message interface{}
 }
 
 //OnClose Handling closed connection events
-func (nets *NetConnectService) OnClose(context actor.Context, message interface{}) {
+func (nets *NetConnectService) OnClose(context actor.Context, sender *actor.PID, message interface{}) {
 	//Release buffer resources
 	nets.Handle.GetRecvBuffer().Reset()
 	nets.Target.SetEtat(UnConnected)

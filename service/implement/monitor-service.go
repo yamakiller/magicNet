@@ -59,7 +59,7 @@ func (ms *MonitorService) Init() {
 }
 
 // Started : 监视器启动函数
-func (ms *MonitorService) Started(context actor.Context, message interface{}) {
+func (ms *MonitorService) Started(context actor.Context, sender *actor.PID, message interface{}) {
 	ms.isShutdown = false
 	ms.httpMutex = http.NewServeMux()
 	ms.httpHandle = &http.Server{Addr: ms.Addr, Handler: ms.httpMutex}
@@ -115,11 +115,11 @@ func (ms *MonitorService) Started(context actor.Context, message interface{}) {
 		}()
 	}
 end_lable:
-	ms.Service.Started(context, message)
+	ms.Service.Started(context, sender, message)
 }
 
 // Stopping : 停止服务
-func (ms *MonitorService) Stopping(context actor.Context, message interface{}) {
+func (ms *MonitorService) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
 	err := ms.httpHandle.Close()
 	if err != http.ErrServerClosed {
 		logger.Warning(context.Self().ID, "monitor service close error:%v", err)
@@ -129,8 +129,8 @@ func (ms *MonitorService) Stopping(context actor.Context, message interface{}) {
 }
 
 //Stoped 服务已停止
-func (ms *MonitorService) Stoped(context actor.Context, message interface{}) {
-	ms.Service.Stoped(context, message)
+func (ms *MonitorService) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
+	ms.Service.Stoped(context, sender, message)
 }
 
 // Shutdown 关闭服务

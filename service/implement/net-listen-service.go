@@ -49,7 +49,7 @@ func (nets *NetListenService) getDesc() string {
 }
 
 //Started Turn on network monitoring service
-func (nets *NetListenService) Started(context actor.Context, message interface{}) {
+func (nets *NetListenService) Started(context actor.Context, sender *actor.PID, message interface{}) {
 	nets.Assignment(context)
 	nets.LogInfo("Service Startup %s", nets.Addr)
 	err := nets.NetListen.Listen(context, nets.Addr, nets.CCMax)
@@ -58,12 +58,15 @@ func (nets *NetListenService) Started(context actor.Context, message interface{}
 		return
 	}
 
-	nets.Service.Started(context, message)
+	nets.Service.Started(context, sender, message)
 	nets.LogInfo("%s Service Startup completed", nets.Name())
 }
 
 //Stopping Turn off network monitoring service
-func (nets *NetListenService) Stopping(context actor.Context, message interface{}) {
+func (nets *NetListenService) Stopping(context actor.Context,
+	sender *actor.PID,
+	message interface{}) {
+
 	nets.LogInfo("Service Stoping %s", nets.Addr)
 
 	h := NetHandle{}
@@ -101,7 +104,10 @@ func (nets *NetListenService) Stopping(context actor.Context, message interface{
 }
 
 //OnAccept Receive connection event
-func (nets *NetListenService) OnAccept(context actor.Context, message interface{}) {
+func (nets *NetListenService) OnAccept(context actor.Context,
+	sender *actor.PID,
+	message interface{}) {
+
 	accepter := message.(*network.NetAccept)
 	if nets.NetClients.Size()+1 > nets.MaxClient {
 		nets.LogWarning("OnAccept: client fulled:%d", nets.NetClients.Size())
@@ -146,7 +152,10 @@ func (nets *NetListenService) OnAccept(context actor.Context, message interface{
 }
 
 //OnRecv Receiving data events
-func (nets *NetListenService) OnRecv(context actor.Context, message interface{}) {
+func (nets *NetListenService) OnRecv(context actor.Context,
+	sender *actor.PID,
+	message interface{}) {
+
 	defer nets.LogDebug("onRecv: complete")
 
 	wrap := message.(*network.NetChunk)
@@ -211,7 +220,10 @@ func (nets *NetListenService) OnRecv(context actor.Context, message interface{})
 }
 
 //OnClose Close connection event
-func (nets *NetListenService) OnClose(context actor.Context, message interface{}) {
+func (nets *NetListenService) OnClose(context actor.Context,
+	sender *actor.PID,
+	message interface{}) {
+
 	closer := message.(*network.NetClose)
 	nets.LogDebug("close socket:%d", closer.Handle)
 	c := nets.NetClients.GrapSocket(closer.Handle)

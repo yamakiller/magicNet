@@ -12,7 +12,7 @@ import (
 )
 
 // MethodFunc : Service method function
-type MethodFunc func(self actor.Context, message interface{})
+type MethodFunc func(self actor.Context, sender *actor.PID, message interface{})
 
 // IService  Service base class interface
 type IService interface {
@@ -40,7 +40,7 @@ type IService interface {
 	LogWarning(frmt string, args ...interface{})
 }
 
-// Service 服务基类
+// Service server base class
 type Service struct {
 	pid    *actor.PID
 	name   string
@@ -60,10 +60,16 @@ func (srv *Service) Init() {
 // Receive : Receive message
 func (srv *Service) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
+	case *actor.MessagePack:
+		f, ok := srv.method[reflect.TypeOf(msg.Message)]
+		if ok {
+			f(context, msg.Sender, msg.Message)
+		}
+		logger.Error(context.Self().ID, "service unknown message:%+v,sender:%+v", msg, msg.Sender)
 	default:
 		f, ok := srv.method[reflect.TypeOf(msg)]
 		if ok {
-			f(context, msg)
+			f(context, nil, msg)
 			break
 		}
 		logger.Error(context.Self().ID, "service unknown message:%+v", msg)
@@ -77,7 +83,7 @@ func (srv *Service) Assignment(context actor.Context) {
 }
 
 // Started : Service start function
-func (srv *Service) Started(context actor.Context, message interface{}) {
+func (srv *Service) Started(context actor.Context, sender *actor.PID, message interface{}) {
 	if srv.pid == nil {
 		srv.Assignment(context)
 	}
@@ -87,11 +93,11 @@ func (srv *Service) Started(context actor.Context, message interface{}) {
 }
 
 //Stopping : Service stopped
-func (srv *Service) Stopping(context actor.Context, message interface{}) {
+func (srv *Service) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
 }
 
 // Stoped : Service stop closing handler
-func (srv *Service) Stoped(context actor.Context, message interface{}) {
+func (srv *Service) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
 	for k := range srv.method {
 		delete(srv.method, k)
 	}
@@ -102,7 +108,7 @@ func (srv *Service) Stoped(context actor.Context, message interface{}) {
 }
 
 // Terminated : The service is terminated and can be destroyed
-func (srv *Service) Terminated(context actor.Context, message interface{}) {
+func (srv *Service) Terminated(context actor.Context, sender *actor.PID, message interface{}) {
 	srv.Shutdown()
 }
 

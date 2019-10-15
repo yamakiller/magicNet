@@ -62,10 +62,10 @@ func (ncs *NetClientService) GetKeyPublic() string {
 }*/
 
 //Stoped 通知已经停止服务，清除套接字关系/清除ID
-func (ncs *NetClientService) Stoped(context actor.Context, message interface{}) {
+func (ncs *NetClientService) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
 	ncs.LogDebug("Stoped: Socket-%d", ncs.GetSocket())
 	ncs.SetSocket(0)
-	ncs.Service.Stoped(context, message)
+	ncs.Service.Stoped(context, sender, message)
 }
 
 //Shutdown Terminate this client service
