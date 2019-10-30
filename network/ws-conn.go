@@ -14,11 +14,11 @@ type wsConn struct {
 	sConn
 }
 
-func (sc *wsConn) getProto() string {
+func (slf *wsConn) getProto() string {
 	return protoWeb
 }
 
-func (sc *wsConn) getType() int {
+func (slf *wsConn) getType() int {
 	return CConnect
 }
 

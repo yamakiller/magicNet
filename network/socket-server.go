@@ -24,11 +24,11 @@ type sServer struct {
 
 type makeConn func(handle int32, s interface{}, operator *actor.PID, so *slot, now uint64, stat int32) ISocket
 
-func (ss *sServer) serve(ln net.Listener) {
+func (slf *sServer) serve(ln net.Listener) {
 
 }
 
-func (ss *sServer) accept(conn interface{},
+func (slf *sServer) accept(conn interface{},
 	network string,
 	address string) error {
 
@@ -39,13 +39,13 @@ func (ss *sServer) accept(conn interface{},
 
 	now := timer.Now()
 	so.l.Lock()
-	if ss.isShutdown {
+	if slf.isShutdown {
 		so.b = resIdle
 		so.l.Unlock()
 		return errors.New("server closed")
 	}
 
-	c := ss.maker(handle, conn, ss.operator, so, now, Connecting)
+	c := slf.maker(handle, conn, slf.operator, so, now, Connecting)
 	so.s = c
 
 	go c.recv()
@@ -54,55 +54,55 @@ func (ss *sServer) accept(conn interface{},
 	so.b = resAssigned
 	so.l.Unlock()
 
-	ss.conns.Store(handle, int32(1))
+	slf.conns.Store(handle, int32(1))
 
 	addr, _ := net.ResolveTCPAddr(network, address)
 
-	actor.DefaultSchedulerContext.Send(ss.operator, &NetAccept{Handle: handle, Addr: addr.IP.To16(), Port: addr.Port})
+	actor.DefaultSchedulerContext.Send(slf.operator, &NetAccept{Handle: handle, Addr: addr.IP.To16(), Port: addr.Port})
 
 	return nil
 }
 
-func (ss *sServer) recv() {
+func (slf *sServer) recv() {
 
 }
 
-func (ss *sServer) write() {
+func (slf *sServer) write() {
 
 }
 
-func (ss *sServer) setKeepAive(keep uint64) {
+func (slf *sServer) setKeepAive(keep uint64) {
 
 }
 
-func (ss *sServer) getKeepAive() uint64 {
+func (slf *sServer) getKeepAive() uint64 {
 	return 0
 }
 
-func (ss *sServer) getLastActivedTime() uint64 {
+func (slf *sServer) getLastActivedTime() uint64 {
 	return 0
 }
 
-func (ss *sServer) connect(operator *actor.PID, addr string) error {
+func (slf *sServer) connect(operator *actor.PID, addr string) error {
 	return nil
 }
 
-func (ss *sServer) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
+func (slf *sServer) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
 	return nil
 }
 
-func (ss *sServer) getStat() int32 {
-	return ss.stat
+func (slf *sServer) getStat() int32 {
+	return slf.stat
 }
 
-func (ss *sServer) setConnected() bool {
-	return atomic.CompareAndSwapInt32(&ss.stat, Connecting, Connected)
+func (slf *sServer) setConnected() bool {
+	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
 }
 
-func (ss *sServer) closewait() {
-	ss.netWait.Wait()
+func (slf *sServer) closewait() {
+	slf.netWait.Wait()
 }
 
-func (ss *sServer) push(data *NetChunk, n int) error {
+func (slf *sServer) push(data *NetChunk, n int) error {
 	return nil
 }

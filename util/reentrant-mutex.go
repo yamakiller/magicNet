@@ -4,35 +4,35 @@ import (
 	"sync"
 )
 
-// ReMutex : 可重入锁
+// ReMutex : Reentrant lock
 type ReMutex struct {
 	mutex *sync.Mutex
 	owner int
 	count int
 }
 
-// Association 同步锁关联可重入锁
-func (re *ReMutex) Association(m *sync.Mutex) {
-	re.mutex = m
+// Association Sync lock association reentrant lock
+func (slf *ReMutex) Association(m *sync.Mutex) {
+	slf.mutex = m
 }
 
-// Lock : 加锁
-func (re *ReMutex) Lock() {
+// Lock : lock
+func (slf *ReMutex) Lock() {
 	me := GetCurrentGoroutineID()
-	if re.owner == me {
-		re.count++
+	if slf.owner == me {
+		slf.count++
 		return
 	}
 
-	re.mutex.Lock()
+	slf.mutex.Lock()
 }
 
-// Unlock : 解锁
-func (re *ReMutex) Unlock() {
-	Assert(re.owner == GetCurrentGoroutineID(), "illegalMonitorStateError")
-	if re.count > 0 {
-		re.count--
+// Unlock : unlock
+func (slf *ReMutex) Unlock() {
+	Assert(slf.owner == GetCurrentGoroutineID(), "illegalMonitorStateError")
+	if slf.count > 0 {
+		slf.count--
 	} else {
-		re.mutex.Unlock()
+		slf.mutex.Unlock()
 	}
 }

@@ -12,14 +12,14 @@ import (
 	"github.com/yamakiller/magicNet/service"
 )
 
-//tcpKeepAliveListener : 重载net/http tcpKeepAliveListener
+//tcpKeepAliveListener : Overload net/http tcpKeepAliveListener
 type tcpKeepAliveListener struct {
 	*net.TCPListener
 }
 
-// Accept : 重载net/http tcpKeepAliveListener.Accept
-func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
-	tc, err := ln.AcceptTCP()
+// Accept : Overload net/http tcpKeepAliveListener.Accept
+func (slf tcpKeepAliveListener) Accept() (net.Conn, error) {
+	tc, err := slf.AcceptTCP()
 	if err != nil {
 		return nil, err
 	}
@@ -50,101 +50,104 @@ type MonitorService struct {
 	httpHandle *http.Server
 }
 
-// Init : 初始化服务
-func (ms *MonitorService) Init() {
-	ms.Service.Init()
-	ms.RegisterMethod(&actor.Started{}, ms.Started)
-	ms.RegisterMethod(&actor.Stopping{}, ms.Stopping)
-	ms.RegisterMethod(&actor.Stopped{}, ms.Stoped)
+// Init : Initialization service
+func (slf *MonitorService) Init() {
+	slf.Service.Init()
+	slf.RegisterMethod(&actor.Started{}, slf.Started)
+	slf.RegisterMethod(&actor.Stopping{}, slf.Stopping)
+	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)
 }
 
-// Started : 监视器启动函数
-func (ms *MonitorService) Started(context actor.Context, sender *actor.PID, message interface{}) {
-	ms.isShutdown = false
-	ms.httpMutex = http.NewServeMux()
-	ms.httpHandle = &http.Server{Addr: ms.Addr, Handler: ms.httpMutex}
-	if ms.MakerMethod == nil {
-		ms.httpMethod = library.NewHTTPSrvMethod()
+// Started : Monitor startup function
+func (slf *MonitorService) Started(context actor.Context,
+	sender *actor.PID,
+	message interface{}) {
+
+	slf.isShutdown = false
+	slf.httpMutex = http.NewServeMux()
+	slf.httpHandle = &http.Server{Addr: slf.Addr, Handler: slf.httpMutex}
+	if slf.MakerMethod == nil {
+		slf.httpMethod = library.NewHTTPSrvMethod()
 	} else {
-		ms.httpMethod = ms.MakerMethod()
+		slf.httpMethod = slf.MakerMethod()
 	}
-	ms.httpMutex.Handle("/", ms.httpMethod)
+	slf.httpMutex.Handle("/", slf.httpMethod)
 
-	if ms.OAuto2 != nil {
-		ms.OAuto2.Init(ms.httpMethod)
-		logger.Info(context.Self().ID, "OAuto2 Config Auth-token-exp:%d Sec", ms.OAuto2.TokenExp)
-		logger.Info(context.Self().ID, "OAuto2 Config Auth-refresh-token-exp:%d Sec", ms.OAuto2.RefreshTokenExp)
-		logger.Info(context.Self().ID, "OAuto2 Config Auth-is-generate-refresh-token:%v Sec", ms.OAuto2.IsGenerateRefresh)
-		logger.Info(context.Self().ID, "OAuto2 Config S256key:%s", ms.OAuto2.S256Key)
-		logger.Info(context.Self().ID, "OAuto2 Config Access-token-url:%s", ms.OAuto2.AccessURI)
-	}
-
-	if ms.Regiter != nil {
-		ms.Regiter(context.Self(), ms.httpMethod)
+	if slf.OAuto2 != nil {
+		slf.OAuto2.Init(slf.httpMethod)
+		logger.Info(context.Self().ID, "OAuto2 Config Auth-token-exp:%d Sec", slf.OAuto2.TokenExp)
+		logger.Info(context.Self().ID, "OAuto2 Config Auth-refresh-token-exp:%d Sec", slf.OAuto2.RefreshTokenExp)
+		logger.Info(context.Self().ID, "OAuto2 Config Auth-is-generate-refresh-token:%v Sec", slf.OAuto2.IsGenerateRefresh)
+		logger.Info(context.Self().ID, "OAuto2 Config S256key:%s", slf.OAuto2.S256Key)
+		logger.Info(context.Self().ID, "OAuto2 Config Access-token-url:%s", slf.OAuto2.AccessURI)
 	}
 
-	ln, err := ms.listen()
-	ms.httpErr = err
-	if ms.httpErr != nil {
-		logger.Error(context.Self().ID, "%s %s service start fail:%v", ms.Name(), ms.Proto, ms.httpErr)
+	if slf.Regiter != nil {
+		slf.Regiter(context.Self(), slf.httpMethod)
+	}
+
+	ln, err := slf.listen()
+	slf.httpErr = err
+	if slf.httpErr != nil {
+		logger.Error(context.Self().ID, "%s %s service start fail:%v", slf.Name(), slf.Proto, slf.httpErr)
 		goto end_lable
 	}
 
-	logger.Info(context.Self().ID, "%s %s service start success[addr:%s]", ms.Name(), ms.Proto, ms.Addr)
+	logger.Info(context.Self().ID, "%s %s service start success[addr:%s]", slf.Name(), slf.Proto, slf.Addr)
 	if err == nil {
-		ms.httpWait.Add(1)
+		slf.httpWait.Add(1)
 		go func() {
 			for {
-				if ms.isShutdown {
+				if slf.isShutdown {
 					break
 				}
 
-				if ms.httpErr == nil {
-					if ms.Proto == "http" {
-						ms.httpErr = ms.httpHandle.Serve(tcpKeepAliveListener{ln.(*net.TCPListener)})
+				if slf.httpErr == nil {
+					if slf.Proto == "http" {
+						slf.httpErr = slf.httpHandle.Serve(tcpKeepAliveListener{ln.(*net.TCPListener)})
 					} else {
 						defer ln.Close()
-						ms.httpErr = ms.httpHandle.ServeTLS(tcpKeepAliveListener{ln.(*net.TCPListener)}, ms.CertFile, ms.KeyFile)
+						slf.httpErr = slf.httpHandle.ServeTLS(tcpKeepAliveListener{ln.(*net.TCPListener)}, slf.CertFile, slf.KeyFile)
 					}
 				} else {
 					time.Sleep(time.Millisecond * 10)
 				}
 			}
 
-			ms.httpWait.Done()
+			slf.httpWait.Done()
 		}()
 	}
 end_lable:
-	ms.Service.Started(context, sender, message)
+	slf.Service.Started(context, sender, message)
 }
 
-// Stopping : 停止服务
-func (ms *MonitorService) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
-	err := ms.httpHandle.Close()
+// Stopping : Out of service
+func (slf *MonitorService) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
+	err := slf.httpHandle.Close()
 	if err != http.ErrServerClosed {
 		logger.Warning(context.Self().ID, "monitor service close error:%v", err)
 	}
 
-	ms.httpMethod.Close()
+	slf.httpMethod.Close()
 }
 
-//Stoped 服务已停止
-func (ms *MonitorService) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
-	ms.Service.Stoped(context, sender, message)
+//Stoped Service has stopped
+func (slf *MonitorService) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
+	slf.Service.Stoped(context, sender, message)
 }
 
-// Shutdown 关闭服务
-func (ms *MonitorService) Shutdown() {
-	ms.isShutdown = true
-	ms.Service.Shutdown()
-	ms.httpWait.Wait()
+// Shutdown Close service
+func (slf *MonitorService) Shutdown() {
+	slf.isShutdown = true
+	slf.Service.Shutdown()
+	slf.httpWait.Wait()
 }
 
-// 启动监听 addr 格式 ip:port
-func (ms *MonitorService) listen() (net.Listener, error) {
-	addr := ms.httpHandle.Addr
+// Start monitoring addr format ip:port
+func (slf *MonitorService) listen() (net.Listener, error) {
+	addr := slf.httpHandle.Addr
 	if addr == "" {
-		addr = ":" + ms.Proto
+		addr = ":" + slf.Proto
 	}
 
 	return net.Listen("tcp", addr)

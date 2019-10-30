@@ -36,27 +36,27 @@ type NetMethodDispatch struct {
 }
 
 //Register Registration network method
-func (nmd *NetMethodDispatch) Register(key interface{}, f NetMethodFun) {
-	nmd.RegisterType(reflect.TypeOf(key), f)
+func (slf *NetMethodDispatch) Register(key interface{}, f NetMethodFun) {
+	slf.RegisterType(reflect.TypeOf(key), f)
 }
 
 //RegisterType Registration network method, key reflect.Type
-func (nmd *NetMethodDispatch) RegisterType(key reflect.Type, f NetMethodFun) {
-	nmd.sync.Lock()
-	defer nmd.sync.Unlock()
-	nmd.m[key] = f
+func (slf *NetMethodDispatch) RegisterType(key reflect.Type, f NetMethodFun) {
+	slf.sync.Lock()
+	defer slf.sync.Unlock()
+	slf.m[key] = f
 }
 
 //Get Put back the network method according to the key object
-func (nmd *NetMethodDispatch) Get(key interface{}) NetMethodFun {
-	return nmd.GetType(reflect.TypeOf(key))
+func (slf *NetMethodDispatch) Get(key interface{}) NetMethodFun {
+	return slf.GetType(reflect.TypeOf(key))
 }
 
 //GetType Put back the network method according to reflect.Type
-func (nmd *NetMethodDispatch) GetType(key reflect.Type) NetMethodFun {
-	nmd.sync.RLock()
-	defer nmd.sync.RUnlock()
-	f, success := nmd.m[key]
+func (slf *NetMethodDispatch) GetType(key reflect.Type) NetMethodFun {
+	slf.sync.RLock()
+	defer slf.sync.RUnlock()
+	f, success := slf.m[key]
 	if !success {
 		return nil
 	}
@@ -64,8 +64,8 @@ func (nmd *NetMethodDispatch) GetType(key reflect.Type) NetMethodFun {
 }
 
 //Clear Clear all method maps
-func (nmd *NetMethodDispatch) Clear() {
-	nmd.sync.Lock()
-	defer nmd.sync.Unlock()
-	nmd.m = make(map[interface{}]NetMethodFun)
+func (slf *NetMethodDispatch) Clear() {
+	slf.sync.Lock()
+	defer slf.sync.Unlock()
+	slf.m = make(map[interface{}]NetMethodFun)
 }

@@ -27,20 +27,20 @@ type task struct {
 	params []interface{}
 }
 
-func (co *coObject) run(cop *CoroutinePool) {
+func (slf *coObject) run(cop *CoroutinePool) {
 	go func() {
 		defer cop.wait.Done()
 		for {
 			for {
 				select {
-				case <-co.q:
-					co.state = coDeath
+				case <-slf.q:
+					slf.state = coDeath
 					return
 				case t := <-cop.taskQueue:
-					atomic.CompareAndSwapInt32(&co.state, coIdle, coRun)
+					atomic.CompareAndSwapInt32(&slf.state, coIdle, coRun)
 					t.cb(t.params)
 					t.params = nil
-					atomic.CompareAndSwapInt32(&co.state, coRun, coIdle)
+					atomic.CompareAndSwapInt32(&slf.state, coRun, coIdle)
 				}
 			}
 		}
@@ -69,17 +69,17 @@ type CoroutinePool struct {
 	quit      chan int
 }
 
-func (co *CoroutinePool) scheduer() {
-	defer co.wait.Done()
+func (slf *CoroutinePool) scheduer() {
+	defer slf.wait.Done()
 	for {
 		select {
-		case <-co.quit:
+		case <-slf.quit:
 			goto scheduer_end
 		default:
 		}
 
 		now := time.Now().Unix()
-		for _, v := range co.cos {
+		for _, v := range slf.cos {
 			if v.state == coRun ||
 				v.state == coDeath ||
 				v.state == coClosing {
@@ -96,81 +96,81 @@ func (co *CoroutinePool) scheduer() {
 		time.Sleep(time.Millisecond * 1000)
 	}
 scheduer_end:
-	for i := 0; i < co.MaxNum; i++ {
-		if co.cos[i].state != coDeath && co.cos[i].state != coClosing {
-			atomic.StoreInt32(&co.cos[i].state, coClosing)
-			close(co.cos[i].q)
+	for i := 0; i < slf.MaxNum; i++ {
+		if slf.cos[i].state != coDeath && slf.cos[i].state != coClosing {
+			atomic.StoreInt32(&slf.cos[i].state, coClosing)
+			close(slf.cos[i].q)
 		}
 	}
 }
 
 // Start : 启动协程池
-func (co *CoroutinePool) Start() {
-	if co.MaxNum == 0 {
-		co.MaxNum = 65535
+func (slf *CoroutinePool) Start() {
+	if slf.MaxNum == 0 {
+		slf.MaxNum = 65535
 	}
-	atomic.StoreInt32(&co.seq, 1)
+	atomic.StoreInt32(&slf.seq, 1)
 
 	now := time.Now().Unix()
-	co.taskQueue = make(chan task, co.TaskLimit)
-	co.cos = make([]coObject, co.MaxNum)
-	for k, v := range co.cos {
+	slf.taskQueue = make(chan task, slf.TaskLimit)
+	slf.cos = make([]coObject, slf.MaxNum)
+	for k, v := range slf.cos {
 		v.id = k + 1
 		v.state = coDeath
 		v.last = time.Duration(now)
 	}
 
-	if co.MaxNum > 0 && co.MaxNum > co.MinNum {
-		co.wait.Add(1)
-		go co.scheduer()
+	if slf.MaxNum > 0 && slf.MaxNum > slf.MinNum {
+		slf.wait.Add(1)
+		go slf.scheduer()
 	}
 
-	for i := 0; i < co.MinNum; i++ {
-		co.cos[i].state = coIdle
-		co.startOne(i)
+	for i := 0; i < slf.MinNum; i++ {
+		slf.cos[i].state = coIdle
+		slf.startOne(i)
 	}
 }
 
-func (co *CoroutinePool) startOne(idx int) {
-	co.wait.Add(1)
-	atomic.AddInt32(&co.seq, 1)
-	atomic.AddInt32(&co.curr, 1)
+func (slf *CoroutinePool) startOne(idx int) {
+	slf.wait.Add(1)
+	atomic.AddInt32(&slf.seq, 1)
+	atomic.AddInt32(&slf.curr, 1)
 
-	co.cos[idx].run(co)
+	slf.cos[idx].run(slf)
 }
 
 // StopPool : 关闭协程池
-func (co *CoroutinePool) StopPool() {
-	close(co.quit)
-	co.wait.Wait()
+func (slf *CoroutinePool) StopPool() {
+	close(slf.quit)
+	slf.wait.Wait()
 }
 
 //Go 运行任务
-func (co *CoroutinePool) Go(f func(params []interface{}), params ...interface{}) error {
+func (slf *CoroutinePool) Go(f func(params []interface{}), params ...interface{}) error {
 
 	select {
-	case <-co.quit:
+	case <-slf.quit:
 		return ErrPoolStoped
 	default:
 	}
-	runing := atomic.LoadInt32(&co.runing)
-	curr := atomic.LoadInt32(&co.curr)
+	runing := atomic.LoadInt32(&slf.runing)
+	curr := atomic.LoadInt32(&slf.curr)
 
-	if runing >= curr && curr < int32(co.MaxNum) {
-		for i := 0; i < co.MaxNum; i++ {
-			hash := ((int32(i) + co.seq) % int32(co.MaxNum))
-			if atomic.CompareAndSwapInt32(&co.cos[hash].state, coDeath, coIdle) {
-				co.seq = int32(hash) + co.seq
-				co.startOne(int(hash))
+	if runing >= curr && curr < int32(slf.MaxNum) {
+		for i := 0; i < slf.MaxNum; i++ {
+			hash := ((int32(i) + slf.seq) % int32(slf.MaxNum))
+			if atomic.CompareAndSwapInt32(&slf.cos[hash].state, coDeath, coIdle) {
+				slf.seq = int32(hash) + slf.seq
+				slf.startOne(int(hash))
 				break
 			}
 		}
 	}
 
 	select {
-	case <-co.quit:
+	case <-slf.quit:
 		return ErrPoolStoped
-	case co.taskQueue <- task{f, params}:
+	case slf.taskQueue <- task{f, params}:
 		return nil
 	}
 }

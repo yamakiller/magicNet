@@ -4,23 +4,23 @@ import (
 	"sync/atomic"
 )
 
-// SpinLock : 自旋锁
+// SpinLock : spin lock
 type SpinLock struct {
 	kernel uint32
 }
 
-// Trylock : 尝试竞争锁如果未竞争到返回false
-func (sl *SpinLock) Trylock() bool {
-	return atomic.CompareAndSwapUint32(&sl.kernel, 0, 1)
+// Trylock : try lock if unlock return false
+func (slf *SpinLock) Trylock() bool {
+	return atomic.CompareAndSwapUint32(&slf.kernel, 0, 1)
 }
 
-// Lock : 加锁
-func (sl *SpinLock) Lock() {
-	for !atomic.CompareAndSwapUint32(&sl.kernel, 0, 1) {
+// Lock : locking
+func (slf *SpinLock) Lock() {
+	for !atomic.CompareAndSwapUint32(&slf.kernel, 0, 1) {
 	}
 }
 
-// Unlock : 解锁
-func (sl *SpinLock) Unlock() {
-	atomic.StoreUint32(&sl.kernel, 0)
+// Unlock : unlocking
+func (slf *SpinLock) Unlock() {
+	atomic.StoreUint32(&slf.kernel, 0)
 }

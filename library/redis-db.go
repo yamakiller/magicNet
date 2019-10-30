@@ -17,11 +17,11 @@ type RedisDB struct {
 }
 
 // Init : 初始化DB
-func (rdb *RedisDB) Init(host string, db int, maxIdle int, maxActive int, idleSec int) error {
-	rdb.host = host
-	rdb.db = db
+func (slf *RedisDB) Init(host string, db int, maxIdle int, maxActive int, idleSec int) error {
+	slf.host = host
+	slf.db = db
 
-	rdb.c = &redis.Pool{
+	slf.c = &redis.Pool{
 		MaxIdle:     maxIdle,
 		MaxActive:   maxActive,
 		IdleTimeout: time.Duration(idleSec) * time.Second,
@@ -40,13 +40,13 @@ func (rdb *RedisDB) Init(host string, db int, maxIdle int, maxActive int, idleSe
 }
 
 // Do : 执行Redis
-func (rdb *RedisDB) Do(commandName string, args ...interface{}) (interface{}, error) {
-	c := rdb.c.Get()
+func (slf *RedisDB) Do(commandName string, args ...interface{}) (interface{}, error) {
+	c := slf.c.Get()
 	defer c.Close()
 	return c.Do(commandName, args...)
 }
 
 // Close : 关闭
-func (rdb *RedisDB) Close() {
-	rdb.c.Close()
+func (slf *RedisDB) Close() {
+	slf.c.Close()
 }

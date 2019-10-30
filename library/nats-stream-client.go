@@ -29,19 +29,19 @@ type NatsStreamClient struct {
 }
 
 // Connect : xx
-func (nsc *NatsStreamClient) Connect(clusterID string, clientID string) error {
-	nsc.clusterID = clusterID
-	nsc.clientID = clientID
-	if nsc.PingInterval == 0 {
-		nsc.PingInterval = stan.DefaultPingInterval
+func (slf *NatsStreamClient) Connect(clusterID string, clientID string) error {
+	slf.clusterID = clusterID
+	slf.clientID = clientID
+	if slf.PingInterval == 0 {
+		slf.PingInterval = stan.DefaultPingInterval
 	}
 
-	if nsc.PingMaxOut == 0 {
-		nsc.PingMaxOut = stan.DefaultPingMaxOut
+	if slf.PingMaxOut == 0 {
+		slf.PingMaxOut = stan.DefaultPingMaxOut
 	}
 
-	if nsc.ConnectTimeout == 0 {
-		nsc.ConnectTimeout = 2
+	if slf.ConnectTimeout == 0 {
+		slf.ConnectTimeout = 2
 	}
 
 	return nil
@@ -54,14 +54,14 @@ type NatsStreamPublish struct {
 }
 
 //Connect : 连接Nats服务器
-func (nsp *NatsStreamPublish) Connect(clusterID string, clientID string) error {
-	nsp.NatsStreamClient.Connect(clusterID, clientID)
+func (slf *NatsStreamPublish) Connect(clusterID string, clientID string) error {
+	slf.NatsStreamClient.Connect(clusterID, clientID)
 
-	if nsp.MaxPubNumber == 0 {
-		nsp.MaxPubNumber = stan.DefaultMaxPubAcksInflight
+	if slf.MaxPubNumber == 0 {
+		slf.MaxPubNumber = stan.DefaultMaxPubAcksInflight
 	}
 
-	err := nsp.autoReConnect()
+	err := slf.autoReConnect()
 
 	if err != nil {
 		return err
@@ -71,33 +71,33 @@ func (nsp *NatsStreamPublish) Connect(clusterID string, clientID string) error {
 }
 
 // Publish : 发布
-func (nsp *NatsStreamPublish) Publish(subject string, data []byte) {
+func (slf *NatsStreamPublish) Publish(subject string, data []byte) {
 	i := 0
 	for {
-		err := nsp.c.Publish(subject, data)
+		err := slf.c.Publish(subject, data)
 
 		if err == stan.ErrConnectionClosed {
-			if nsp.isShutdown {
-				logger.Error(nsp.Operator.ID, "nats stream publish closed data not sent subject[%s]:%v", subject, data)
+			if slf.isShutdown {
+				logger.Error(slf.Operator.ID, "nats stream publish closed data not sent subject[%s]:%v", subject, data)
 				break
 			}
-			autoErr := nsp.autoReConnect()
+			autoErr := slf.autoReConnect()
 			if autoErr != nil {
 				i++
-				if i > nsp.AutoReConnectLimt || (nsp.AutoReConnectLimt == 0 && i > defaultAutoReConnectLimt) {
-					logger.Error(nsp.Operator.ID,
+				if i > slf.AutoReConnectLimt || (slf.AutoReConnectLimt == 0 && i > defaultAutoReConnectLimt) {
+					logger.Error(slf.Operator.ID,
 						"nats stream publish to [%s] data[%v] fail, auto reconnect error:%s",
 						subject, data, autoErr.Error())
 					break
 				}
-				logger.Error(nsp.Operator.ID, "nats stream publish auto reconnect [] error :%s", i, autoErr.Error())
+				logger.Error(slf.Operator.ID, "nats stream publish auto reconnect [] error :%s", i, autoErr.Error())
 				time.Sleep(time.Millisecond * 100)
 				continue
 			}
 		} else if err == nil {
 			break
 		} else {
-			logger.Error(nsp.Operator.ID, "nats stream publish to [%s] data[%v] fail:%s", subject, data, err.Error())
+			logger.Error(slf.Operator.ID, "nats stream publish to [%s] data[%v] fail:%s", subject, data, err.Error())
 			break
 		}
 
@@ -105,33 +105,33 @@ func (nsp *NatsStreamPublish) Publish(subject string, data []byte) {
 }
 
 // Close : 关闭连接
-func (nsp *NatsStreamPublish) Close() {
-	if nsp.c != nil {
-		nsp.isShutdown = true
-		nsp.c.Close()
+func (slf *NatsStreamPublish) Close() {
+	if slf.c != nil {
+		slf.isShutdown = true
+		slf.c.Close()
 	}
 }
 
-func (nsp *NatsStreamPublish) autoReConnect() error {
-	conn, err := stan.Connect(nsp.clusterID,
-		nsp.clientID,
+func (slf *NatsStreamPublish) autoReConnect() error {
+	conn, err := stan.Connect(slf.clusterID,
+		slf.clientID,
 		stan.NatsURL(stan.DefaultNatsURL),
-		stan.Pings(nsp.PingInterval, nsp.PingMaxOut),
-		stan.ConnectWait(time.Duration(nsp.ConnectTimeout)*time.Second),
-		stan.MaxPubAcksInflight(nsp.MaxPubNumber),
+		stan.Pings(slf.PingInterval, slf.PingMaxOut),
+		stan.ConnectWait(time.Duration(slf.ConnectTimeout)*time.Second),
+		stan.MaxPubAcksInflight(slf.MaxPubNumber),
 		stan.SetConnectionLostHandler(func(conn stan.Conn, err error) {
 			conn.Close()
-			logger.Error(nsp.Operator.ID,
+			logger.Error(slf.Operator.ID,
 				"nats stream conn lost clusterID[%s] clientID[%s] error[%v]",
-				nsp.clusterID,
-				nsp.clientID,
+				slf.clusterID,
+				slf.clientID,
 				err)
 		}))
 
 	if err != nil {
 		return err
 	}
-	nsp.c = conn
+	slf.c = conn
 	return nil
 }
 
@@ -146,21 +146,21 @@ type NatsStreamSubscribe struct {
 }
 
 // Connect : xxx
-func (nss *NatsStreamSubscribe) Connect(clusterID string, clientID string) error {
-	if nss.Quit == nil {
-		nss.Quit = make(chan int)
+func (slf *NatsStreamSubscribe) Connect(clusterID string, clientID string) error {
+	if slf.Quit == nil {
+		slf.Quit = make(chan int)
 	}
 
-	if nss.MaxSubNumber == 0 {
-		nss.MaxSubNumber = stan.DefaultMaxInflight
+	if slf.MaxSubNumber == 0 {
+		slf.MaxSubNumber = stan.DefaultMaxInflight
 	}
 
-	if nss.MaxAckSecond == 0 {
-		nss.MaxAckSecond = 60
+	if slf.MaxAckSecond == 0 {
+		slf.MaxAckSecond = 60
 	}
 
-	nss.NatsStreamClient.Connect(clusterID, clientID)
-	err := nss.autoReConnect()
+	slf.NatsStreamClient.Connect(clusterID, clientID)
+	err := slf.autoReConnect()
 
 	if err != nil {
 		return err
@@ -170,68 +170,68 @@ func (nss *NatsStreamSubscribe) Connect(clusterID string, clientID string) error
 }
 
 // Subscribe : 以队列订阅 out 通道挂起,需要手动确认Ack包
-func (nss *NatsStreamSubscribe) Subscribe(subject string, queueGroup string, durableID string) error {
-	awk, _ := time.ParseDuration(fmt.Sprint(nss.MaxAckSecond, "s"))
-	sub, err := nss.c.QueueSubscribe(subject, queueGroup, nss.procMessage,
+func (slf *NatsStreamSubscribe) Subscribe(subject string, queueGroup string, durableID string) error {
+	awk, _ := time.ParseDuration(fmt.Sprint(slf.MaxAckSecond, "s"))
+	sub, err := slf.c.QueueSubscribe(subject, queueGroup, slf.procMessage,
 		stan.DurableName(durableID),
-		stan.MaxInflight(nss.MaxSubNumber),
+		stan.MaxInflight(slf.MaxSubNumber),
 		stan.SetManualAckMode(),
 		stan.AckWait(awk))
 
 	if err != nil {
 		return err
 	}
-	nss.s = sub
+	slf.s = sub
 	return nil
 }
 
 // Close : 关闭订阅器
-func (nss *NatsStreamSubscribe) Close() {
-	if nss.s != nil {
-		nss.s.Close()
+func (slf *NatsStreamSubscribe) Close() {
+	if slf.s != nil {
+		slf.s.Close()
 	}
 
-	if nss.c != nil {
-		nss.isShutdown = true
-		close(nss.Quit)
-		nss.c.Close()
-		close(nss.Out)
+	if slf.c != nil {
+		slf.isShutdown = true
+		close(slf.Quit)
+		slf.c.Close()
+		close(slf.Out)
 	}
 }
 
-func (nss *NatsStreamSubscribe) procMessage(msg *stan.Msg) {
+func (slf *NatsStreamSubscribe) procMessage(msg *stan.Msg) {
 	select {
-	case <-nss.Quit:
+	case <-slf.Quit:
 		return
 	default:
 	}
 
 	select {
-	case <-nss.Quit:
+	case <-slf.Quit:
 		return
-	case nss.Out <- msg:
+	case slf.Out <- msg:
 	}
 
 }
 
-func (nss *NatsStreamSubscribe) autoReConnect() error {
-	conn, err := stan.Connect(nss.clusterID,
-		nss.clientID,
+func (slf *NatsStreamSubscribe) autoReConnect() error {
+	conn, err := stan.Connect(slf.clusterID,
+		slf.clientID,
 		stan.NatsURL(stan.DefaultNatsURL),
-		stan.Pings(nss.PingInterval, nss.PingMaxOut),
-		stan.ConnectWait(time.Duration(nss.ConnectTimeout)*time.Second),
+		stan.Pings(slf.PingInterval, slf.PingMaxOut),
+		stan.ConnectWait(time.Duration(slf.ConnectTimeout)*time.Second),
 		stan.SetConnectionLostHandler(func(conn stan.Conn, err error) {
 			conn.Close()
-			logger.Error(nss.Operator.ID,
+			logger.Error(slf.Operator.ID,
 				"nats stream conn lost clusterID[%s] clientID[%s] error[%v]",
-				nss.clusterID,
-				nss.clientID,
+				slf.clusterID,
+				slf.clientID,
 				err)
 		}))
 
 	if err != nil {
 		return err
 	}
-	nss.c = conn
+	slf.c = conn
 	return nil
 }

@@ -27,7 +27,7 @@ type udpSocket struct {
 	stat     int32
 }
 
-func (ups *udpSocket) listen(operator *actor.PID, addr string) error {
+func (slf *udpSocket) listen(operator *actor.PID, addr string) error {
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		return err
@@ -38,22 +38,22 @@ func (ups *udpSocket) listen(operator *actor.PID, addr string) error {
 		return err
 	}
 
-	ups.s = ln
-	ups.mode = 0
-	ups.stat = Connecting
-	ups.netWait.Add(2)
-	go ups.recv()
-	go ups.write()
+	slf.s = ln
+	slf.mode = 0
+	slf.stat = Connecting
+	slf.netWait.Add(2)
+	go slf.recv()
+	go slf.write()
 
 	time.Sleep(time.Millisecond * 1)
 	return nil
 }
 
-func (ups *udpSocket) connect(operator *actor.PID, addr string) error {
+func (slf *udpSocket) connect(operator *actor.PID, addr string) error {
 	return nil
 }
 
-func (ups *udpSocket) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
+func (slf *udpSocket) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
 	udpSrcAddr, _ := net.ResolveUDPAddr("udp", srcAddr)
 	udpDstAddr, _ := net.ResolveUDPAddr("udp", dstAddr)
 
@@ -61,141 +61,141 @@ func (ups *udpSocket) udpConnect(operator *actor.PID, srcAddr string, dstAddr st
 	if err != nil {
 		return err
 	}
-	ups.s = ln
-	ups.mode = 1
-	ups.stat = Connecting
+	slf.s = ln
+	slf.mode = 1
+	slf.stat = Connecting
 
 	return nil
 }
 
-func (ups *udpSocket) recv() {
-	defer ups.netWait.Done()
+func (slf *udpSocket) recv() {
+	defer slf.netWait.Done()
 	for {
-		if ups.stat != Connecting && ups.stat != Connected {
+		if slf.stat != Connecting && slf.stat != Connected {
 			goto read_end
 		}
 
 		var inBuf []byte
-		n, addr, err := ups.s.ReadFrom(inBuf)
+		n, addr, err := slf.s.ReadFrom(inBuf)
 		if err != nil {
 			goto read_error
 		}
 
-		if ups.stat != Connected {
+		if slf.stat != Connected {
 			continue
 		}
 
-		ups.i.ReadBytes += uint64(n)
-		ups.i.ReadLastTime = timer.Now()
+		slf.i.ReadBytes += uint64(n)
+		slf.i.ReadLastTime = timer.Now()
 
 		udpAddr, _ := net.ResolveUDPAddr(addr.Network(), addr.String())
 
-		actor.DefaultSchedulerContext.Send(ups.operator, &NetChunk{Handle: ups.h, Data: inBuf, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)})
+		actor.DefaultSchedulerContext.Send(slf.operator, &NetChunk{Handle: slf.h, Data: inBuf, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)})
 	}
 read_error:
-	ups.stat = Closing
-	ups.s.Close()
+	slf.stat = Closing
+	slf.s.Close()
 read_end:
 	var (
 		closeHandle   int32
 		closeOperator *actor.PID
 	)
 
-	ups.so.l.Lock()
-	closeHandle = ups.h
-	closeOperator = ups.operator
-	close(ups.quit)
+	slf.so.l.Lock()
+	closeHandle = slf.h
+	closeOperator = slf.operator
+	close(slf.quit)
 	//-----等待写协程结束------
 	for {
-		if atomic.CompareAndSwapInt32(&ups.outStat, 1, 1) {
+		if atomic.CompareAndSwapInt32(&slf.outStat, 1, 1) {
 			break
 		}
 	}
-	close(ups.out)
+	close(slf.out)
 
-	ups.so.s = nil
-	ups.so.b = resIdle
-	ups.so.l.Unlock()
+	slf.so.s = nil
+	slf.so.b = resIdle
+	slf.so.l.Unlock()
 
 	actor.DefaultSchedulerContext.Send(closeOperator, &NetClose{Handle: closeHandle})
 }
 
-func (ups *udpSocket) write() {
+func (slf *udpSocket) write() {
 	for {
-		if ups.stat != Connecting && ups.stat != Connected {
+		if slf.stat != Connecting && slf.stat != Connected {
 			goto write_end
 		}
 
 		select {
-		case msg := <-ups.out:
-			if ups.stat != Connecting && ups.stat != Connected {
+		case msg := <-slf.out:
+			if slf.stat != Connecting && slf.stat != Connected {
 				goto write_end
 			}
 
 			udpAddr, _ := net.ResolveUDPAddr("udp", fmt.Sprint(msg.Addr.String(), ":", msg.Port))
-			n, err := ups.s.WriteToUDP(msg.Data, udpAddr)
+			n, err := slf.s.WriteToUDP(msg.Data, udpAddr)
 			if err != nil {
 				//?
 				goto write_error
 			}
 
-			ups.i.WriteBytes += uint64(n)
-			ups.i.WriteLastTime = timer.Now()
-		case <-ups.quit:
+			slf.i.WriteBytes += uint64(n)
+			slf.i.WriteLastTime = timer.Now()
+		case <-slf.quit:
 			goto write_end
 		}
 	}
 write_error:
-	ups.stat = Closing
+	slf.stat = Closing
 write_end:
-	ups.netWait.Done()
-	ups.outStat = 1
+	slf.netWait.Done()
+	slf.outStat = 1
 }
 
-func (ups *udpSocket) push(data *NetChunk, n int) error {
+func (slf *udpSocket) push(data *NetChunk, n int) error {
 	select {
-	case <-ups.quit:
+	case <-slf.quit:
 		return errors.New("conn closed")
 	default:
 	}
 
 	select {
-	case <-ups.quit:
+	case <-slf.quit:
 		return errors.New("conn closed")
-	case ups.out <- data:
+	case slf.out <- data:
 	}
 
 	return nil
 }
 
-func (ups *udpSocket) setKeepAive(keep uint64) {
+func (slf *udpSocket) setKeepAive(keep uint64) {
 
 }
 
-func (ups *udpSocket) getKeepAive() uint64 {
+func (slf *udpSocket) getKeepAive() uint64 {
 	return 0
 }
 
-func (ups *udpSocket) getLastActivedTime() uint64 {
-	return ups.i.ReadLastTime
+func (slf *udpSocket) getLastActivedTime() uint64 {
+	return slf.i.ReadLastTime
 }
 
-func (ups *udpSocket) getStat() int32 {
-	return ups.stat
+func (slf *udpSocket) getStat() int32 {
+	return slf.stat
 }
 
-func (ups *udpSocket) setConnected() bool {
-	return atomic.CompareAndSwapInt32(&ups.stat, Connecting, Connected)
+func (slf *udpSocket) setConnected() bool {
+	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
 }
 
-func (ups *udpSocket) close(lck *util.ReSpinLock) {
+func (slf *udpSocket) close(lck *util.ReSpinLock) {
 	if lck != nil {
 		lck.Lock()
 	}
 
-	if ups.stat != Closing {
-		ups.stat = Closing
-		ups.s.Close()
+	if slf.stat != Closing {
+		slf.stat = Closing
+		slf.s.Close()
 	}
 
 	if lck != nil {
@@ -203,16 +203,16 @@ func (ups *udpSocket) close(lck *util.ReSpinLock) {
 	}
 }
 
-func (ups *udpSocket) closewait() {
-	ups.netWait.Wait()
+func (slf *udpSocket) closewait() {
+	slf.netWait.Wait()
 }
 
-func (ups *udpSocket) getProto() string {
+func (slf *udpSocket) getProto() string {
 	return protoUDP
 }
 
-func (ups *udpSocket) getType() int {
-	if ups.mode == 0 {
+func (slf *udpSocket) getType() int {
+	if slf.mode == 0 {
 		return CListen
 	}
 	return CClient

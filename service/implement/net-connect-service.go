@@ -57,79 +57,79 @@ type NetConnectService struct {
 }
 
 //Init Initialize the network listening service
-func (nets *NetConnectService) Init() {
-	nets.Service.Init()
-	nets.RegisterMethod(&actor.Started{}, nets.Started)
-	nets.RegisterMethod(&actor.Stopping{}, nets.Stopping)
-	nets.RegisterMethod(&NetConnectEvent{}, nets.onConnection)
-	nets.RegisterMethod(&network.NetChunk{}, nets.onRecv)
-	nets.RegisterMethod(&network.NetClose{}, nets.OnClose)
+func (slf *NetConnectService) Init() {
+	slf.Service.Init()
+	slf.RegisterMethod(&actor.Started{}, slf.Started)
+	slf.RegisterMethod(&actor.Stopping{}, slf.Stopping)
+	slf.RegisterMethod(&NetConnectEvent{}, slf.onConnection)
+	slf.RegisterMethod(&network.NetChunk{}, slf.onRecv)
+	slf.RegisterMethod(&network.NetClose{}, slf.OnClose)
 }
 
 //Started Turn on network connect service
-func (nets *NetConnectService) Started(context actor.Context, sender *actor.PID, message interface{}) {
-	nets.Assignment(context)
-	nets.LogInfo("Service Startup address:%s read-buffer-limit:%d chan-buffer-size:%d",
-		nets.Target.GetAddr(),
-		nets.Handle.GetRecvBufferLimit(),
-		nets.Target.GetOutSize())
-	nets.Service.Started(context, sender, message)
-	nets.LogInfo("Service Startup completed")
+func (slf *NetConnectService) Started(context actor.Context, sender *actor.PID, message interface{}) {
+	slf.Assignment(context)
+	slf.LogInfo("Service Startup address:%s read-buffer-limit:%d chan-buffer-size:%d",
+		slf.Target.GetAddr(),
+		slf.Handle.GetRecvBufferLimit(),
+		slf.Target.GetOutSize())
+	slf.Service.Started(context, sender, message)
+	slf.LogInfo("Service Startup completed")
 }
 
 //Stopping Out of service
-func (nets *NetConnectService) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
-	nets.LogInfo("[%s] %s Connection Service Stoping %s",
-		nets.Handle.Name(),
-		nets.Name(),
-		nets.Target.GetAddr())
-	nets.isShutdown = false
-	nets.Handle.Close()
-	nets.NetMethod.Clear()
-	nets.LogInfo("Connection Service Stoped %s", nets.Target.GetAddr())
+func (slf *NetConnectService) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
+	slf.LogInfo("[%s] %s Connection Service Stoping %s",
+		slf.Handle.Name(),
+		slf.Name(),
+		slf.Target.GetAddr())
+	slf.isShutdown = false
+	slf.Handle.Close()
+	slf.NetMethod.Clear()
+	slf.LogInfo("Connection Service Stoped %s", slf.Target.GetAddr())
 }
 
 //IsShutdown Whether the service has been terminated
-func (nets *NetConnectService) IsShutdown() bool {
-	return nets.isShutdown
+func (slf *NetConnectService) IsShutdown() bool {
+	return slf.isShutdown
 }
 
 //AutoConnect  auto connect
-func (nets *NetConnectService) AutoConnect(context actor.Context) error {
-	err := nets.Handle.Connection(context, nets.Target.GetAddr(), nets.Target.GetOutSize())
+func (slf *NetConnectService) AutoConnect(context actor.Context) error {
+	err := slf.Handle.Connection(context, slf.Target.GetAddr(), slf.Target.GetOutSize())
 	if err != nil {
 		goto unend
 	}
 
-	err = nets.Deleate.Connected(context, nets)
+	err = slf.Deleate.Connected(context, slf)
 	if err != nil {
-		nets.Handle.Close()
+		slf.Handle.Close()
 		goto unend
 	}
 	return nil
 unend:
-	nets.Target.SetEtat(UnConnected)
+	slf.Target.SetEtat(UnConnected)
 	return err
 }
 
 //onConnection Request connection event
-func (nets *NetConnectService) onConnection(context actor.Context, sender *actor.PID, message interface{}) {
+func (slf *NetConnectService) onConnection(context actor.Context, sender *actor.PID, message interface{}) {
 	//t := message.(*NetConnectEvent)
-	nets.LogInfo("onConnection: %s", nets.Target.GetAddr())
-	err := nets.AutoConnect(context)
+	slf.LogInfo("onConnection: %s", slf.Target.GetAddr())
+	err := slf.AutoConnect(context)
 	if err != nil {
-		nets.LogError("onConnection: fail-%+v", err)
+		slf.LogError("onConnection: fail-%+v", err)
 	}
 }
 
 //OnRecv Connection read data
-func (nets *NetConnectService) onRecv(context actor.Context, sender *actor.PID, message interface{}) {
-	defer nets.LogDebug("onRecv complete")
+func (slf *NetConnectService) onRecv(context actor.Context, sender *actor.PID, message interface{}) {
+	defer slf.LogDebug("onRecv complete")
 	wrap := message.(*network.NetChunk)
-	if wrap.Handle != nets.Handle.Socket() {
-		nets.LogDebug("[%d:%d]Discard the data because this data is the current connection authorization data.",
+	if wrap.Handle != slf.Handle.Socket() {
+		slf.LogDebug("[%d:%d]Discard the data because this data is the current connection authorization data.",
 			wrap.Handle,
-			nets.Handle.Socket())
+			slf.Handle.Socket())
 		return
 	}
 
@@ -143,37 +143,37 @@ func (nets *NetConnectService) onRecv(context actor.Context, sender *actor.PID, 
 	)
 
 	for {
-		if nets.isShutdown {
+		if slf.isShutdown {
 			break
 		}
 
-		space = nets.Handle.GetRecvBufferLimit() - nets.Handle.GetRecvBuffer().Len()
+		space = slf.Handle.GetRecvBufferLimit() - slf.Handle.GetRecvBuffer().Len()
 		wby = len(wrap.Data) - writed
 		if space > 0 && wby > 0 {
 			if space > wby {
 				space = wby
 			}
 
-			_, err = nets.Handle.GetRecvBuffer().Write(wrap.Data[pos : pos+space])
+			_, err = slf.Handle.GetRecvBuffer().Write(wrap.Data[pos : pos+space])
 			if err != nil {
-				nets.Handle.Close()
+				slf.Handle.Close()
 				break
 			}
 
 			pos += space
 			writed += space
 
-			nets.Handle.GetDataStat().UpdateRead(timer.Now(), uint64(space))
+			slf.Handle.GetDataStat().UpdateRead(timer.Now(), uint64(space))
 		}
 
 		for {
 			// Decomposition of Packets
-			err = nets.Deleate.Analysis(context, nets)
+			err = slf.Deleate.Analysis(context, slf)
 			if err != nil {
 				if err == ErrAnalysisSuccess {
 					continue
 				} else if err != ErrAnalysisProceed {
-					nets.Handle.Close()
+					slf.Handle.Close()
 					return
 				}
 			}
@@ -188,46 +188,46 @@ func (nets *NetConnectService) onRecv(context actor.Context, sender *actor.PID, 
 }
 
 //OnClose Handling closed connection events
-func (nets *NetConnectService) OnClose(context actor.Context, sender *actor.PID, message interface{}) {
+func (slf *NetConnectService) OnClose(context actor.Context, sender *actor.PID, message interface{}) {
 	//Release buffer resources
-	nets.Handle.GetRecvBuffer().Reset()
-	nets.Target.SetEtat(UnConnected)
+	slf.Handle.GetRecvBuffer().Reset()
+	slf.Target.SetEtat(UnConnected)
 }
 
 // Shutdown : Proactively shut down the service
-func (nets *NetConnectService) Shutdown() {
-	nets.isShutdown = true
-	if nets.Handle.Socket() != 0 {
-		network.OperClose(nets.Handle.Socket())
+func (slf *NetConnectService) Shutdown() {
+	slf.isShutdown = true
+	if slf.Handle.Socket() != 0 {
+		network.OperClose(slf.Handle.Socket())
 	}
-	nets.Service.Shutdown()
+	slf.Service.Shutdown()
 }
 
-func (nets *NetConnectService) getDesc() string {
-	return fmt.Sprintf("[%s] %s ", nets.Handle.Name(), nets.Name())
+func (slf *NetConnectService) getDesc() string {
+	return fmt.Sprintf("[%s] %s ", slf.Handle.Name(), slf.Name())
 }
 
 //LogInfo Log information
-func (nets *NetConnectService) LogInfo(frmt string, args ...interface{}) {
-	nets.Service.LogInfo(nets.getDesc()+frmt, args...)
+func (slf *NetConnectService) LogInfo(frmt string, args ...interface{}) {
+	slf.Service.LogInfo(slf.getDesc()+frmt, args...)
 }
 
 //LogError Record error log information
-func (nets *NetConnectService) LogError(frmt string, args ...interface{}) {
-	nets.Service.LogError(nets.getDesc()+frmt, args...)
+func (slf *NetConnectService) LogError(frmt string, args ...interface{}) {
+	slf.Service.LogError(slf.getDesc()+frmt, args...)
 }
 
 //LogDebug Record debug log information
-func (nets *NetConnectService) LogDebug(frmt string, args ...interface{}) {
-	nets.Service.LogDebug(nets.getDesc()+frmt, args...)
+func (slf *NetConnectService) LogDebug(frmt string, args ...interface{}) {
+	slf.Service.LogDebug(slf.getDesc()+frmt, args...)
 }
 
 //LogTrace Record trace log information
-func (nets *NetConnectService) LogTrace(frmt string, args ...interface{}) {
-	nets.Service.LogTrace(nets.getDesc()+frmt, args...)
+func (slf *NetConnectService) LogTrace(frmt string, args ...interface{}) {
+	slf.Service.LogTrace(slf.getDesc()+frmt, args...)
 }
 
 //LogWarning Record warning log information
-func (nets *NetConnectService) LogWarning(frmt string, args ...interface{}) {
-	nets.Service.LogWarning(nets.getDesc()+frmt, args...)
+func (slf *NetConnectService) LogWarning(frmt string, args ...interface{}) {
+	slf.Service.LogWarning(slf.getDesc()+frmt, args...)
 }

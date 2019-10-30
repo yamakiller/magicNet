@@ -1,6 +1,6 @@
 package util
 
-// SubStr :剪切字符串以长度为结束
+// SubStr :Cut string ends with length
 func SubStr(str string, start int, length int) string {
 	rs := []rune(str)
 	rl := len(rs)
@@ -31,7 +31,7 @@ func SubStr(str string, start int, length int) string {
 	return string(rs[start:end])
 }
 
-// SubStr2 : 剪切字符串以索引为结束
+// SubStr2 : Cut string ends with index
 func SubStr2(str string, start int, end int) string {
 	rs := []rune(str)
 	length := len(rs)

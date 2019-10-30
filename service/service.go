@@ -49,25 +49,25 @@ type Service struct {
 }
 
 // Init : Initialization service
-func (srv *Service) Init() {
-	srv.method = make(map[interface{}]MethodFunc, 16)
-	srv.RegisterMethod(&actor.Started{}, srv.Started)
-	srv.RegisterMethod(&actor.Stopping{}, srv.Stopping)
-	srv.RegisterMethod(&actor.Stopped{}, srv.Stoped)
-	srv.RegisterMethod(&actor.Terminated{}, srv.Terminated)
+func (slf *Service) Init() {
+	slf.method = make(map[interface{}]MethodFunc, 16)
+	slf.RegisterMethod(&actor.Started{}, slf.Started)
+	slf.RegisterMethod(&actor.Stopping{}, slf.Stopping)
+	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)
+	slf.RegisterMethod(&actor.Terminated{}, slf.Terminated)
 }
 
 // Receive : Receive message
-func (srv *Service) Receive(context actor.Context) {
+func (slf *Service) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *actor.MessagePack:
-		f, ok := srv.method[reflect.TypeOf(msg.Message)]
+		f, ok := slf.method[reflect.TypeOf(msg.Message)]
 		if ok {
 			f(context, msg.Sender, msg.Message)
 		}
 		logger.Error(context.Self().ID, "service unknown message:%+v,sender:%+v", msg, msg.Sender)
 	default:
-		f, ok := srv.method[reflect.TypeOf(msg)]
+		f, ok := slf.method[reflect.TypeOf(msg)]
 		if ok {
 			f(context, nil, msg)
 			break
@@ -77,111 +77,114 @@ func (srv *Service) Receive(context actor.Context) {
 }
 
 //Assignment Service initial value association
-func (srv *Service) Assignment(context actor.Context) {
-	srv.pid = context.Self()
-	srv.name = srv.name + "$" + strconv.Itoa(int(srv.pid.ID))
+func (slf *Service) Assignment(context actor.Context) {
+	slf.pid = context.Self()
+	slf.name = slf.name + "$" + strconv.Itoa(int(slf.pid.ID))
 }
 
 // Started : Service start function
-func (srv *Service) Started(context actor.Context, sender *actor.PID, message interface{}) {
-	if srv.pid == nil {
-		srv.Assignment(context)
+func (slf *Service) Started(context actor.Context,
+	sender *actor.PID,
+	message interface{}) {
+
+	if slf.pid == nil {
+		slf.Assignment(context)
 	}
-	if srv.wait != nil {
-		srv.wait.Done()
+	if slf.wait != nil {
+		slf.wait.Done()
 	}
 }
 
 //Stopping : Service stopped
-func (srv *Service) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
+func (slf *Service) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
 }
 
 // Stoped : Service stop closing handler
-func (srv *Service) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
-	for k := range srv.method {
-		delete(srv.method, k)
+func (slf *Service) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
+	for k := range slf.method {
+		delete(slf.method, k)
 	}
 
-	if srv.wait != nil {
-		srv.wait.Done()
+	if slf.wait != nil {
+		slf.wait.Done()
 	}
 }
 
 // Terminated : The service is terminated and can be destroyed
-func (srv *Service) Terminated(context actor.Context, sender *actor.PID, message interface{}) {
-	srv.Shutdown()
+func (slf *Service) Terminated(context actor.Context, sender *actor.PID, message interface{}) {
+	slf.Shutdown()
 }
 
 // Shutdown : Proactively shut down the service
-func (srv *Service) Shutdown() {
-	if srv.pid == nil {
+func (slf *Service) Shutdown() {
+	if slf.pid == nil {
 		return
 	}
-	srv.pid.Stop()
-	srv.wait.Wait()
+	slf.pid.Stop()
+	slf.wait.Wait()
 }
 
 // Name : Get the name of the service
-func (srv *Service) Name() string {
-	return srv.name
+func (slf *Service) Name() string {
+	return slf.name
 }
 
 // Key : Returns the Key name of the service
-func (srv *Service) Key() string {
-	ix := strings.IndexByte(srv.name, '$')
+func (slf *Service) Key() string {
+	ix := strings.IndexByte(slf.name, '$')
 	if ix <= 0 {
-		return srv.name
+		return slf.name
 	}
 
-	return util.SubStr2(srv.name, 0, ix)
+	return util.SubStr2(slf.name, 0, ix)
 }
 
 //GetPID Return the pid object
-func (srv *Service) GetPID() *actor.PID {
-	return srv.pid
+func (slf *Service) GetPID() *actor.PID {
+	return slf.pid
 }
 
 // ID Returns the unique number of the service
-func (srv *Service) ID() uint32 {
-	return srv.pid.ID
+func (slf *Service) ID() uint32 {
+	return slf.pid.ID
 }
 
 // RegisterMethod : Registration (convention/agreement) method
-func (srv *Service) RegisterMethod(key interface{}, method MethodFunc) {
-	srv.method[reflect.TypeOf(key)] = method
+func (slf *Service) RegisterMethod(key interface{}, method MethodFunc) {
+	slf.method[reflect.TypeOf(key)] = method
 }
 
-func (srv *Service) withName(n string) {
-	srv.name = n
+func (slf *Service) withName(n string) {
+	slf.name = n
 }
 
-func (srv *Service) withWait(wait *sync.WaitGroup) {
-	srv.wait = wait
+func (slf *Service) withWait(wait *sync.WaitGroup) {
+	slf.wait = wait
 }
 
 //LogInfo Log information
-func (srv *Service) LogInfo(frmt string, args ...interface{}) {
-	logger.Info(srv.ID(), frmt, args...)
+func (slf *Service) LogInfo(frmt string, args ...interface{}) {
+	logger.Info(slf.ID(), frmt, args...)
 }
 
 //LogError Record error log information
-func (srv *Service) LogError(frmt string, args ...interface{}) {
-	logger.Error(srv.ID(), frmt, args...)
+func (slf *Service) LogError(frmt string, args ...interface{}) {
+	logger.Error(slf.ID(), frmt, args...)
 }
 
 //LogDebug Record debug log information
-func (srv *Service) LogDebug(frmt string, args ...interface{}) {
-	logger.Debug(srv.ID(), frmt, args...)
+func (slf *Service) LogDebug(frmt string, args ...interface{}) {
+	logger.Debug(slf.ID(), frmt, args...)
 }
 
 //LogTrace Record trace log information
-func (srv *Service) LogTrace(frmt string, args ...interface{}) {
-	logger.Trace(srv.ID(), frmt, args...)
+func (slf *Service) LogTrace(frmt string, args ...interface{}) {
+	logger.Trace(slf.ID(), frmt, args...)
 }
 
 //LogWarning Record warning log information
-func (srv *Service) LogWarning(frmt string, args ...interface{}) {
-	logger.Warning(srv.ID(), frmt, args...)
+func (slf *Service) LogWarning(frmt string, args ...interface{}) {
+	logger.Warning(slf.ID(), frmt, args...)
 }
 
 // Make : Service creator

@@ -35,46 +35,46 @@ const (
 )
 
 // Generate : Generate Handle
-func (nh *NetHandle) Generate(serviceID int32, handleID int32, sock int32) {
-	nh.value = ((uint64(serviceID) & constNetHandleServiceIDMask) << constNetHandleServiceIDShift) |
+func (slf *NetHandle) Generate(serviceID int32, handleID int32, sock int32) {
+	slf.value = ((uint64(serviceID) & constNetHandleServiceIDMask) << constNetHandleServiceIDShift) |
 		((uint64(handleID) & constNetHandleIDMask) << constNetHandleIDShift) |
 		(uint64(sock) & constNetHandleSocketIDMask)
 }
 
 // GetServiceID :  Return to the server ID
-func (nh *NetHandle) GetServiceID() int32 {
-	return int32((nh.value >> constNetHandleServiceIDShift) & constNetHandleServiceIDMask)
+func (slf *NetHandle) GetServiceID() int32 {
+	return int32((slf.value >> constNetHandleServiceIDShift) & constNetHandleServiceIDMask)
 }
 
 // GetHandle : Returns the handle ID of the allocated resource
-func (nh *NetHandle) GetHandle() int32 {
-	return int32((nh.value >> constNetHandleSocketIDBit) & constNetHandleIDMask)
+func (slf *NetHandle) GetHandle() int32 {
+	return int32((slf.value >> constNetHandleSocketIDBit) & constNetHandleIDMask)
 }
 
 // GetSocket : Return socket ID
-func (nh *NetHandle) GetSocket() int32 {
-	return int32(nh.value & constNetHandleSocketIDMask)
+func (slf *NetHandle) GetSocket() int32 {
+	return int32(slf.value & constNetHandleSocketIDMask)
 }
 
 // GetValue : Get Handle Value
-func (nh *NetHandle) GetValue() uint64 {
-	return nh.value
+func (slf *NetHandle) GetValue() uint64 {
+	return slf.value
 }
 
 // SetValue : Set Handle Value
-func (nh *NetHandle) SetValue(v uint64) {
-	nh.value = v
+func (slf *NetHandle) SetValue(v uint64) {
+	slf.value = v
 }
 
 // IsEmpty : is empty
-func (nh *NetHandle) IsEmpty() bool {
-	if nh.value == 0 {
+func (slf *NetHandle) IsEmpty() bool {
+	if slf.value == 0 {
 		return true
 	}
 	return false
 }
 
 // Rest :
-func (nh *NetHandle) Rest() {
-	nh.value = 0
+func (slf *NetHandle) Rest() {
+	slf.value = 0
 }

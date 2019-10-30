@@ -18,8 +18,8 @@ type wsTCPKeepAliveListener struct {
 }
 
 // Accept : 重载net/http wsTCPKeepAliveListener.Accept
-func (ln wsTCPKeepAliveListener) Accept() (net.Conn, error) {
-	tc, err := ln.AcceptTCP()
+func (slf wsTCPKeepAliveListener) Accept() (net.Conn, error) {
+	tc, err := slf.AcceptTCP()
 	if err != nil {
 		return nil, err
 	}
@@ -36,39 +36,39 @@ type wsServer struct {
 	httpErr error
 }
 
-func (wss *wsServer) listen(operator *actor.PID, addr string) error {
-	wss.waccept = websocket.Upgrader{
+func (slf *wsServer) listen(operator *actor.PID, addr string) error {
+	slf.waccept = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
 	}
 
-	wss.maker = wss.wsMakeConn
-	wss.httpMtx = http.NewServeMux()
-	wss.httpSrv = &http.Server{Addr: addr, Handler: wss.httpMtx}
-	wss.httpMtx.HandleFunc("/ws", wss.wsAccept)
+	slf.maker = slf.wsMakeConn
+	slf.httpMtx = http.NewServeMux()
+	slf.httpSrv = &http.Server{Addr: addr, Handler: slf.httpMtx}
+	slf.httpMtx.HandleFunc("/ws", slf.wsAccept)
 
-	ln, err := wss.httpListen(addr)
+	ln, err := slf.httpListen(addr)
 	if err != nil {
 		return err
 	}
 
-	wss.netWait.Add(1)
-	go wss.serve(ln)
+	slf.netWait.Add(1)
+	go slf.serve(ln)
 
 	time.Sleep(time.Millisecond * 1)
 	return nil
 }
 
-func (wss *wsServer) serve(ln net.Listener) {
-	defer wss.netWait.Done()
+func (slf *wsServer) serve(ln net.Listener) {
+	defer slf.netWait.Done()
 	for {
-		wss.httpErr = wss.httpSrv.Serve(wsTCPKeepAliveListener{ln.(*net.TCPListener)})
-		wss.isShutdown = true
+		slf.httpErr = slf.httpSrv.Serve(wsTCPKeepAliveListener{ln.(*net.TCPListener)})
+		slf.isShutdown = true
 		break
 	}
 
-	wss.conns.Range(func(handle interface{}, v interface{}) bool {
+	slf.conns.Range(func(handle interface{}, v interface{}) bool {
 		so := operGet(handle.(int32))
 		if so.b == resIdle {
 			return true
@@ -89,26 +89,26 @@ func (wss *wsServer) serve(ln net.Listener) {
 	})
 }
 
-func (wss *wsServer) wsAccept(w http.ResponseWriter, r *http.Request) {
+func (slf *wsServer) wsAccept(w http.ResponseWriter, r *http.Request) {
 
-	if wss.stat != Connected {
+	if slf.stat != Connected {
 		return
 	}
 
-	s, err := wss.waccept.Upgrade(w, r, nil)
+	s, err := slf.waccept.Upgrade(w, r, nil)
 	if err != nil {
 		//错误日志
-		logger.Fatal(wss.operator.ID, "web socket accept fail:%v", err)
+		logger.Fatal(slf.operator.ID, "web socket accept fail:%v", err)
 		return
 	}
 
-	err = wss.accept(s, s.RemoteAddr().Network(), s.RemoteAddr().String())
+	err = slf.accept(s, s.RemoteAddr().Network(), s.RemoteAddr().String())
 	if err != nil {
-		logger.Fatal(wss.operator.ID, "web socket accept fail:%v", err)
+		logger.Fatal(slf.operator.ID, "web socket accept fail:%v", err)
 	}
 }
 
-func (wss *wsServer) wsMakeConn(handle int32, s interface{}, operator *actor.PID, so *slot, now uint64, stat int32) ISocket {
+func (slf *wsServer) wsMakeConn(handle int32, s interface{}, operator *actor.PID, so *slot, now uint64, stat int32) ISocket {
 	conn := &wsConn{}
 	conn.h = handle
 	conn.s = s
@@ -118,7 +118,7 @@ func (wss *wsServer) wsMakeConn(handle int32, s interface{}, operator *actor.PID
 	conn.rv = wsConnRecv
 	conn.wr = wsConnWrite
 	conn.cls = wsConnClose
-	conn.out = make(chan *NetChunk, wss.outChanMax)
+	conn.out = make(chan *NetChunk, slf.outChanMax)
 	conn.quit = make(chan int)
 	conn.i.ReadLastTime = now
 	conn.i.WriteLastTime = now
@@ -126,7 +126,7 @@ func (wss *wsServer) wsMakeConn(handle int32, s interface{}, operator *actor.PID
 	return conn
 }
 
-func (wss *wsServer) httpListen(addr string) (net.Listener, error) {
+func (slf *wsServer) httpListen(addr string) (net.Listener, error) {
 	if addr == "" {
 		addr = ":http"
 	}
@@ -134,13 +134,13 @@ func (wss *wsServer) httpListen(addr string) (net.Listener, error) {
 	return net.Listen("tcp", addr)
 }
 
-func (wss *wsServer) getProto() string {
+func (slf *wsServer) getProto() string {
 	return protoWeb
 }
-func (wss *wsServer) getType() int {
+func (slf *wsServer) getType() int {
 	return CListen
 }
 
-func (wss *wsServer) close(lck *util.ReSpinLock) {
-	wss.httpSrv.Close()
+func (slf *wsServer) close(lck *util.ReSpinLock) {
+	slf.httpSrv.Close()
 }

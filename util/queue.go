@@ -10,12 +10,12 @@ type node struct {
 	val  interface{}
 }
 
-// Queue : 简单队列
+// Queue : Simple queue
 type Queue struct {
 	head, tail *node
 }
 
-// NewQueue : 创建一个队列对象
+// NewQueue : Create a queue object
 func NewQueue() *Queue {
 	q := &Queue{}
 	stub := &node{}
@@ -24,20 +24,20 @@ func NewQueue() *Queue {
 	return q
 }
 
-// Push : 向队列插入一个Object
-func (q *Queue) Push(t interface{}) {
+// Push : Insert an Object into the queue
+func (slf *Queue) Push(t interface{}) {
 	n := new(node)
 	n.val = t
-	prev := (*node)(atomic.SwapPointer((*unsafe.Pointer)(unsafe.Pointer(&q.head)), unsafe.Pointer(n)))
+	prev := (*node)(atomic.SwapPointer((*unsafe.Pointer)(unsafe.Pointer(&slf.head)), unsafe.Pointer(n)))
 	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&prev.next)), unsafe.Pointer(n))
 }
 
-// Pop : 重队列中弹出一个Object
-func (q *Queue) Pop() interface{} {
-	tail := q.tail
+// Pop : An object pops up in the re-queue
+func (slf *Queue) Pop() interface{} {
+	tail := slf.tail
 	next := (*node)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&tail.next))))
 	if next != nil {
-		q.tail = next
+		slf.tail = next
 		v := next.val
 		next.val = nil
 		return v
@@ -45,9 +45,9 @@ func (q *Queue) Pop() interface{} {
 	return nil
 }
 
-// IsEmpty : 队列是否为空
-func (q *Queue) IsEmpty() bool {
-	tail := q.tail
+// IsEmpty : Whether the queue is empty
+func (slf *Queue) IsEmpty() bool {
+	tail := slf.tail
 	next := (*node)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&tail.next))))
 	return next == nil
 }

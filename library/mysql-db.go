@@ -16,14 +16,14 @@ type MySQLDB struct {
 }
 
 // Init : 初始化mysql数据库
-func (msd *MySQLDB) Init(dsn string, maxConn int, maxIdleConn, lifeSec int) error {
-	msd.db, _ = sql.Open("mysql", dsn)
-	msd.db.SetMaxOpenConns(maxConn)
-	msd.db.SetMaxIdleConns(maxIdleConn)
-	msd.db.SetConnMaxLifetime(time.Duration(lifeSec) * time.Second)
-	msd.dsn = dsn
+func (slf *MySQLDB) Init(dsn string, maxConn int, maxIdleConn, lifeSec int) error {
+	slf.db, _ = sql.Open("mysql", dsn)
+	slf.db.SetMaxOpenConns(maxConn)
+	slf.db.SetMaxIdleConns(maxIdleConn)
+	slf.db.SetConnMaxLifetime(time.Duration(lifeSec) * time.Second)
+	slf.dsn = dsn
 
-	err := msd.db.Ping()
+	err := slf.db.Ping()
 	if err != nil {
 		return err
 	}
@@ -32,12 +32,12 @@ func (msd *MySQLDB) Init(dsn string, maxConn int, maxIdleConn, lifeSec int) erro
 }
 
 // Query : 查询
-func (msd *MySQLDB) Query(strSQL string, args ...interface{}) (map[string]interface{}, error) {
-	if perr := msd.db.Ping(); perr != nil {
+func (slf *MySQLDB) Query(strSQL string, args ...interface{}) (map[string]interface{}, error) {
+	if perr := slf.db.Ping(); perr != nil {
 		return nil, perr
 	}
 
-	rows, err := msd.db.Query(strSQL, args...)
+	rows, err := slf.db.Query(strSQL, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +65,13 @@ func (msd *MySQLDB) Query(strSQL string, args ...interface{}) (map[string]interf
 }
 
 // Insert : 插入语句
-func (msd *MySQLDB) Insert(strSQL string, args ...interface{}) (int64, error) {
-	if perr := msd.db.Ping(); perr != nil {
+func (slf *MySQLDB) Insert(strSQL string, args ...interface{}) (int64, error) {
+	if perr := slf.db.Ping(); perr != nil {
 		log.Println(perr)
 		return 0, perr
 	}
 
-	r, err := msd.db.Exec(strSQL, args...)
+	r, err := slf.db.Exec(strSQL, args...)
 	if err != nil {
 		log.Println(err)
 		return 0, err
@@ -81,12 +81,12 @@ func (msd *MySQLDB) Insert(strSQL string, args ...interface{}) (int64, error) {
 }
 
 // Update : 更新语句
-func (msd *MySQLDB) Update(strSQL string, args ...interface{}) (int64, error) {
-	if perr := msd.db.Ping(); perr != nil {
+func (slf *MySQLDB) Update(strSQL string, args ...interface{}) (int64, error) {
+	if perr := slf.db.Ping(); perr != nil {
 		return 0, perr
 	}
 
-	r, err := msd.db.Exec(strSQL, args)
+	r, err := slf.db.Exec(strSQL, args)
 	if err != nil {
 		return 0, err
 	}
@@ -95,6 +95,6 @@ func (msd *MySQLDB) Update(strSQL string, args ...interface{}) (int64, error) {
 }
 
 // Close : 关闭
-func (msd *MySQLDB) Close() {
-	msd.db.Close()
+func (slf *MySQLDB) Close() {
+	slf.db.Close()
 }

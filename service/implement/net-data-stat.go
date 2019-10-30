@@ -30,31 +30,31 @@ type NetStat struct {
 }
 
 //UpdateRead Update read data status
-func (nst *NetStat) UpdateRead(tts uint64, bytes uint64) {
-	nst.read.Update(tts, bytes)
+func (slf *NetStat) UpdateRead(tts uint64, bytes uint64) {
+	slf.read.Update(tts, bytes)
 }
 
 //UpdateWrite Update write data status
-func (nst *NetStat) UpdateWrite(tts uint64, bytes uint64) {
-	nst.write.Update(tts, bytes)
+func (slf *NetStat) UpdateWrite(tts uint64, bytes uint64) {
+	slf.write.Update(tts, bytes)
 }
 
 //UpdateOnline Update online time information
-func (nst *NetStat) UpdateOnline(tts uint64) {
-	nst.online = tts
+func (slf *NetStat) UpdateOnline(tts uint64) {
+	slf.online = tts
 }
 
 //GetRead returns read status object
-func (nst *NetStat) GetRead() NetDataStat {
-	return nst.read
+func (slf *NetStat) GetRead() NetDataStat {
+	return slf.read
 }
 
 //GetWrite returns write status object
-func (nst *NetStat) GetWrite() NetDataStat {
-	return nst.write
+func (slf *NetStat) GetWrite() NetDataStat {
+	return slf.write
 }
 
 //GetOnline returns online time last
-func (nst *NetStat) GetOnline() uint64 {
-	return nst.online
+func (slf *NetStat) GetOnline() uint64 {
+	return slf.online
 }

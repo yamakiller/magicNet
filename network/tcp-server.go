@@ -14,7 +14,7 @@ type tcpServer struct {
 	s *net.TCPListener
 }
 
-func (tps *tcpServer) listen(operator *actor.PID, addr string) error {
+func (slf *tcpServer) listen(operator *actor.PID, addr string) error {
 
 	tcpAddr, aderr := net.ResolveTCPAddr("tcp", addr)
 	if aderr != nil {
@@ -26,36 +26,36 @@ func (tps *tcpServer) listen(operator *actor.PID, addr string) error {
 		return err
 	}
 
-	tps.s = ln
-	tps.maker = tps.makeConn
+	slf.s = ln
+	slf.maker = slf.makeConn
 
-	tps.netWait.Add(1)
-	go tps.serve(ln)
+	slf.netWait.Add(1)
+	go slf.serve(ln)
 
 	time.Sleep(time.Millisecond * 1)
 	return nil
 }
 
-func (tps *tcpServer) serve(ln net.Listener) {
-	defer tps.netWait.Done()
+func (slf *tcpServer) serve(ln net.Listener) {
+	defer slf.netWait.Done()
 	for {
 
-		s, err := tps.s.AcceptTCP()
+		s, err := slf.s.AcceptTCP()
 		if err != nil {
-			logger.Error(tps.operator.ID, "socket accept fail:%s", err.Error())
-			tps.isShutdown = true
+			logger.Error(slf.operator.ID, "socket accept fail:%s", err.Error())
+			slf.isShutdown = true
 			break
 		}
 		s.SetNoDelay(true)
 
-		err = tps.accept(s, s.RemoteAddr().Network(), s.RemoteAddr().String())
+		err = slf.accept(s, s.RemoteAddr().Network(), s.RemoteAddr().String())
 		if err != nil {
-			logger.Fatal(tps.operator.ID, "socket accept fail:%v", err)
+			logger.Fatal(slf.operator.ID, "socket accept fail:%v", err)
 		}
 	}
 
 	//------------------关闭所有连接-----------------------------
-	tps.conns.Range(func(handle interface{}, v interface{}) bool {
+	slf.conns.Range(func(handle interface{}, v interface{}) bool {
 		so := operGet(handle.(int32))
 		if so.b == resIdle {
 			return true
@@ -76,11 +76,11 @@ func (tps *tcpServer) serve(ln net.Listener) {
 	})
 }
 
-func (tps *tcpServer) keeploop() {
+func (slf *tcpServer) keeploop() {
 
 }
 
-func (tps *tcpServer) makeConn(handle int32, s interface{}, operator *actor.PID, so *slot, now uint64, stat int32) ISocket {
+func (slf *tcpServer) makeConn(handle int32, s interface{}, operator *actor.PID, so *slot, now uint64, stat int32) ISocket {
 	conn := &tcpConn{}
 	conn.h = handle
 	conn.s = s
@@ -90,7 +90,7 @@ func (tps *tcpServer) makeConn(handle int32, s interface{}, operator *actor.PID,
 	conn.rv = tcpConnRecv
 	conn.wr = tcpConnWrite
 	conn.cls = tcpConnClose
-	conn.out = make(chan *NetChunk, tps.outChanMax)
+	conn.out = make(chan *NetChunk, slf.outChanMax)
 	conn.quit = make(chan int)
 	conn.i.ReadLastTime = now
 	conn.i.WriteLastTime = now
@@ -98,13 +98,13 @@ func (tps *tcpServer) makeConn(handle int32, s interface{}, operator *actor.PID,
 	return conn
 }
 
-func (tps *tcpServer) getProto() string {
+func (slf *tcpServer) getProto() string {
 	return protoTCP
 }
-func (tps *tcpServer) getType() int {
+func (slf *tcpServer) getType() int {
 	return CListen
 }
 
-func (tps *tcpServer) close(lck *util.ReSpinLock) {
-	tps.s.Close()
+func (slf *tcpServer) close(lck *util.ReSpinLock) {
+	slf.s.Close()
 }

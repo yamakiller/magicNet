@@ -9,10 +9,10 @@ import (
 	"github.com/yamakiller/magicNet/util"
 )
 
-//HTTPSrvFunc : http 服务函数
+//HTTPSrvFunc : Http service function
 type HTTPSrvFunc func(arg1 http.ResponseWriter, arg2 *http.Request)
 
-// IHTTPSrvMethod : HTTP 服务方法接口
+// IHTTPSrvMethod : HTTP service method interface
 type IHTTPSrvMethod interface {
 	http.Handler
 	RegisterMethod(pattern string, method string, f interface{})
@@ -25,14 +25,14 @@ type httpMethodValue struct {
 	f          interface{}
 }
 
-//HTTPSrvMethod : http 服务方法
+//HTTPSrvMethod : Http service method
 type HTTPSrvMethod struct {
 	suffixRegexp *regexp.Regexp
 	methods      map[string]httpMethodValue
 	l            sync.RWMutex
 }
 
-//NewHTTPSrvMethod 新建一个服务方法
+//NewHTTPSrvMethod Create a new service method
 func NewHTTPSrvMethod() IHTTPSrvMethod {
 	r := &HTTPSrvMethod{}
 	r.suffixRegexp, _ = regexp.Compile(`\.\w+.*`)
@@ -40,8 +40,8 @@ func NewHTTPSrvMethod() IHTTPSrvMethod {
 	return r
 }
 
-func (hsm *HTTPSrvMethod) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	f := hsm.match(r.RequestURI, r.Method)
+func (slf *HTTPSrvMethod) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	f := slf.match(r.RequestURI, r.Method)
 	if f == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -52,24 +52,24 @@ func (hsm *HTTPSrvMethod) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RegisterMethod : 注册服务方法
-func (hsm *HTTPSrvMethod) RegisterMethod(pattern string, method string, f interface{}) {
-	hsm.l.Lock()
-	defer hsm.l.Unlock()
-	hsm.methods[pattern] = httpMethodValue{httpMethod: method, f: f}
+// RegisterMethod : Registration service method
+func (slf *HTTPSrvMethod) RegisterMethod(pattern string, method string, f interface{}) {
+	slf.l.Lock()
+	defer slf.l.Unlock()
+	slf.methods[pattern] = httpMethodValue{httpMethod: method, f: f}
 }
 
-// Close : 关闭方法服务
-func (hsm *HTTPSrvMethod) Close() {
-	hsm.l.Lock()
-	defer hsm.l.Unlock()
-	hsm.methods = make(map[string]httpMethodValue)
+// Close : Close method service
+func (slf *HTTPSrvMethod) Close() {
+	slf.l.Lock()
+	defer slf.l.Unlock()
+	slf.methods = make(map[string]httpMethodValue)
 }
 
-func (hsm *HTTPSrvMethod) match(requestURI string, method string) interface{} {
-	hsm.l.RLock()
-	defer hsm.l.RUnlock()
-	suffix := hsm.suffixRegexp.FindStringSubmatch(requestURI)
+func (slf *HTTPSrvMethod) match(requestURI string, method string) interface{} {
+	slf.l.RLock()
+	defer slf.l.RUnlock()
+	suffix := slf.suffixRegexp.FindStringSubmatch(requestURI)
 	if suffix != nil && len(suffix) >= 1 {
 		return nil
 	}
@@ -80,7 +80,7 @@ func (hsm *HTTPSrvMethod) match(requestURI string, method string) interface{} {
 		tmpURI = util.SubStr2(tmpURI, 0, idx)
 	}
 
-	r := hsm.methods[tmpURI]
+	r := slf.methods[tmpURI]
 
 	if strings.Index(strings.ToLower(r.httpMethod),
 		strings.ToLower(method)) >= 0 {

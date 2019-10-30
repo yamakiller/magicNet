@@ -32,44 +32,44 @@ type Consistent struct {
 	sync.RWMutex
 }
 
-
+//NewConsistent xxx
 func NewConsistent(n int) *Consistent {
-	return &Consistent{NumberOfReplicas : n, circle: make(map[uint32]interface{})}
+	return &Consistent{NumberOfReplicas: n, circle: make(map[uint32]interface{})}
 }
 
 //Push inserts a sring element in the consistent hash.
-func (c *Consistent) Push(e string, v interface{}) {
-	c.Lock()
-	defer c.Unlock()
-	c.push(e, v)
+func (slf *Consistent) Push(e string, v interface{}) {
+	slf.Lock()
+	defer slf.Unlock()
+	slf.push(e, v)
 }
 
 // Erase removes an element in the consistent hash.
-func (c *Consistent) Erase(e string) {
-	c.Lock()
-	defer c.Unlock()
-	c.erase(e)
+func (slf *Consistent) Erase(e string) {
+	slf.Lock()
+	defer slf.Unlock()
+	slf.erase(e)
 }
 
 // Get returns an element close to where name hashes to in the circle
-func (c *Consistent) Get(name string) (interface{}, error) {
-	c.RLock()
-	defer c.RUnlock()
+func (slf *Consistent) Get(name string) (interface{}, error) {
+	slf.RLock()
+	defer slf.RUnlock()
 
-	if len(c.circle) == 0 {
+	if len(slf.circle) == 0 {
 		return nil, errors.New("empty consistent")
 	}
-	key := c.hashCalc(name)
-	i := c.search(key)
-	return c.circle[c.sortedHashes[i]], nil
+	key := slf.hashCalc(name)
+	i := slf.search(key)
+	return slf.circle[slf.sortedHashes[i]], nil
 }
 
 // Sreach return an element to where f returns 0 to in the circle
-func (c *Consistent) Sreach(key interface{}, f func(key interface{}, val interface{}) int) interface{} {
-	c.RLock()
-	defer c.RUnlock()
+func (slf *Consistent) Sreach(key interface{}, f func(key interface{}, val interface{}) int) interface{} {
+	slf.RLock()
+	defer slf.RUnlock()
 
-	for _, v := range c.circle {
+	for _, v := range slf.circle {
 		if f(key, v) == 0 {
 			return v
 		}
@@ -78,55 +78,55 @@ func (c *Consistent) Sreach(key interface{}, f func(key interface{}, val interfa
 }
 
 // Range Traverse access to all elements
-func (c *Consistent) Range(f func(val interface{})) {
-	c.RLock()
-	defer c.RUnlock()
+func (slf *Consistent) Range(f func(val interface{})) {
+	slf.RLock()
+	defer slf.RUnlock()
 
-	for _, v := range c.circle {
+	for _, v := range slf.circle {
 		f(v)
 	}
 }
 
 //Size returns memory number to in the circle
-func (c *Consistent) Size() int {
-	return c.size
+func (slf *Consistent) Size() int {
+	return slf.size
 }
 
-func (c *Consistent) push(e string, v interface{}) {
-	for i := 0; i < c.NumberOfReplicas; i++ {
-		c.circle[c.hashCalc(c.genKey(e, i))] = v
+func (slf *Consistent) push(e string, v interface{}) {
+	for i := 0; i < slf.NumberOfReplicas; i++ {
+		slf.circle[slf.hashCalc(slf.genKey(e, i))] = v
 	}
 
-	c.updateSortedHashes()
-	c.size++
+	slf.updateSortedHashes()
+	slf.size++
 }
 
-func (c *Consistent) erase(e string) {
-	for i := 0; i < c.NumberOfReplicas; i++ {
-		delete(c.circle, c.hashCalc(c.genKey(e, i)))
+func (slf *Consistent) erase(e string) {
+	for i := 0; i < slf.NumberOfReplicas; i++ {
+		delete(slf.circle, slf.hashCalc(slf.genKey(e, i)))
 	}
-	c.updateSortedHashes()
-	c.size--
+	slf.updateSortedHashes()
+	slf.size--
 }
 
-func (c *Consistent) search(key uint32) (i int) {
+func (slf *Consistent) search(key uint32) (i int) {
 	f := func(x int) bool {
-		return c.sortedHashes[x] > key
+		return slf.sortedHashes[x] > key
 	}
 
-	i = sort.Search(len(c.sortedHashes), f)
-	if i >= len(c.sortedHashes) {
+	i = sort.Search(len(slf.sortedHashes), f)
+	if i >= len(slf.sortedHashes) {
 		i = 0
 	}
 	return i
 }
 
 // generates a string key for an element with an index
-func (c *Consistent) genKey(s string, idx int) string {
+func (slf *Consistent) genKey(s string, idx int) string {
 	return strconv.Itoa(idx) + s
 }
 
-func (c *Consistent) hashCalc(s string) uint32 {
+func (slf *Consistent) hashCalc(s string) uint32 {
 	if len(s) < 64 {
 		var scratch [64]byte
 		copy(scratch[:], s)
@@ -135,14 +135,14 @@ func (c *Consistent) hashCalc(s string) uint32 {
 	return crc32.ChecksumIEEE([]byte(s))
 }
 
-func (c *Consistent) updateSortedHashes() {
-	hashes := c.sortedHashes[:0]
-	if cap(c.sortedHashes)/(c.NumberOfReplicas*4) > len(c.circle) {
+func (slf *Consistent) updateSortedHashes() {
+	hashes := slf.sortedHashes[:0]
+	if cap(slf.sortedHashes)/(slf.NumberOfReplicas*4) > len(slf.circle) {
 		hashes = nil
 	}
-	for k := range c.circle {
+	for k := range slf.circle {
 		hashes = append(hashes, k)
 	}
 	sort.Sort(hashes)
-	c.sortedHashes = hashes
+	slf.sortedHashes = hashes
 }

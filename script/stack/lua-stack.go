@@ -27,106 +27,106 @@ func NewLuaStack() *LuaStack {
 }
 
 // GetLuaState Get LUA virtual machine C object
-func (S *LuaStack) GetLuaState() *mlua.State {
-	return S._l
+func (slf *LuaStack) GetLuaState() *mlua.State {
+	return slf._l
 }
 
 //OpenLibs  library
-func (S *LuaStack) OpenLibs() {
-	S._l.OpenLibs()
+func (slf *LuaStack) OpenLibs() {
+	slf._l.OpenLibs()
 }
 
 // AddSreachPath : 添加LUA搜索路径
-func (S *LuaStack) AddSreachPath(path string) {
-	S._l.GetGlobal("package")
-	S._l.GetField(-1, "path")
-	curPath := S._l.ToString(-1)
+func (slf *LuaStack) AddSreachPath(path string) {
+	slf._l.GetGlobal("package")
+	slf._l.GetField(-1, "path")
+	curPath := slf._l.ToString(-1)
 	newPath := fmt.Sprintf("%s;%s/?.lua", curPath, path)
-	S._l.PushString(newPath)
-	S._l.SetField(-3, "path")
-	S._l.Pop(2)
+	slf._l.PushString(newPath)
+	slf._l.SetField(-3, "path")
+	slf._l.Pop(2)
 }
 
 // AddLuaLoader : LUA载入器
-func (S *LuaStack) AddLuaLoader(f *mlua.LuaGoFunction) {
+func (slf *LuaStack) AddLuaLoader(f *mlua.LuaGoFunction) {
 	if f == nil {
 		return
 	}
-	S._l.GetGlobal("package")
-	S._l.GetField(-1, "preload")
+	slf._l.GetGlobal("package")
+	slf._l.GetField(-1, "preload")
 
-	S._l.PushGoFunction(*f)
-	for i := S._l.RawLen(-2) + 1; i > 2; {
-		S._l.RawGetI(-2, int64(i-1))
-		S._l.RawGetI(-3, int64(i))
+	slf._l.PushGoFunction(*f)
+	for i := slf._l.RawLen(-2) + 1; i > 2; {
+		slf._l.RawGetI(-2, int64(i-1))
+		slf._l.RawGetI(-3, int64(i))
 		i--
 	}
-	S._l.RawSetI(-2, 2)
+	slf._l.RawSetI(-2, 2)
 
-	S._l.SetField(-2, "preload")
-	S._l.Pop(1)
+	slf._l.SetField(-2, "preload")
+	slf._l.Pop(1)
 }
 
 // ExecuteFunction : 执行LUA 函数
-func (S *LuaStack) ExecuteFunction(numArgs int) (int, error) {
+func (slf *LuaStack) ExecuteFunction(numArgs int) (int, error) {
 	funcIndex := -(numArgs + 1)
-	if !S._l.IsFunction(funcIndex) {
-		S._l.Pop(numArgs + 1)
+	if !slf._l.IsFunction(funcIndex) {
+		slf._l.Pop(numArgs + 1)
 		return 0, nil
 	}
 
 	traceback := 0
-	S._l.GetGlobal("__G__TRACKBACK__")
-	if !S._l.IsFunction(-1) {
-		S._l.Pop(1)
+	slf._l.GetGlobal("__G__TRACKBACK__")
+	if !slf._l.IsFunction(-1) {
+		slf._l.Pop(1)
 	} else {
-		S._l.Insert(funcIndex - 1)
+		slf._l.Insert(funcIndex - 1)
 		traceback = funcIndex - 1
 	}
 
-	error := S._l.PCall(numArgs, 1, traceback)
+	error := slf._l.PCall(numArgs, 1, traceback)
 	if error != 0 {
 		if traceback == 0 {
-			err := S._l.ToString(-1)
-			S._l.Pop(1)
+			err := slf._l.ToString(-1)
+			slf._l.Pop(1)
 			return 0, errors.New(err)
 		}
-		S._l.Pop(2)
+		slf._l.Pop(2)
 		return 0, errors.New("lua unknown error")
 	}
 
 	ret := 0
-	if S._l.IsNumber(-1) {
-		ret = int(S._l.ToInteger(-1))
-	} else if S._l.IsBoolean(-1) {
-		if S._l.ToBoolean(-1) {
+	if slf._l.IsNumber(-1) {
+		ret = int(slf._l.ToInteger(-1))
+	} else if slf._l.IsBoolean(-1) {
+		if slf._l.ToBoolean(-1) {
 			ret = 1
 		} else {
 			ret = 0
 		}
 	}
 
-	S._l.Pop(1)
+	slf._l.Pop(1)
 
 	if traceback != 0 {
-		S._l.Pop(1)
+		slf._l.Pop(1)
 	}
 
 	return ret, nil
 }
 
 // ExecuteString : 执行LUA字符串
-func (S *LuaStack) ExecuteString(codes string) (int, error) {
-	if S._l.LoadString(codes) != 0 {
-		err := errors.New(S._l.ToString(-1))
-		S._l.Pop(1)
+func (slf *LuaStack) ExecuteString(codes string) (int, error) {
+	if slf._l.LoadString(codes) != 0 {
+		err := errors.New(slf._l.ToString(-1))
+		slf._l.Pop(1)
 		return 0, err
 	}
-	return S.ExecuteFunction(0)
+	return slf.ExecuteFunction(0)
 }
 
 // ExecuteScriptFile ： 执行LUA脚本文件
-func (S *LuaStack) ExecuteScriptFile(fileName string) (int, error) {
+func (slf *LuaStack) ExecuteScriptFile(fileName string) (int, error) {
 	tmp := fileName
 	pos := strings.LastIndex(tmp, byteLuaFileExt)
 	if pos != -1 {
@@ -156,88 +156,88 @@ func (S *LuaStack) ExecuteScriptFile(fileName string) (int, error) {
 		return 0, fmt.Errorf("%s script not executed correctly", tmp)
 	}
 
-	if _, err := S.loadBuffer(&data.GetBytes()[0], uint(data.GetSize()), tmp); err != nil {
+	if _, err := slf.loadBuffer(&data.GetBytes()[0], uint(data.GetSize()), tmp); err != nil {
 		return 0, err
 	}
 
-	return S.ExecuteFunction(0)
+	return slf.ExecuteFunction(0)
 }
 
 // Clean : 清空堆栈
-func (S *LuaStack) Clean() {
-	S._l.SetTop(0)
+func (slf *LuaStack) Clean() {
+	slf._l.SetTop(0)
 }
 
 // PushInt : 插入Int
-func (S *LuaStack) PushInt(intValue int) {
-	S._l.PushInteger(int64(intValue))
+func (slf *LuaStack) PushInt(intValue int) {
+	slf._l.PushInteger(int64(intValue))
 }
 
 // PushLong : 插入64位Int
-func (S *LuaStack) PushLong(longValue int64) {
-	S._l.PushInteger(longValue)
+func (slf *LuaStack) PushLong(longValue int64) {
+	slf._l.PushInteger(longValue)
 }
 
 // PushFloat : 插入 float
-func (S *LuaStack) PushFloat(floatValue float32) {
-	S._l.PushNumber(float64(floatValue))
+func (slf *LuaStack) PushFloat(floatValue float32) {
+	slf._l.PushNumber(float64(floatValue))
 }
 
 // PushDouble : 插入 float64
-func (S *LuaStack) PushDouble(doubleValue float64) {
-	S._l.PushNumber(float64(doubleValue))
+func (slf *LuaStack) PushDouble(doubleValue float64) {
+	slf._l.PushNumber(float64(doubleValue))
 }
 
 // PushBoolean : 插入 bool
-func (S *LuaStack) PushBoolean(boolValue bool) {
-	S._l.PushBoolean(boolValue)
+func (slf *LuaStack) PushBoolean(boolValue bool) {
+	slf._l.PushBoolean(boolValue)
 }
 
 // PushString : 插入字符串
-func (S *LuaStack) PushString(stringValue string) {
-	S._l.PushString(stringValue)
+func (slf *LuaStack) PushString(stringValue string) {
+	slf._l.PushString(stringValue)
 }
 
 // PushNil : 插入一个 Nil
-func (S *LuaStack) PushNil() {
-	S._l.PushNil()
+func (slf *LuaStack) PushNil() {
+	slf._l.PushNil()
 }
 
 // Register : 注册闭包函数
-func (S *LuaStack) Register(f mlua.LuaGoFunction, name string, args ...interface{}) {
-	S._l.PushGoClosure(f, args...)
-	S._l.SetGlobal(name)
+func (slf *LuaStack) Register(f mlua.LuaGoFunction, name string, args ...interface{}) {
+	slf._l.PushGoClosure(f, args...)
+	slf._l.SetGlobal(name)
 }
 
 // ReLoad : 重新载入
-func (S *LuaStack) ReLoad(moduleFileName string) (int, error) {
+func (slf *LuaStack) ReLoad(moduleFileName string) (int, error) {
 	if len(moduleFileName) == 0 {
 		return 0, fmt.Errorf("reload %s fail", moduleFileName)
 	}
 
-	S._l.GetGlobal("package")
-	S._l.GetField(-1, "loaded")
-	S._l.PushString(moduleFileName)
-	S._l.GetTable(-2)
-	if !S._l.IsNil(-1) {
-		S._l.PushString(moduleFileName)
-		S._l.PushNil()
-		S._l.SetTable(-4)
+	slf._l.GetGlobal("package")
+	slf._l.GetField(-1, "loaded")
+	slf._l.PushString(moduleFileName)
+	slf._l.GetTable(-2)
+	if !slf._l.IsNil(-1) {
+		slf._l.PushString(moduleFileName)
+		slf._l.PushNil()
+		slf._l.SetTable(-4)
 	}
-	S._l.Pop(3)
+	slf._l.Pop(3)
 
 	name := moduleFileName
 	require := fmt.Sprintf("require '%s'", name)
-	return S.ExecuteString(require)
+	return slf.ExecuteString(require)
 }
 
-func (S *LuaStack) loadBuffer(chunk *byte, chunkSize uint, chunkName string) (int, error) {
-	r := S._l.LoadBuffer(chunk, chunkSize, chunkName)
+func (slf *LuaStack) loadBuffer(chunk *byte, chunkSize uint, chunkName string) (int, error) {
+	r := slf._l.LoadBuffer(chunk, chunkSize, chunkName)
 
 	if r != 0 {
 
-		err := S._l.ToString(-1)
-		S._l.Pop(1)
+		err := slf._l.ToString(-1)
+		slf._l.Pop(1)
 
 		switch r {
 		case int(mlua.LUAERRSYNTAX):
@@ -255,6 +255,6 @@ func (S *LuaStack) loadBuffer(chunk *byte, chunkSize uint, chunkName string) (in
 }
 
 //Shutdown Close lua_state
-func (S *LuaStack) Shutdown() {
-	S._l.Close()
+func (slf *LuaStack) Shutdown() {
+	slf._l.Close()
 }

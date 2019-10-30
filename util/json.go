@@ -6,7 +6,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// JSONSerialize : golang object 序列化为 json字符串
+// JSONSerialize : golang object Serialized to json string
 func JSONSerialize(obj interface{}) string {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	data, err := json.Marshal(&obj)
@@ -17,9 +17,16 @@ func JSONSerialize(obj interface{}) string {
 	return string(data)
 }
 
-// JSONUnSerialize : 把json字符串反列化为 golang object
+// JSONUnSerialize : Reverse the json string [byte] into a golang object
 func JSONUnSerialize(data []byte, v interface{}) error {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	err := json.Unmarshal(data, v)
+	return err
+}
+
+// JSONUnFormSerialize : Reverse the json string into a golang object
+func JSONUnFormSerialize(data string, v interface{}) error {
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	err := json.UnmarshalFromString(data, v)
 	return err
 }

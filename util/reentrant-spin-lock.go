@@ -1,45 +1,45 @@
 package util
 
-// ReSpinLock : 可重入自旋锁
+// ReSpinLock : Re-entrant spin lock
 type ReSpinLock struct {
 	mutex *SpinLock
 	owner int
 	count int
 }
 
-// Association : 自旋锁关联可重入自旋锁
-func (re *ReSpinLock) Association(m *SpinLock) {
-	re.mutex = m
+// Association : Spinlock association reentrant spin lock
+func (slf *ReSpinLock) Association(m *SpinLock) {
+	slf.mutex = m
 }
 
-// TryLock : 尝试加锁如果未获得锁返回失败不会反复尝试
-func (re *ReSpinLock) TryLock() bool {
+// TryLock : Try to lock if you fail to get the lock return failure will not try again
+func (slf *ReSpinLock) TryLock() bool {
 	me := GetCurrentGoroutineID()
-	if re.owner == me {
-		re.count++
+	if slf.owner == me {
+		slf.count++
 		return true
 	}
 
-	return re.mutex.Trylock()
+	return slf.mutex.Trylock()
 }
 
-// Lock : 加锁
-func (re *ReSpinLock) Lock() {
+// Lock : lock
+func (slf *ReSpinLock) Lock() {
 	me := GetCurrentGoroutineID()
-	if re.owner == me {
-		re.count++
+	if slf.owner == me {
+		slf.count++
 		return
 	}
 
-	re.mutex.Lock()
+	slf.mutex.Lock()
 }
 
-// Unlock : 解锁
-func (re *ReSpinLock) Unlock() {
-	Assert(re.owner == GetCurrentGoroutineID(), "illegalMonitorStateError")
-	if re.count > 0 {
-		re.count--
+// Unlock : unlock
+func (slf *ReSpinLock) Unlock() {
+	Assert(slf.owner == GetCurrentGoroutineID(), "illegalMonitorStateError")
+	if slf.count > 0 {
+		slf.count--
 	} else {
-		re.mutex.Unlock()
+		slf.mutex.Unlock()
 	}
 }

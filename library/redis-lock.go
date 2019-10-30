@@ -18,8 +18,8 @@ type RedisMutex struct {
 	timeout  int
 }
 
-func (m *RedisMutex) tryLock() (ok bool, err error) {
-	_, err = m.doFun("SET", m.key(), m.token, "EX", int(m.timeout), "NX")
+func (slf *RedisMutex) tryLock() (ok bool, err error) {
+	_, err = slf.doFun("SET", slf.key(), slf.token, "EX", int(slf.timeout), "NX")
 	if err == redis.ErrNil {
 		return false, nil
 	}
@@ -30,24 +30,24 @@ func (m *RedisMutex) tryLock() (ok bool, err error) {
 	return true, nil
 }
 
-func (m *RedisMutex) key() string {
-	return fmt.Sprintf("redislock:%s", m.resource)
+func (slf *RedisMutex) key() string {
+	return fmt.Sprintf("redislock:%s", slf.resource)
 }
 
 //Unlock Unlock
-func (m *RedisMutex) Unlock() (err error) {
-	_, err = m.doFun("del", m.key())
+func (slf *RedisMutex) Unlock() (err error) {
+	_, err = slf.doFun("del", slf.key())
 	return
 }
 
 //AddTimeout Set lock timeout
-func (m *RedisMutex) AddTimeout(exTime int64) (ok bool, err error) {
-	ttl, err := redis.Int64(m.doFun("TTL", m.key()))
+func (slf *RedisMutex) AddTimeout(exTime int64) (ok bool, err error) {
+	ttl, err := redis.Int64(slf.doFun("TTL", slf.key()))
 	if err != nil {
 		log.Fatal("redis get failed:", err)
 	}
 	if ttl > 0 {
-		_, err := redis.String(m.doFun("SET", m.key(), m.token, "EX", int(ttl+exTime)))
+		_, err := redis.String(slf.doFun("SET", slf.key(), slf.token, "EX", int(ttl+exTime)))
 		if err == redis.ErrNil {
 			return false, nil
 		}

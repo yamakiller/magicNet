@@ -32,149 +32,149 @@ type recvFunc func(interface{}) (int, []byte, error)
 type writeFunc func(interface{}, []byte) (int, error)
 type closeFunc func(interface{})
 
-func (sc *sConn) listen(operator *actor.PID, addr string) error {
+func (slf *sConn) listen(operator *actor.PID, addr string) error {
 	return nil
 }
 
-func (sc *sConn) connect(operator *actor.PID, addr string) error {
+func (slf *sConn) connect(operator *actor.PID, addr string) error {
 	return nil
 }
 
-func (sc *sConn) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
+func (slf *sConn) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
 	return nil
 }
 
-func (sc *sConn) recv() {
-	defer sc.w.Done()
+func (slf *sConn) recv() {
+	defer slf.w.Done()
 	for {
-		if sc.stat != Connecting && sc.stat != Connected {
+		if slf.stat != Connecting && slf.stat != Connected {
 			goto read_end
 		}
 
-		n, data, err := sc.rv(sc.s)
+		n, data, err := slf.rv(slf.s)
 		if err != nil {
 			//? Log error log
 			goto read_error
 		}
 
 		// Discard data
-		if sc.stat != Connected {
+		if slf.stat != Connected {
 			continue
 		}
 
-		sc.i.ReadBytes += uint64(n)
-		sc.i.ReadLastTime = timer.Now()
+		slf.i.ReadBytes += uint64(n)
+		slf.i.ReadLastTime = timer.Now()
 		//Forwarding data  message
-		actor.DefaultSchedulerContext.Send(sc.o, &NetChunk{Handle: sc.h, Data: data[:n]})
+		actor.DefaultSchedulerContext.Send(slf.o, &NetChunk{Handle: slf.h, Data: data[:n]})
 	}
 read_error:
-	sc.stat = Closing
-	sc.cls(sc.s)
+	slf.stat = Closing
+	slf.cls(slf.s)
 read_end:
 	var (
 		closeHandle   int32
 		closeOperator *actor.PID
 	)
-	sc.so.l.Lock()
-	closeHandle = sc.h
-	closeOperator = sc.o
-	close(sc.quit)
+	slf.so.l.Lock()
+	closeHandle = slf.h
+	closeOperator = slf.o
+	close(slf.quit)
 
 	//-----Waiting for the end of the write corout------
 	for {
-		if atomic.CompareAndSwapInt32(&sc.outStat, 1, 1) {
+		if atomic.CompareAndSwapInt32(&slf.outStat, 1, 1) {
 			break
 		}
 	}
-	
-	close(sc.out)
+
+	close(slf.out)
 	//----------------------
-	if sc.srv != nil {
-		sc.srv.conns.Delete(sc.h)
+	if slf.srv != nil {
+		slf.srv.conns.Delete(slf.h)
 	}
 
-	sc.so.s = nil
-	sc.so.b = resIdle
-	sc.so.l.Unlock()
+	slf.so.s = nil
+	slf.so.b = resIdle
+	slf.so.l.Unlock()
 
 	actor.DefaultSchedulerContext.Send(closeOperator, &NetClose{Handle: closeHandle})
 }
 
-func (sc *sConn) write() {
-	defer sc.w.Done()
+func (slf *sConn) write() {
+	defer slf.w.Done()
 	for {
-		if sc.stat != Connecting && sc.stat != Connected {
+		if slf.stat != Connecting && slf.stat != Connected {
 			goto write_end
 		}
 
 		select {
-		case msg := <-sc.out:
-			if sc.stat != Connecting && sc.stat != Connected {
+		case msg := <-slf.out:
+			if slf.stat != Connecting && slf.stat != Connected {
 				goto write_end
 			}
 
-			n, err := sc.wr(sc.s, msg.Data)
+			n, err := slf.wr(slf.s, msg.Data)
 			if err != nil {
 				goto write_error
 			}
 
-			sc.i.WriteBytes += uint64(n)
-			sc.i.WriteLastTime = timer.Now()
-		case <-sc.quit:
+			slf.i.WriteBytes += uint64(n)
+			slf.i.WriteLastTime = timer.Now()
+		case <-slf.quit:
 			goto write_end
 		}
 	}
 write_error:
-	sc.stat = Closing
+	slf.stat = Closing
 write_end:
-	sc.outStat = 1
+	slf.outStat = 1
 }
 
-func (sc *sConn) push(data *NetChunk, n int) error {
+func (slf *sConn) push(data *NetChunk, n int) error {
 	select {
-	case <-sc.quit:
+	case <-slf.quit:
 		return errors.New("conn closed")
 	default:
 	}
 
 	select {
-	case <-sc.quit:
+	case <-slf.quit:
 		return errors.New("conn closed")
-	case sc.out <- data:
+	case slf.out <- data:
 	}
 
 	return nil
 }
 
-func (sc *sConn) setKeepAive(keep uint64) {
-	sc.keepAive = keep
+func (slf *sConn) setKeepAive(keep uint64) {
+	slf.keepAive = keep
 }
 
-func (sc *sConn) getKeepAive() uint64 {
+func (slf *sConn) getKeepAive() uint64 {
 
-	return sc.keepAive
+	return slf.keepAive
 }
 
-func (sc *sConn) getLastActivedTime() uint64 {
-	return sc.i.ReadLastTime
+func (slf *sConn) getLastActivedTime() uint64 {
+	return slf.i.ReadLastTime
 }
 
-func (sc *sConn) getStat() int32 {
-	return sc.stat
+func (slf *sConn) getStat() int32 {
+	return slf.stat
 }
 
-func (sc *sConn) setConnected() bool {
-	return atomic.CompareAndSwapInt32(&sc.stat, Connecting, Connected)
+func (slf *sConn) setConnected() bool {
+	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
 }
 
-func (sc *sConn) close(lck *util.ReSpinLock) {
+func (slf *sConn) close(lck *util.ReSpinLock) {
 	if lck != nil {
 		lck.Lock()
 	}
 
-	if sc.stat != Closing {
-		sc.stat = Closing
-		sc.cls(sc.s)
+	if slf.stat != Closing {
+		slf.stat = Closing
+		slf.cls(slf.s)
 	}
 
 	if lck != nil {
@@ -182,6 +182,6 @@ func (sc *sConn) close(lck *util.ReSpinLock) {
 	}
 }
 
-func (sc *sConn) closewait() {
-	sc.w.Wait()
+func (slf *sConn) closewait() {
+	slf.w.Wait()
 }

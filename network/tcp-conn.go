@@ -10,24 +10,24 @@ type tcpConn struct {
 	sConn
 }
 
-func (tpc *tcpConn) setKeepAive(keep uint64) {
-	tpc.keepAive = keep
-	if conn, ok := tpc.s.(*net.TCPConn); ok {
-		if tpc.keepAive > 0 {
+func (slf *tcpConn) setKeepAive(keep uint64) {
+	slf.keepAive = keep
+	if conn, ok := slf.s.(*net.TCPConn); ok {
+		if slf.keepAive > 0 {
 			conn.SetKeepAlive(true)
-			conn.SetKeepAlivePeriod(time.Duration(tpc.keepAive) * time.Millisecond)
+			conn.SetKeepAlivePeriod(time.Duration(slf.keepAive) * time.Millisecond)
 		} else {
 			conn.SetKeepAlive(false)
-			conn.SetKeepAlivePeriod(time.Duration(tpc.keepAive))
+			conn.SetKeepAlivePeriod(time.Duration(slf.keepAive))
 		}
 	}
 }
 
-func (tpc *tcpConn) getProto() string {
+func (slf *tcpConn) getProto() string {
 	return protoTCP
 }
 
-func (tpc *tcpConn) getType() int {
+func (slf *tcpConn) getType() int {
 	return CConnect
 }
 

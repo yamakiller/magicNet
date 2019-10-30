@@ -30,38 +30,38 @@ type OAuth2 struct {
 }
 
 // Init : xxx
-func (oa *OAuth2) Init(method IHTTPSrvMethod) {
+func (slf *OAuth2) Init(method IHTTPSrvMethod) {
 	oauth2CodeTokenCfg := &manage.Config{
-		AccessTokenExp:    time.Minute * time.Duration(oa.TokenExp),
-		RefreshTokenExp:   time.Minute * time.Duration(oa.RefreshTokenExp),
-		IsGenerateRefresh: oa.IsGenerateRefresh,
+		AccessTokenExp:    time.Minute * time.Duration(slf.TokenExp),
+		RefreshTokenExp:   time.Minute * time.Duration(slf.RefreshTokenExp),
+		IsGenerateRefresh: slf.IsGenerateRefresh,
 	}
 
-	oauth2ClientTokenCfg := &manage.Config{AccessTokenExp: time.Minute * time.Duration(oa.TokenExp)}
+	oauth2ClientTokenCfg := &manage.Config{AccessTokenExp: time.Minute * time.Duration(slf.TokenExp)}
 
-	oa.m = manage.NewDefaultManager()
-	oa.m.SetAuthorizeCodeTokenCfg(oauth2CodeTokenCfg)
-	oa.m.SetClientTokenCfg(oauth2ClientTokenCfg)
+	slf.m = manage.NewDefaultManager()
+	slf.m.SetAuthorizeCodeTokenCfg(oauth2CodeTokenCfg)
+	slf.m.SetClientTokenCfg(oauth2ClientTokenCfg)
 
-	oa.m.MustTokenStorage(store.NewMemoryTokenStore())
+	slf.m.MustTokenStorage(store.NewMemoryTokenStore())
 
-	if oa.S256Key != "" {
-		oa.m.MapAccessGenerate(generates.NewJWTAccessGenerate([]byte(oa.S256Key), jwt.SigningMethodHS256))
+	if slf.S256Key != "" {
+		slf.m.MapAccessGenerate(generates.NewJWTAccessGenerate([]byte(slf.S256Key), jwt.SigningMethodHS256))
 	}
 
-	oa.c = store.NewClientStore()
+	slf.c = store.NewClientStore()
 
-	oa.m.MapClientStorage(oa.c)
+	slf.m.MapClientStorage(slf.c)
 
-	oa.s = server.NewDefaultServer(oa.m)
+	slf.s = server.NewDefaultServer(slf.m)
 
-	oa.s.SetAllowGetAccessRequest(true)
-	oa.s.SetAllowedGrantType(oauth2.ClientCredentials, oauth2.Refreshing)
-	oa.s.SetClientInfoHandler(server.ClientFormHandler)
-	oa.m.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
+	slf.s.SetAllowGetAccessRequest(true)
+	slf.s.SetAllowedGrantType(oauth2.ClientCredentials, oauth2.Refreshing)
+	slf.s.SetClientInfoHandler(server.ClientFormHandler)
+	slf.m.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
 
-	method.RegisterMethod(oa.AccessURI, "get|put|post", HTTPSrvFunc(func(w http.ResponseWriter, r *http.Request) {
-		err := oa.s.HandleTokenRequest(w, r)
+	method.RegisterMethod(slf.AccessURI, "get|put|post", HTTPSrvFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := slf.s.HandleTokenRequest(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
@@ -69,30 +69,30 @@ func (oa *OAuth2) Init(method IHTTPSrvMethod) {
 }
 
 // SetErrorHandle : xxx
-func (oa *OAuth2) SetErrorHandle(owner uint32) {
-	oa.s.SetInternalErrorHandler(func(err error) (re *errors.Response) {
+func (slf *OAuth2) SetErrorHandle(owner uint32) {
+	slf.s.SetInternalErrorHandler(func(err error) (re *errors.Response) {
 		logger.Error(owner, "internal error:%s", err.Error())
 		return
 	})
 
-	oa.s.SetResponseErrorHandler(func(re *errors.Response) {
+	slf.s.SetResponseErrorHandler(func(re *errors.Response) {
 		logger.Error(owner, "response error:%s", re.Error.Error())
 	})
 }
 
 //RegisterClient : 注册授权的客户端
-func (oa *OAuth2) RegisterClient(id string, secret string, domain string, userid string) {
-	oa.c.Set(id, &models.Client{ID: id, Secret: secret, Domain: domain, UserID: userid})
+func (slf *OAuth2) RegisterClient(id string, secret string, domain string, userid string) {
+	slf.c.Set(id, &models.Client{ID: id, Secret: secret, Domain: domain, UserID: userid})
 }
 
 // RegisterAuth2Method : 注册受保护的方法
-func (oa *OAuth2) RegisterAuth2Method(method IHTTPSrvMethod, pattern string, httpMetod string, f HTTPSrvFunc) {
-	method.RegisterMethod(pattern, httpMetod, validateToken(method, f, oa.s))
+func (slf *OAuth2) RegisterAuth2Method(method IHTTPSrvMethod, pattern string, httpMetod string, f HTTPSrvFunc) {
+	method.RegisterMethod(pattern, httpMetod, validateToken(method, f, slf.s))
 }
 
 // RegisterAuth2MethodJS : 注册受保护的JS方法
-func (oa *OAuth2) RegisterAuth2MethodJS(method IHTTPSrvMethod, pattern string, httpMetod string, f string) {
-	method.RegisterMethod(pattern, httpMetod, validateToken(method, f, oa.s))
+func (slf *OAuth2) RegisterAuth2MethodJS(method IHTTPSrvMethod, pattern string, httpMetod string, f string) {
+	method.RegisterMethod(pattern, httpMetod, validateToken(method, f, slf.s))
 }
 
 //HTTPSrvFunc

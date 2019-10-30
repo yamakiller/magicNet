@@ -19,8 +19,8 @@ type mongoClient struct {
 	timeSec int
 }
 
-// Connect : 连接服务
-func (mgd *mongoClient) connect(host []string,
+// Connect : Connection mongo db service
+func (slf *mongoClient) connect(host []string,
 	uri string,
 	dbName string,
 	poolSize uint16,
@@ -28,7 +28,7 @@ func (mgd *mongoClient) connect(host []string,
 	timeSec int,
 	hbSec int,
 	idleSec int) error {
-	mgd.timeSec = timeSec
+	slf.timeSec = timeSec
 	opt := options.ClientOptions{}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeSec)*time.Second)
 	defer cancel()
@@ -43,23 +43,23 @@ func (mgd *mongoClient) connect(host []string,
 		return err
 	}
 
-	mgd.db = client.Database(dbName)
-	if mgd.db == nil {
+	slf.db = client.Database(dbName)
+	if slf.db == nil {
 		client.Disconnect(ctx)
 		return fmt.Errorf("mongoDB Database %s does not exist", dbName)
 	}
 
-	mgd.c = client
+	slf.c = client
 
 	return nil
 }
 
-func (mgd *mongoClient) close() {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mgd.timeSec)*time.Second)
+func (slf *mongoClient) close() {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(slf.timeSec)*time.Second)
 	defer cancel()
-	mgd.c.Disconnect(ctx)
-	mgd.c = nil
-	mgd.db = nil
+	slf.c.Disconnect(ctx)
+	slf.c = nil
+	slf.db = nil
 }
 
 // MongoDB :

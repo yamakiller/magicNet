@@ -34,25 +34,25 @@ type grpcServer struct {
 	maxReceiveMessageSize int
 }
 
-func (rpcs *grpcServer) listen(operator *actor.PID, addr string) error {
-	if rpcs.writeBufSize == 0 {
-		rpcs.writeBufSize = 32 * 1024
+func (slf *grpcServer) listen(operator *actor.PID, addr string) error {
+	if slf.writeBufSize == 0 {
+		slf.writeBufSize = 32 * 1024
 	}
 
-	if rpcs.readBufSize == 0 {
-		rpcs.readBufSize = 32 * 1024
+	if slf.readBufSize == 0 {
+		slf.readBufSize = 32 * 1024
 	}
 
-	if rpcs.connectionTimeout == 0 {
-		rpcs.connectionTimeout = 120
+	if slf.connectionTimeout == 0 {
+		slf.connectionTimeout = 120
 	}
 
-	if rpcs.maxSendMessageSize == 0 {
-		rpcs.maxSendMessageSize = math.MaxInt32
+	if slf.maxSendMessageSize == 0 {
+		slf.maxSendMessageSize = math.MaxInt32
 	}
 
-	if rpcs.maxReceiveMessageSize == 0 {
-		rpcs.maxReceiveMessageSize = 1024 * 1024 * 4
+	if slf.maxReceiveMessageSize == 0 {
+		slf.maxReceiveMessageSize = 1024 * 1024 * 4
 	}
 
 	tcpAddr, aderr := net.ResolveTCPAddr("tcp", addr)
@@ -65,30 +65,30 @@ func (rpcs *grpcServer) listen(operator *actor.PID, addr string) error {
 		return err
 	}
 
-	rpcs.s = ln
-	rpcs.rpc = grpc.NewServer(grpc.ReadBufferSize(rpcs.readBufSize),
-		grpc.WriteBufferSize(rpcs.writeBufSize),
-		grpc.MaxRecvMsgSize(rpcs.maxReceiveMessageSize),
-		grpc.MaxSendMsgSize(rpcs.maxSendMessageSize),
-		grpc.ConnectionTimeout(time.Duration(rpcs.connectionTimeout)*time.Second))
-	rpcs.stat = Connecting
+	slf.s = ln
+	slf.rpc = grpc.NewServer(grpc.ReadBufferSize(slf.readBufSize),
+		grpc.WriteBufferSize(slf.writeBufSize),
+		grpc.MaxRecvMsgSize(slf.maxReceiveMessageSize),
+		grpc.MaxSendMsgSize(slf.maxSendMessageSize),
+		grpc.ConnectionTimeout(time.Duration(slf.connectionTimeout)*time.Second))
+	slf.stat = Connecting
 
-	if rpcs.register != nil {
-		rpcs.register(rpcs.rpc)
+	if slf.register != nil {
+		slf.register(slf.rpc)
 	}
 
-	rpcs.netWait.Add(1)
-	go rpcs.serve(ln)
+	slf.netWait.Add(1)
+	go slf.serve(ln)
 
 	time.Sleep(time.Millisecond * 1)
 	return nil
 }
 
-func (rpcs *grpcServer) serve(ln net.Listener) {
-	defer rpcs.netWait.Done()
+func (slf *grpcServer) serve(ln net.Listener) {
+	defer slf.netWait.Done()
 	for {
-		err := rpcs.rpc.Serve(rpcs.s)
-		logger.Error(rpcs.operator.ID, "grpc server error %v", err)
+		err := slf.rpc.Serve(slf.s)
+		logger.Error(slf.operator.ID, "grpc server error %v", err)
 		if err != grpc.ErrServerStopped {
 			goto rpc_end
 		} else if err == grpc.ErrClientConnClosing ||
@@ -99,83 +99,83 @@ func (rpcs *grpcServer) serve(ln net.Listener) {
 		break
 	}
 
-	rpcs.stat = Closing
-	rpcs.rpc.Stop()
+	slf.stat = Closing
+	slf.rpc.Stop()
 rpc_end:
 	var (
 		closeHandle   int32
 		closeOperator *actor.PID
 	)
 
-	rpcs.so.l.Lock()
+	slf.so.l.Lock()
 
-	closeHandle = rpcs.h
-	closeOperator = rpcs.operator
-	rpcs.s.Close()
+	closeHandle = slf.h
+	closeOperator = slf.operator
+	slf.s.Close()
 
-	rpcs.so.s = nil
-	rpcs.so.b = resIdle
+	slf.so.s = nil
+	slf.so.b = resIdle
 
-	rpcs.so.l.Unlock()
+	slf.so.l.Unlock()
 
 	actor.DefaultSchedulerContext.Send(closeOperator, &NetClose{Handle: closeHandle})
 }
 
-func (rpcs *grpcServer) connect(operator *actor.PID, addr string) error {
+func (slf *grpcServer) connect(operator *actor.PID, addr string) error {
 	return nil
 }
 
-func (rpcs *grpcServer) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
+func (slf *grpcServer) udpConnect(operator *actor.PID, srcAddr string, dstAddr string) error {
 	return nil
 }
 
-func (rpcs *grpcServer) push(data *NetChunk, n int) error {
+func (slf *grpcServer) push(data *NetChunk, n int) error {
 	return nil
 }
 
-func (rpcs *grpcServer) recv() {
+func (slf *grpcServer) recv() {
 
 }
 
-func (rpcs *grpcServer) write() {
+func (slf *grpcServer) write() {
 
 }
 
-func (rpcs *grpcServer) setKeepAive(keep uint64) {
+func (slf *grpcServer) setKeepAive(keep uint64) {
 
 }
 
-func (rpcs *grpcServer) getKeepAive() uint64 {
+func (slf *grpcServer) getKeepAive() uint64 {
 	return 0
 }
 
-func (rpcs *grpcServer) getLastActivedTime() uint64 {
+func (slf *grpcServer) getLastActivedTime() uint64 {
 	return 0
 }
 
-func (rpcs *grpcServer) getStat() int32 {
-	return rpcs.stat
+func (slf *grpcServer) getStat() int32 {
+	return slf.stat
 }
 
-func (rpcs *grpcServer) getProto() string {
+func (slf *grpcServer) getProto() string {
 	return protoRPC
 }
 
-func (rpcs *grpcServer) getType() int {
+func (slf *grpcServer) getType() int {
 	return CListen
 }
 
-func (rpcs *grpcServer) setConnected() bool {
-	return atomic.CompareAndSwapInt32(&rpcs.stat, Connecting, Connected)
+func (slf *grpcServer) setConnected() bool {
+	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
 }
 
-func (rpcs *grpcServer) close(lck *util.ReSpinLock) {
-	if rpcs.stat != Closing {
-		rpcs.stat = Closing
-		rpcs.rpc.Stop()
+func (slf *grpcServer) close(lck *util.ReSpinLock) {
+	if slf.stat != Closing {
+		slf.stat = Closing
+		slf.rpc.Stop()
 	}
 }
 
-func (rpcs *grpcServer) closewait() {
-	rpcs.netWait.Wait()
+func (slf *grpcServer) closewait() {
+	slf.netWait.Wait()
 }

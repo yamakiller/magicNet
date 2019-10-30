@@ -36,8 +36,8 @@ func NewHTTPSrvMethodJS() IHTTPSrvMethod {
 	return r
 }
 
-func (hsm *HTTPSrvMethodJS) getHTTPMethodJS(js otto.FunctionCall) otto.Value {
-	vmst, err := otto.ToValue(hsm.curHTTPRequest.Method)
+func (slf *HTTPSrvMethodJS) getHTTPMethodJS(js otto.FunctionCall) otto.Value {
+	vmst, err := otto.ToValue(slf.curHTTPRequest.Method)
 	if err != nil {
 		panic(err)
 	}
@@ -45,8 +45,8 @@ func (hsm *HTTPSrvMethodJS) getHTTPMethodJS(js otto.FunctionCall) otto.Value {
 	return vmst
 }
 
-func (hsm *HTTPSrvMethodJS) getHTTPParamJS(js otto.FunctionCall) otto.Value {
-	r := hsm.curHTTPRequest
+func (slf *HTTPSrvMethodJS) getHTTPParamJS(js otto.FunctionCall) otto.Value {
+	r := slf.curHTTPRequest
 	m := strings.ToLower(r.Method)
 	if m == "post" {
 		result, _ := js.Otto.Object(`({})`)
@@ -84,15 +84,15 @@ func (hsm *HTTPSrvMethodJS) getHTTPParamJS(js otto.FunctionCall) otto.Value {
 	return vmst
 }
 
-func (hsm *HTTPSrvMethodJS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	f := hsm.match(r.RequestURI, r.Method)
+func (slf *HTTPSrvMethodJS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	f := slf.match(r.RequestURI, r.Method)
 	if f == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	if v, ok := f.(string); ok {
-		hsm.runJs(v, w, r)
+		slf.runJs(v, w, r)
 		return
 	}
 
@@ -101,18 +101,18 @@ func (hsm *HTTPSrvMethodJS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Close : 关闭方法注册服务
-func (hsm *HTTPSrvMethodJS) Close() {
-	hsm.l.Lock()
-	defer hsm.l.Unlock()
-	hsm.methods = make(map[string]httpMethodValue)
-	close(hsm.jsStop)
-	close(hsm.jsChan)
-	//? 需要吗
-	hsm.jsVim = nil
+// Close : Closed method registration service
+func (slf *HTTPSrvMethodJS) Close() {
+	slf.l.Lock()
+	defer slf.l.Unlock()
+	slf.methods = make(map[string]httpMethodValue)
+	close(slf.jsStop)
+	close(slf.jsChan)
+	//? need?
+	slf.jsVim = nil
 }
 
-func (hsm *HTTPSrvMethodJS) runJs(jsfile string, w http.ResponseWriter, r *http.Request) {
+func (slf *HTTPSrvMethodJS) runJs(jsfile string, w http.ResponseWriter, r *http.Request) {
 	fileFullPath := files.GetFullPathForFilename(jsfile)
 	if !files.IsFileExist(fileFullPath) {
 		w.WriteHeader(http.StatusNotFound)
@@ -120,22 +120,22 @@ func (hsm *HTTPSrvMethodJS) runJs(jsfile string, w http.ResponseWriter, r *http.
 	}
 
 	select {
-	case <-hsm.jsStop:
+	case <-slf.jsStop:
 		return
-	case hsm.jsChan <- 1:
+	case slf.jsChan <- 1:
 	}
 
 	defer func() {
-		hsm.curHTTPRequest = nil
+		slf.curHTTPRequest = nil
 		select {
-		case <-hsm.jsStop:
+		case <-slf.jsStop:
 			return
-		case <-hsm.jsChan:
+		case <-slf.jsChan:
 		}
 	}()
 
-	hsm.curHTTPRequest = r
-	result, err := hsm.jsVim.ExecuteScriptFile(jsfile)
+	slf.curHTTPRequest = r
+	result, err := slf.jsVim.ExecuteScriptFile(jsfile)
 	if err != nil {
 		if err == stack.ErrJSNotFindFile ||
 			err == stack.ErrJSNotFileData {
