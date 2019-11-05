@@ -10,6 +10,7 @@ import (
 func JSONSerialize(obj interface{}) string {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	data, err := json.Marshal(&obj)
+
 	if err != nil {
 		return fmt.Sprintf("{ \"code\" : -1, \"message\" : \"json marshl error:%s\"}", err.Error())
 	}

@@ -11,7 +11,7 @@ type INetMethodEvent interface {
 
 //NetMethodEvent Network Method Event
 type NetMethodEvent struct {
-	Name   string
+	Name   interface{}
 	Socket int32
 	Wrap   []byte
 }

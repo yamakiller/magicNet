@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,7 +14,35 @@ var (
 	instEnv map[string]interface{}
 )
 
-// LoadEnv : 载入环境变量配置信息
+//LoadMapEnv
+//@method LoadMapEnv desc : load json file map to env
+//@param (string) json file path
+//@param (interface{}) map to env[struct]
+//@return (error) a error message
+func LoadMapEnv(filename string, out interface{}) error {
+	fullpath := files.GetFullPathForFilename(filename)
+	f, err := os.Open(fullpath)
+	if err != nil {
+		return fmt.Errorf("open env map file fail:%s", fullpath)
+	}
+
+	defer f.Close()
+	contents, err := ioutil.ReadAll(f)
+	if err != nil {
+		return fmt.Errorf("read env map file fail:%s", err.Error())
+	}
+
+	err = json.Unmarshal(contents, out)
+	if err != nil {
+		return fmt.Errorf("env map fail:%s", err.Error())
+	}
+	return nil
+}
+
+//LoadEnv
+//@method LoadEnv desc: load json file to global env
+//@param (string) json file path
+//@return (error) a error message
 func LoadEnv(filename string) error {
 	fullpath := files.GetFullPathForFilename(filename)
 	f, err := os.Open(fullpath)
@@ -36,17 +65,24 @@ func LoadEnv(filename string) error {
 	return nil
 }
 
-// UnLoadEnv : 卸载载入的环境变量
+//UnLoadEnv
+//@method UnLoadEnv desc: unload global env
 func UnLoadEnv() {
 	instEnv = nil
 }
 
-// GetEnvRoot : 获取环境变量根map对象
+//GetEnvRoot
+//@method GetEnvRoot desc: return global env root
+//@return (map[string]interface{})
 func GetEnvRoot() map[string]interface{} {
 	return instEnv
 }
 
-// GetEnvMap : 获取当前环境变量 k -> 的map接点
+//GetEnvMap
+//@method GetEnvMap desc: return key=>value
+//@param (map[string]interface{}) source map
+//@param (string) key
+//@return (map[string]interface{})
 func GetEnvMap(v map[string]interface{}, k string) map[string]interface{} {
 	if v[k] == nil {
 		return nil
@@ -65,7 +101,11 @@ func GetEnvMap(v map[string]interface{}, k string) map[string]interface{} {
 	return outv
 }
 
-// GetEnvArray : 获取当前环境变量 k -> 数组对象
+//GetEnvArray
+//@method GetEnvArray desc: return a array
+//@param (map[string]interface{}) source map
+//@param (string) key
+//@return a arrays
 func GetEnvArray(v map[string]interface{}, k string) []interface{} {
 	if v[k] == nil {
 		return nil
@@ -86,7 +126,10 @@ func GetEnvArray(v map[string]interface{}, k string) []interface{} {
 	return outv
 }
 
-// ToEnvMap : 获取当前环境变的 map 对象
+//ToEnvMap
+//@method ToEnvMap desc: return key=>value
+//@param (interface{}) source object
+//@return (map[string]interface{})
 func ToEnvMap(v interface{}) map[string]interface{} {
 	var outv map[string]interface{}
 	var inv interface{} = &outv
@@ -94,7 +137,12 @@ func ToEnvMap(v interface{}) map[string]interface{} {
 	return outv
 }
 
-// GetEnvBoolean : 获取当前环境变量 k-> Bool
+//GetEnvBoolean
+//@method GetEnvBoolean desc: return key=>boolean
+//@param (map[string]interface{}) source map
+//@param (string) key
+//@param (bool) default value
+//@return (bool) a boolean value
 func GetEnvBoolean(v map[string]interface{}, k string, defaultValue bool) bool {
 	istr := getEnvValue(v, k, reflect.Bool)
 	if istr == nil {
@@ -104,7 +152,12 @@ func GetEnvBoolean(v map[string]interface{}, k string, defaultValue bool) bool {
 	return reflect.ValueOf(istr).Bool()
 }
 
-// GetEnvString : 获取当前环境变量 k -> String
+//GetEnvString
+//@method GetEnvString desc: return key=>string
+//@param (map[string]interface{}) source map
+//@param (string) key
+//@param (string) default value
+//@return (string) return a string
 func GetEnvString(v map[string]interface{}, k string, defaultValue string) string {
 	istr := getEnvValue(v, k, reflect.String)
 	if istr == nil {
@@ -114,7 +167,12 @@ func GetEnvString(v map[string]interface{}, k string, defaultValue string) strin
 	return reflect.ValueOf(istr).String()
 }
 
-// GetEnvInt : 获取当前环境变量 k -> Int
+//GetEnvInt
+//@method  GetEnvInt desc: return key=>int
+//@param   (map[string]interface{}) source map
+//@param   (string) key
+//@param   (int) default value
+//@return  (int) return a int
 func GetEnvInt(v map[string]interface{}, k string, defaultValue int) int {
 	istr := getEnvValue(v, k, reflect.Int)
 	if istr == nil {
@@ -124,7 +182,12 @@ func GetEnvInt(v map[string]interface{}, k string, defaultValue int) int {
 	return int(reflect.ValueOf(istr).Int())
 }
 
-// GetEnvInt64 : 获取当前环境变量 k -> int64
+//GetEnvInt64
+//@method GetEnvInt64 desc: return key=>int64
+//@param  (map[string]interface{}) source map
+//@param  (string) key
+//@param  (int64) default value
+//@return (int64) return a int64
 func GetEnvInt64(v map[string]interface{}, k string, defaultValue int64) int64 {
 	istr := getEnvValue(v, k, reflect.Int64)
 	if istr == nil {
@@ -134,7 +197,12 @@ func GetEnvInt64(v map[string]interface{}, k string, defaultValue int64) int64 {
 	return reflect.ValueOf(istr).Int()
 }
 
-// GetEnvFloat : 获取当前环境变量 k -> float32
+//GetEnvFloat
+//@method GetEnvFloat desc: return key=>float32
+//@param  (map[string]interface{}) source map
+//@param  (string) key
+//@param  (float32) default value
+//@return (float32) return a float32
 func GetEnvFloat(v map[string]interface{}, k string, defaultValue float32) float32 {
 	istr := getEnvValue(v, k, reflect.Float32)
 	if istr == nil {
@@ -144,7 +212,12 @@ func GetEnvFloat(v map[string]interface{}, k string, defaultValue float32) float
 	return float32(reflect.ValueOf(istr).Float())
 }
 
-// GetEnvDouble : 获取当前环境变量 k -> float64
+//GetEnvDouble
+//@method GetEnvDouble desc: return key=>float64
+//@param  (map[string]interface{}) source map
+//@param  (string) key
+//@param  (float64) default value
+//@return (float64) return a float64
 func GetEnvDouble(v map[string]interface{}, k string, defaultValue float64) float64 {
 	istr := getEnvValue(v, k, reflect.Float64)
 	if istr == nil {
@@ -154,7 +227,6 @@ func GetEnvDouble(v map[string]interface{}, k string, defaultValue float64) floa
 	return reflect.ValueOf(istr).Float()
 }
 
-// GetEnvValue : 获取当前环境变量 k -> interface
 func getEnvValue(v map[string]interface{}, k string, c reflect.Kind) interface{} {
 	ival := v[k]
 	if ival == nil ||

@@ -71,7 +71,7 @@ func (slf *NetConnectService) Started(context actor.Context, sender *actor.PID, 
 	slf.Assignment(context)
 	slf.LogInfo("Service Startup address:%s read-buffer-limit:%d chan-buffer-size:%d",
 		slf.Target.GetAddr(),
-		slf.Handle.GetRecvBufferLimit(),
+		slf.Handle.GetReceiveBufferLimit(),
 		slf.Target.GetOutSize())
 	slf.Service.Started(context, sender, message)
 	slf.LogInfo("Service Startup completed")
@@ -147,14 +147,14 @@ func (slf *NetConnectService) onRecv(context actor.Context, sender *actor.PID, m
 			break
 		}
 
-		space = slf.Handle.GetRecvBufferLimit() - slf.Handle.GetRecvBuffer().Len()
+		space = slf.Handle.GetReceiveBufferLimit() - slf.Handle.GetReceiveBuffer().Len()
 		wby = len(wrap.Data) - writed
 		if space > 0 && wby > 0 {
 			if space > wby {
 				space = wby
 			}
 
-			_, err = slf.Handle.GetRecvBuffer().Write(wrap.Data[pos : pos+space])
+			_, err = slf.Handle.GetReceiveBuffer().Write(wrap.Data[pos : pos+space])
 			if err != nil {
 				slf.Handle.Close()
 				break
@@ -163,7 +163,7 @@ func (slf *NetConnectService) onRecv(context actor.Context, sender *actor.PID, m
 			pos += space
 			writed += space
 
-			slf.Handle.GetDataStat().UpdateRead(timer.Now(), uint64(space))
+			slf.Handle.GetStat().UpdateRead(timer.Now(), uint64(space))
 		}
 
 		for {
@@ -190,7 +190,7 @@ func (slf *NetConnectService) onRecv(context actor.Context, sender *actor.PID, m
 //OnClose Handling closed connection events
 func (slf *NetConnectService) OnClose(context actor.Context, sender *actor.PID, message interface{}) {
 	//Release buffer resources
-	slf.Handle.GetRecvBuffer().Reset()
+	slf.Handle.GetReceiveBuffer().Reset()
 	slf.Target.SetEtat(UnConnected)
 }
 

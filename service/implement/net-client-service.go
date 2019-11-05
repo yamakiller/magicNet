@@ -12,9 +12,9 @@ type NetClientService struct {
 }
 
 //Init Client service initialization
-func (ncs *NetClientService) Init() {
-	ncs.Service.Init()
-	ncs.RegisterMethod(&actor.Stopped{}, ncs.Stoped)
+func (slf *NetClientService) Init() {
+	slf.Service.Init()
+	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)
 }
 
 /*//SetID Setting the client ID
@@ -28,12 +28,12 @@ func (ncs *NetClientService) GetID() uint64 {
 }*/
 
 //GetSocket Returns the client socket
-func (ncs *NetClientService) GetSocket() int32 {
+func (slf *NetClientService) GetSocket() int32 {
 	return 0
 }
 
 //SetSocket Setting the client socket
-func (ncs *NetClientService) SetSocket(sock int32) {
+func (slf *NetClientService) SetSocket(sock int32) {
 
 }
 
@@ -62,13 +62,13 @@ func (ncs *NetClientService) GetKeyPublic() string {
 }*/
 
 //Stoped 通知已经停止服务，清除套接字关系/清除ID
-func (ncs *NetClientService) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
-	ncs.LogDebug("Stoped: Socket-%d", ncs.GetSocket())
-	ncs.SetSocket(0)
-	ncs.Service.Stoped(context, sender, message)
+func (slf *NetClientService) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
+	slf.LogDebug("Stoped: Socket-%d", slf.GetSocket())
+	slf.SetSocket(0)
+	slf.Service.Stoped(context, sender, message)
 }
 
 //Shutdown Terminate this client service
-func (ncs *NetClientService) Shutdown() {
-	ncs.Service.Shutdown()
+func (slf *NetClientService) Shutdown() {
+	slf.Service.Shutdown()
 }

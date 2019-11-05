@@ -9,13 +9,22 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// MySQLDB : 关系数据库
+//MySQLDB
+//@struct MySQLDB desc: mysql operation object
+//@member (string) mysql connection dsn
+//@member (*sql.DB) mysql connection object
 type MySQLDB struct {
 	dsn string
 	db  *sql.DB
 }
 
-// Init : 初始化mysql数据库
+//Init
+//@method Init desc: initialization mysql DB
+//@param (string) mysql connection dsn
+//@param (int) mysql connection max of number
+//@param (int) mysql connection idle of number
+//@param (int) mysql connection life time[util/sec]
+//@return (error) fail:return error, success: return nil
 func (slf *MySQLDB) Init(dsn string, maxConn int, maxIdleConn, lifeSec int) error {
 	slf.db, _ = sql.Open("mysql", dsn)
 	slf.db.SetMaxOpenConns(maxConn)
@@ -31,7 +40,12 @@ func (slf *MySQLDB) Init(dsn string, maxConn int, maxIdleConn, lifeSec int) erro
 	return nil
 }
 
-// Query : 查询
+//Query
+//@method Query desc: execute sql query
+//@param (string) query sql
+//@param (...interface{}) sql params
+//@return (map[string]interface{}) query result
+//@return (error) fail: return error, success: return nil
 func (slf *MySQLDB) Query(strSQL string, args ...interface{}) (map[string]interface{}, error) {
 	if perr := slf.db.Ping(); perr != nil {
 		return nil, perr
@@ -64,7 +78,12 @@ func (slf *MySQLDB) Query(strSQL string, args ...interface{}) (map[string]interf
 	return record, nil
 }
 
-// Insert : 插入语句
+//Insert
+//@method Insert desc: execute sql Insert
+//@param (string) Insert sql
+//@param (...interface{}) sql params
+//@return (int54) insert of number
+//@return (error) fail: return error, success: return nil
 func (slf *MySQLDB) Insert(strSQL string, args ...interface{}) (int64, error) {
 	if perr := slf.db.Ping(); perr != nil {
 		log.Println(perr)
@@ -80,7 +99,11 @@ func (slf *MySQLDB) Insert(strSQL string, args ...interface{}) (int64, error) {
 	return r.LastInsertId()
 }
 
-// Update : 更新语句
+//Update
+//@method Update desc: execute sql Update
+//@param (string) Update sql
+//@param (...interface{}) sql params
+//@return (int54) Update of number
 func (slf *MySQLDB) Update(strSQL string, args ...interface{}) (int64, error) {
 	if perr := slf.db.Ping(); perr != nil {
 		return 0, perr
@@ -94,7 +117,8 @@ func (slf *MySQLDB) Update(strSQL string, args ...interface{}) (int64, error) {
 	return r.RowsAffected()
 }
 
-// Close : 关闭
+//Close
+//@method CLose desc: close mysql connection
 func (slf *MySQLDB) Close() {
 	slf.db.Close()
 }

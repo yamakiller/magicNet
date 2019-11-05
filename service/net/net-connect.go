@@ -22,9 +22,9 @@ type INetConnection interface {
 		addr string, /*Connection address*/
 		outChanSize int /*Receive pipe buffer size*/) error
 	Write(wrap []byte, length int) error
-	GetRecvBufferLimit() int
-	GetRecvBuffer() *bytes.Buffer
-	GetDataStat() INetConnectionDataStat
+	GetReceiveBufferLimit() int
+	GetReceiveBuffer() *bytes.Buffer
+	GetStat() INetConnectionDataStat
 	GetAuth() uint64
 	SetAuth(auth uint64)
 	Close()
