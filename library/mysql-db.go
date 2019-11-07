@@ -3,11 +3,25 @@ package library
 import (
 	"database/sql"
 	"log"
+	"reflect"
 	"time"
 
 	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 )
+
+type MySQLValue struct {
+	vtype reflect.Type
+	v     interface{}
+}
+
+func (slf *MySQLValue) ToString() string {
+	return string(slf.v.([]uint8))
+}
+
+func (slf *MySQLValue) ToInt64() int64 {
+	return slf.v.(int64)
+}
 
 //MySQLDB
 //@struct MySQLDB desc: mysql operation object
@@ -71,7 +85,7 @@ func (slf *MySQLDB) Query(strSQL string, args ...interface{}) (map[string]interf
 		err = rows.Scan(scanArgs...)
 		for i, col := range values {
 			if col != nil {
-				record[columns[i]] = col
+				record[columns[i]] = &MySQLValue{vtype: reflect.TypeOf(col), v: col}
 			}
 		}
 	}

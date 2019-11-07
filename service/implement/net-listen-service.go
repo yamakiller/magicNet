@@ -186,7 +186,7 @@ func (slf *NetListenService) OnRecv(context actor.Context,
 
 			_, err = c.GetRecvBuffer().Write(wrap.Data[pos : pos+space])
 			if err != nil {
-				slf.LogError("OnRecv: error %+v socket %d", err, wrap.Handle)
+				slf.LogError("OnRecv Write: error %+v socket %d", err, wrap.Handle)
 				network.OperClose(wrap.Handle)
 				break
 			}
