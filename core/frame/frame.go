@@ -38,6 +38,7 @@ type servicePart interface {
 }
 
 type waitPart interface {
+	EnterLoop()
 	Wait() int
 }
 
