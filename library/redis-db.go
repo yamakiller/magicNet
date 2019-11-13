@@ -9,7 +9,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-//RedisDB
+//RedisDB desc
 //@struct RedisDB desc: redis db opertioner
 //@member (*redis.Pool) a redis connection pool
 //@member (string) redis address
@@ -20,7 +20,7 @@ type RedisDB struct {
 	db   int
 }
 
-//Init
+//Init desc
 //@method Init desc: initialization Redis DB
 //@param (string) redis host address
 //@param (int) redis db code
@@ -50,7 +50,7 @@ func (slf *RedisDB) Init(host string, db int, maxIdle int, maxActive int, idleSe
 	return nil
 }
 
-//Do
+//Do desc
 //@method Do desc: execute redis command
 //@param (string) command name
 //@param (...interface{}) command params
@@ -62,7 +62,7 @@ func (slf *RedisDB) Do(commandName string, args ...interface{}) (interface{}, er
 	return c.Do(commandName, args...)
 }
 
-//Close
+//Close desc
 //@method Close desc: close redis db operation
 func (slf *RedisDB) Close() {
 	slf.c.Close()
