@@ -6,21 +6,29 @@ import (
 	"strings"
 )
 
-// Assert :  断言Bool并输出错误信息
+//Assert desc
+//@method Assert desc: Assert boolean and output error message
+//@param (bool) false assert
+//@param (string) error message
 func Assert(isAs bool, errMsg string) {
 	if !isAs {
 		panic(errMsg)
 	}
 }
 
-// AssertEmpty : 断言Nil并输出错误信息
+//AssertEmpty desc
+//@method AssertEmtpy desc: Assert Nil and output an error message
+//@param (interface{}) is null assert
+//@param (string) error message
 func AssertEmpty(isNull interface{}, errMsg string) {
 	if isNull == nil {
 		panic(errMsg)
 	}
 }
 
-// GetStack : 获取当前堆栈信息
+//GetStack desc
+//@method GetStack desc: Return current stack information
+//@return (string)
 func GetStack() string {
 	var name, file string
 	var line int
