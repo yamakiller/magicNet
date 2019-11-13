@@ -10,7 +10,9 @@ import (
 	"github.com/yamakiller/magicNet/timer"
 )
 
-// Launch : 系统启动器
+//Launch desc
+//@method Launch desc: Start function
+//@param (frame.MakeFrame) Start framework
 func Launch(f frame.MakeFrame) {
 	fme := f()
 	fme.VarValue()
@@ -37,6 +39,8 @@ func Launch(f frame.MakeFrame) {
 		fmt.Println(err)
 		os.Exit(0)
 	}
+
+	fme.EnterLoop()
 
 	for {
 		if fme.Wait() == -1 {

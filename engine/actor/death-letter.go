@@ -3,7 +3,6 @@ package actor
 import (
 	"github.com/yamakiller/magicNet/engine/evtchan"
 	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/util"
 )
 
 type deathLetterProcess struct{}
@@ -16,9 +15,12 @@ var (
 func init() {
 	deathLetterSubscriber = evtchan.Subscribe(func(evt interface{}) {
 		if deathLetter, ok := evt.(*DeadLetterEvent); ok {
-			util.Assert(deathLetter.Sender != nil && deathLetter.PID != nil, "deathLetter sender or pid is nil")
-			logger.Debug(deathLetter.Sender.GetID(), "DeathLetter Dest PID :%s", deathLetter.PID.String())
-			//TODO : 修改 2019-7-10
+			if deathLetter.Sender != nil {
+				logger.Debug(deathLetter.Sender.GetID(), "DeathLetter Dest PID :%s", deathLetter.PID.String())
+			} else {
+				logger.Debug(0, "DeathLetter Dest PID: %s", deathLetter.PID.String())
+			}
+			//util.Assert(deathLetter.Sender != nil && deathLetter.PID != nil, "deathLetter sender or pid is nil")
 		}
 	})
 
@@ -31,14 +33,18 @@ func init() {
 	})
 }
 
-// DeadLetterEvent Death news
+//DeadLetterEvent desc
+//@struct DeadLetterEvent desc:  Death news
 type DeadLetterEvent struct {
 	PID     *PID
 	Message interface{}
 	Sender  *PID
 }
 
-// SendUsrMessage ： 发送死亡消息
+//SendUsrMessage desc
+//@method SendUsrMessage desc: send a user message to death subscribe
+//@param (PID) dest actor ID
+//@param (interface{}) message
 func (*deathLetterProcess) SendUsrMessage(pid *PID, message interface{}) {
 	_, msg, sender := UnWrapPack(message)
 	evtchan.Publish(&DeadLetterEvent{
@@ -48,7 +54,10 @@ func (*deathLetterProcess) SendUsrMessage(pid *PID, message interface{}) {
 	})
 }
 
-// SendSysMessage : 发送死亡消息
+//SendSysMessage desc
+//@method SendSysMessage desc: send a system message to death subscribe
+//@param (PID) dest actor ID
+//@param (interface{}) message
 func (*deathLetterProcess) SendSysMessage(pid *PID, message interface{}) {
 	evtchan.Publish(&DeadLetterEvent{
 		PID:     pid,
@@ -56,11 +65,16 @@ func (*deathLetterProcess) SendSysMessage(pid *PID, message interface{}) {
 	})
 }
 
+//OverloadUsrMessage desc
+//@method OverloadUsrMessage desc: user mesage queue overload
+//@return (int) user mesage queue overload of number
 func (*deathLetterProcess) OverloadUsrMessage() int {
 	return 0
 }
 
-// Stop: 发送停止消息
-func (ref *deathLetterProcess) Stop(pid *PID) {
-	ref.SendSysMessage(pid, stopMessage)
+//Stop desc
+//@method Stop desc: send stop message
+//@param (PID) dest actor ID
+func (slf *deathLetterProcess) Stop(pid *PID) {
+	slf.SendSysMessage(pid, stopMessage)
 }
