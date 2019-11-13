@@ -14,7 +14,7 @@ var (
 	instEnv map[string]interface{}
 )
 
-//LoadMapEnv
+//LoadMapEnv desc
 //@method LoadMapEnv desc : load json file map to env
 //@param (string) json file path
 //@param (interface{}) map to env[struct]
@@ -39,7 +39,7 @@ func LoadMapEnv(filename string, out interface{}) error {
 	return nil
 }
 
-//LoadEnv
+//LoadEnv desc
 //@method LoadEnv desc: load json file to global env
 //@param (string) json file path
 //@return (error) a error message
@@ -65,20 +65,20 @@ func LoadEnv(filename string) error {
 	return nil
 }
 
-//UnLoadEnv
+//UnLoadEnv desc
 //@method UnLoadEnv desc: unload global env
 func UnLoadEnv() {
 	instEnv = nil
 }
 
-//GetEnvRoot
+//GetEnvRoot desc
 //@method GetEnvRoot desc: return global env root
 //@return (map[string]interface{})
 func GetEnvRoot() map[string]interface{} {
 	return instEnv
 }
 
-//GetEnvMap
+//GetEnvMap desc
 //@method GetEnvMap desc: return key=>value
 //@param (map[string]interface{}) source map
 //@param (string) key
@@ -101,7 +101,7 @@ func GetEnvMap(v map[string]interface{}, k string) map[string]interface{} {
 	return outv
 }
 
-//GetEnvArray
+//GetEnvArray desc
 //@method GetEnvArray desc: return a array
 //@param (map[string]interface{}) source map
 //@param (string) key
@@ -126,7 +126,7 @@ func GetEnvArray(v map[string]interface{}, k string) []interface{} {
 	return outv
 }
 
-//ToEnvMap
+//ToEnvMap desc
 //@method ToEnvMap desc: return key=>value
 //@param (interface{}) source object
 //@return (map[string]interface{})
@@ -137,7 +137,7 @@ func ToEnvMap(v interface{}) map[string]interface{} {
 	return outv
 }
 
-//GetEnvBoolean
+//GetEnvBoolean desc
 //@method GetEnvBoolean desc: return key=>boolean
 //@param (map[string]interface{}) source map
 //@param (string) key
@@ -152,7 +152,7 @@ func GetEnvBoolean(v map[string]interface{}, k string, defaultValue bool) bool {
 	return reflect.ValueOf(istr).Bool()
 }
 
-//GetEnvString
+//GetEnvString desc
 //@method GetEnvString desc: return key=>string
 //@param (map[string]interface{}) source map
 //@param (string) key
@@ -167,7 +167,7 @@ func GetEnvString(v map[string]interface{}, k string, defaultValue string) strin
 	return reflect.ValueOf(istr).String()
 }
 
-//GetEnvInt
+//GetEnvInt desc
 //@method  GetEnvInt desc: return key=>int
 //@param   (map[string]interface{}) source map
 //@param   (string) key
@@ -182,7 +182,7 @@ func GetEnvInt(v map[string]interface{}, k string, defaultValue int) int {
 	return int(reflect.ValueOf(istr).Int())
 }
 
-//GetEnvInt64
+//GetEnvInt64 desc
 //@method GetEnvInt64 desc: return key=>int64
 //@param  (map[string]interface{}) source map
 //@param  (string) key
@@ -197,7 +197,7 @@ func GetEnvInt64(v map[string]interface{}, k string, defaultValue int64) int64 {
 	return reflect.ValueOf(istr).Int()
 }
 
-//GetEnvFloat
+//GetEnvFloat desc
 //@method GetEnvFloat desc: return key=>float32
 //@param  (map[string]interface{}) source map
 //@param  (string) key
@@ -212,7 +212,7 @@ func GetEnvFloat(v map[string]interface{}, k string, defaultValue float32) float
 	return float32(reflect.ValueOf(istr).Float())
 }
 
-//GetEnvDouble
+//GetEnvDouble desc
 //@method GetEnvDouble desc: return key=>float64
 //@param  (map[string]interface{}) source map
 //@param  (string) key
