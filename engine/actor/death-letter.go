@@ -16,11 +16,10 @@ func init() {
 	deathLetterSubscriber = evtchan.Subscribe(func(evt interface{}) {
 		if deathLetter, ok := evt.(*DeadLetterEvent); ok {
 			if deathLetter.Sender != nil {
-				logger.Debug(deathLetter.Sender.GetID(), "DeathLetter Dest PID :%s", deathLetter.PID.String())
+				logger.Error(deathLetter.Sender.GetID(), "DeathLetter Dest PID :%s Message:%+v", deathLetter.PID.String(), deathLetter.Message)
 			} else {
-				logger.Debug(0, "DeathLetter Dest PID: %s", deathLetter.PID.String())
+				logger.Error(0, "DeathLetter Dest PID: %s Message:%+v", deathLetter.PID.String(), deathLetter.Message)
 			}
-			//util.Assert(deathLetter.Sender != nil && deathLetter.PID != nil, "deathLetter sender or pid is nil")
 		}
 	})
 
