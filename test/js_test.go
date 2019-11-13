@@ -1,13 +1,14 @@
-package testing
+package test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/yamakiller/magicNet/script"
 )
 
 // TestJSStack : xxx
-func TestJSStack() {
+func TestJSStack(t *testing.T) {
 	jsstack := script.NewJSStack()
 	//jslib.JSRuntimeBundle(jsstack)
 	/*jsstack.SetFunc("Print", func(call otto.FunctionCall) otto.Value {

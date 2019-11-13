@@ -1,8 +1,9 @@
-package testing
+package test
 
 import (
 	"sync"
 	"sync/atomic"
+	"testing"
 	"time"
 
 	"github.com/yamakiller/magicNet/engine/actor"
@@ -43,8 +44,9 @@ func (state *tellerActor) Receive(context actor.Context) {
 	}
 }
 
-// TestActorContext : 测试大量Actor 消息发送
-func TestActorContext() {
+//TestActorContext desc
+//@method TestActorContext desc: test actor context
+func TestActorContext(t *testing.T) {
 	schedulerContext := actor.DefaultSchedulerContext
 	wait.Add(100 * 1000)
 

@@ -1,14 +1,17 @@
-package testing
+package test
 
-import "fmt"
+import (
+	"fmt"
+	"testing"
+)
 
 // TestEmpty : xxxxx
-func TestEmpty() {
+func TestEmpty(t *testing.T) {
 
 }
 
 // TestWait :
-func TestWait() {
+func TestWait(t *testing.T) {
 	fmt.Println("已经执行到末尾")
 	var ispass bool
 	fmt.Scanln(&ispass)
