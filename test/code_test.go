@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ func TestDir(t *testing.T) {
 	dir, err := os.Getwd()
 
 	fmt.Println("uuuuu:", dir, err)
-
+	fmt.Println("system:", runtime.GOOS)
 }
 
 func TestRectPoint(t *testing.T) {
