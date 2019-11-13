@@ -50,7 +50,7 @@ func (slf *NetListenService) getDesc() string {
 
 //Started Turn on network monitoring service
 func (slf *NetListenService) Started(context actor.Context, sender *actor.PID, message interface{}) {
-	slf.Assignment(context)
+	slf.WithPID(context)
 	slf.LogInfo("Service Startup %s", slf.Addr)
 	err := slf.NetListen.Listen(context, slf.Addr, slf.CCMax)
 	if err != nil {

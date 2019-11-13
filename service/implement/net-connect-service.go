@@ -68,7 +68,7 @@ func (slf *NetConnectService) Init() {
 
 //Started Turn on network connect service
 func (slf *NetConnectService) Started(context actor.Context, sender *actor.PID, message interface{}) {
-	slf.Assignment(context)
+	slf.WithPID(context)
 	slf.LogInfo("Service Startup address:%s read-buffer-limit:%d chan-buffer-size:%d",
 		slf.Target.GetAddr(),
 		slf.Handle.GetReceiveBufferLimit(),

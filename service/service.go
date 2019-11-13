@@ -48,7 +48,7 @@ type IService interface {
 	Shutdown()
 	RegisterMethod(key interface{}, method MethodFunc)
 
-	withPID(context actor.Context)
+	WithPID(context actor.Context)
 	withName(n string)
 	withWait(wait *sync.WaitGroup)
 
@@ -103,10 +103,10 @@ func (slf *Service) Receive(context actor.Context) {
 	}
 }
 
-//withPID desc
-//@method withPID desc: Service initial value association
+//WithPID desc
+//@method WithPID desc: Service initial value association
 //@param (actor.Context) this service context
-func (slf *Service) withPID(context actor.Context) {
+func (slf *Service) WithPID(context actor.Context) {
 	slf.pid = context.Self()
 	slf.name = slf.name + "$" + strconv.Itoa(int(slf.pid.ID))
 }
@@ -121,7 +121,7 @@ func (slf *Service) Started(context actor.Context,
 	message interface{}) {
 
 	if slf.pid == nil {
-		slf.withPID(context)
+		slf.WithPID(context)
 	}
 	if slf.wait != nil {
 		slf.wait.Done()
