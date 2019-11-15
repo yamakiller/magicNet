@@ -1,10 +1,9 @@
 package mailbox
 
-import (
-	"github.com/yamakiller/magicNet/util"
-)
+import "github.com/yamakiller/magicLibs/coroutine"
 
-// Dispatcher : 分发器接口
+//Dispatcher desc
+//@interface Dispatcher desc: Publisher interface
 type Dispatcher interface {
 	Schedule(fn func([]interface{}))
 	Throughput() int
@@ -12,16 +11,19 @@ type Dispatcher interface {
 
 type goroutineDispatcher int
 
+//Schedule desc
+//@method Schedule desc
+//@param (func([]interface{})) Running function
 func (d goroutineDispatcher) Schedule(fn func([]interface{})) {
-	//! 修改为协程池
-	util.Go(fn) //go fn()
+	coroutine.Instance().Go(fn)
 }
 
 func (d goroutineDispatcher) Throughput() int {
 	return int(d)
 }
 
-// NewGoroutineDispatcher ： 创建一个带协程的分发器
+//NewGoroutineDispatcher desc
+//@method NewGoroutineDispatcher desc: Create a distributor with a coroutine
 func NewGoroutineDispatcher(throughput int) Dispatcher {
 	return goroutineDispatcher(throughput)
 }
@@ -36,7 +38,8 @@ func (d synchronizedDispatcher) Throughput() int {
 	return int(d)
 }
 
-// NewSynchronizedDispatcher : 新建一个同步的分发器
+//NewSynchronizedDispatcher desc
+//@method NetSynchronizedDispatcher desc: Create a new synchronous distributor
 func NewSynchronizedDispatcher(throughput int) Dispatcher {
 	return synchronizedDispatcher(throughput)
 }

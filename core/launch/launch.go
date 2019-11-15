@@ -1,7 +1,6 @@
 package launch
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
@@ -15,9 +14,7 @@ import (
 //@param (frame.MakeFrame) Start framework
 func Launch(f frame.MakeFrame) {
 	fme := f()
-	fme.VarValue()
-	flag.Parse()
-	fme.LineOption()
+	fme.Option()
 
 	debugTrace := debug.TraceDebug{}
 	debugTrace.Start()

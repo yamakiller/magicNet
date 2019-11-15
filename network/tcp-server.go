@@ -4,9 +4,9 @@ import (
 	"net"
 	"time"
 
+	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/util"
 )
 
 type tcpServer struct {
@@ -105,6 +105,6 @@ func (slf *tcpServer) getType() int {
 	return CListen
 }
 
-func (slf *tcpServer) close(lck *util.ReSpinLock) {
+func (slf *tcpServer) close(lck *mutex.ReSpinLock) {
 	slf.s.Close()
 }

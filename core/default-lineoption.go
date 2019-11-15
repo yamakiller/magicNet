@@ -1,15 +1,6 @@
 package core
 
-import (
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"os"
-
-	"github.com/yamakiller/magicNet/core/version"
-	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/util"
-)
+import "github.com/yamakiller/magicLibs/args"
 
 const (
 	verMajor     = "1"
@@ -23,7 +14,7 @@ const (
 
 // DefaultCMDLineOption : 默认命令处理器
 type DefaultCMDLineOption struct {
-	showVer  bool
+	/*showVer  bool
 	showHelp bool
 	//
 	logPath  string
@@ -36,12 +27,15 @@ type DefaultCMDLineOption struct {
 	//
 	virDir string
 	//
-	configPath string
+	configPath string*/
 }
 
-// VarValue 绑定变量
-func (cl *DefaultCMDLineOption) VarValue() {
-	flag.BoolVar(&cl.showVer, "v", false, "show build version")
+//Option desc
+//@method Option desc: Parse command line args
+func (cl *DefaultCMDLineOption) Option() {
+	args.Instance().Parse()
+
+	/*flag.BoolVar(&cl.showVer, "v", false, "show build version")
 	flag.BoolVar(&cl.showHelp, "h", false, "show help")
 
 	flag.StringVar(&cl.logPath, "logPath", "", "log file path")
@@ -53,13 +47,9 @@ func (cl *DefaultCMDLineOption) VarValue() {
 
 	flag.IntVar(&cl.coPoolLimt, "colimit", util.MCCOPOOLDEFLIMIT, "maximum stacking limit for cooperative pool tasks")
 	flag.IntVar(&cl.coPoolMax, "comax", util.MCCOPOOLDEFMAX, "maximum Limitation of Cooperative Pool")
-	flag.IntVar(&cl.coPoolMin, "comin", util.MCCOPOOLDEFMIN, "minimum Limitation of Cooperative Pool")
-}
+	flag.IntVar(&cl.coPoolMin, "comin", util.MCCOPOOLDEFMIN, "minimum Limitation of Cooperative Pool")*/
 
-// LineOption : 命令处理函数
-func (cl *DefaultCMDLineOption) LineOption() {
-
-	util.PushArgCmd("v", cl.showVer)
+	/*util.PushArgCmd("v", cl.showVer)
 	util.PushArgCmd("h", cl.showHelp)
 	util.PushArgCmd("logPath", cl.logPath)
 	util.PushArgCmd("logLevel", cl.logLevel)
@@ -78,10 +68,10 @@ func (cl *DefaultCMDLineOption) LineOption() {
 	if cl.showHelp {
 		cl.usage()
 		os.Exit(0)
-	}
+	}*/
 }
 
-func (cl *DefaultCMDLineOption) usage() {
+/*func (cl *DefaultCMDLineOption) usage() {
 	f, ferr := os.Open("help.md")
 	if ferr != nil {
 		panic(fmt.Sprint("error: open help.md file fail:", ferr))
@@ -92,4 +82,4 @@ func (cl *DefaultCMDLineOption) usage() {
 		panic(fmt.Sprint("error: open help.md file fail:", rerr))
 	}
 	fmt.Printf(string(contents))
-}
+}*/

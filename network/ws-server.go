@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/util"
 
 	"github.com/gorilla/websocket"
 )
@@ -141,6 +141,6 @@ func (slf *wsServer) getType() int {
 	return CListen
 }
 
-func (slf *wsServer) close(lck *util.ReSpinLock) {
+func (slf *wsServer) close(lck *mutex.ReSpinLock) {
 	slf.httpSrv.Close()
 }

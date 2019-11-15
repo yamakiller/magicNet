@@ -4,7 +4,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/yamakiller/magicNet/util"
+	"github.com/yamakiller/magicLibs/util"
 )
 
 type registryValue struct {

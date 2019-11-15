@@ -5,9 +5,9 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/timer"
-	"github.com/yamakiller/magicNet/util"
 )
 
 type sConn struct {
@@ -167,7 +167,7 @@ func (slf *sConn) setConnected() bool {
 	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
 }
 
-func (slf *sConn) close(lck *util.ReSpinLock) {
+func (slf *sConn) close(lck *mutex.ReSpinLock) {
 	if lck != nil {
 		lck.Lock()
 	}

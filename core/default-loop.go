@@ -10,7 +10,8 @@ import (
 	"github.com/yamakiller/magicNet/engine/monitor"
 )
 
-// DefaultLoop : 默认主循环体
+//DefaultLoop desc
+//@struct DefaultLoop desc: Default main loop body
 type DefaultLoop struct {
 	c chan os.Signal
 	e sync.WaitGroup
@@ -43,7 +44,7 @@ func (slf *DefaultLoop) EnterLoop() {
 	}()
 }
 
-// Wait desc
+//Wait desc
 //@method Wait desc: Waiting for the system to be terminated
 //@return (int) 0:continue -1:eixt
 func (slf *DefaultLoop) Wait() int {

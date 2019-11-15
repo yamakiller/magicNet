@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/util"
 
 	"google.golang.org/grpc"
 )
@@ -169,7 +169,7 @@ func (slf *grpcServer) setConnected() bool {
 	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
 }
 
-func (slf *grpcServer) close(lck *util.ReSpinLock) {
+func (slf *grpcServer) close(lck *mutex.ReSpinLock) {
 	if slf.stat != Closing {
 		slf.stat = Closing
 		slf.rpc.Stop()

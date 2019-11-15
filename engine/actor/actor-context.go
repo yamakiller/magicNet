@@ -11,10 +11,9 @@ package actor
 import (
 	"time"
 
-	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/util"
-
 	"github.com/emirpasic/gods/stacks/linkedliststack"
+	"github.com/yamakiller/magicLibs/util"
+	"github.com/yamakiller/magicNet/engine/logger"
 )
 
 type contextState int32

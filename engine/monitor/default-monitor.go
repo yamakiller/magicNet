@@ -1,31 +1,32 @@
 package monitor
 
-//DefaultMonitor : 默认监控器
+//DefaultMonitor desc
+//@struct defaultMonitor desc: Default monitor
 type defaultMonitor struct {
 	isShutdown bool
 }
 
-// IsShutdown : 系统是否已经关闭
+//IsShutdown Whether the system has been closed
 func (dmt *defaultMonitor) IsShutdown() bool {
 	return dmt.isShutdown
 }
 
-// Shutdown : 关闭系统
+//Shutdown Termination system
 func (dmt *defaultMonitor) Shutdown() {
 	dmt.isShutdown = true
 }
 
-// IncService : 增加一个服务
+//IncService Add a service
 func (dmt *defaultMonitor) IncService() {
 
 }
 
-// DecService : 减少一个服务
+//DecService Reduce a service
 func (dmt *defaultMonitor) DecService() {
 
 }
 
-// WaitService : 等待所有服务结束
+//WaitService Waiting for all services to end
 func (dmt *defaultMonitor) WaitService() {
 
 }

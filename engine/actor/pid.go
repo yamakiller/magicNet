@@ -6,13 +6,13 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/yamakiller/magicLibs/util"
 	"github.com/yamakiller/magicNet/engine/logger"
-	"github.com/yamakiller/magicNet/util"
 )
 
-/***************************************
-* 高15位表示服务器地址 | 低17表示PID编号 *
-****************************************/
+/**********************************************************************************
+* The upper 15 bits indicate the server address | Low 17 indicates the PID number *
+***********************************************************************************/
 const (
 	pidMask   = 0x1ffff
 	pidMax    = pidMask
@@ -34,7 +34,10 @@ func idToHex(u uint32) string {
 	return string(str[:8])
 }
 
-// HexToID : 16进制字符串，转换为 uint32
+//HexToID desc
+//@method HexToID desc: Hexadecimal string, converted to uint32
+//@param  (string) hex string
+//@return (uint32)
 func HexToID(hex string) uint32 {
 	var i uint32
 	var addr uint32
@@ -73,12 +76,16 @@ type PID struct {
 	p  *Process
 }
 
-// Address : 获取地址信息
+//Address desc
+//@method Address desc: Returns address information
+//@param (uint32)
 func (pid *PID) Address() uint32 {
 	return pid.ID >> pidKeyBit
 }
 
-// Key : 获取唯一的ID Key 不带地址信息
+//Key desc
+//@method Key desc: Returns unique ID Key without address information
+//@param (uint32)
 func (pid *PID) Key() uint32 {
 	return pid.ID & pidMask
 }
@@ -118,30 +125,41 @@ func (pid *PID) String() string {
 	return idToHex(pid.ID)
 }
 
-// Stop ： 停止PID既停止Actor
+//Stop desc
+//@method Stop desc: Stop PID and stop Actor
 func (pid *PID) Stop() {
 	pid.ref().Stop(pid)
 }
 
-// Tell : 调用
+//Tell desc
+//@method Tell desc: transfer
+//@param (interface{})
 func (pid *PID) Tell(message interface{}) {
 	ctx := DefaultSchedulerContext
 	ctx.Send(pid, message)
 }
 
-// Request ：请求自定义恢复目标PID
+//Request desc
+//@method Request desc: Request a custom recovery target PID
+//@param (interface{}) message
+//@param (*PID)
 func (pid *PID) Request(message interface{}, responseTo *PID) {
 	ctx := DefaultSchedulerContext
 	ctx.RequestWithCustomSender(pid, message, responseTo)
 }
 
-// RequestFuture ：请求并等待回复[带超时]
+//RequestFuture desc
+//@method RequestFuture desc: Request and wait for a reply [with timeout]
+//@param (interface{}) message
+//@param (time.Duration) time out
 func (pid *PID) RequestFuture(message interface{}, timeOut time.Duration) *Future {
 	ctx := DefaultSchedulerContext
 	return ctx.RequestFuture(pid, message, timeOut)
 }
 
-// StopFuture ：停止PID并等待回复
+//StopFuture desc
+//@method StopFuture desc: Stop the PID and wait for a reply
+//@return (*Future)
 func (pid *PID) StopFuture() *Future {
 	future := NewFuture(10 * time.Second)
 
@@ -150,7 +168,8 @@ func (pid *PID) StopFuture() *Future {
 	return future
 }
 
-// StopWait ：停止并等待
+//StopWait desc
+//@method StopWait desc: Stop and wait
 func (pid *PID) StopWait() {
 	pid.StopFuture().Wait()
 }

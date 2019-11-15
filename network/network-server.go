@@ -5,8 +5,8 @@ import (
 	"net"
 	"sync/atomic"
 
+	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/util"
 )
 
 const (
@@ -402,7 +402,7 @@ func operForeach(f func(s *slot)) {
 type slot struct {
 	b int32
 	s ISocket
-	l util.SpinLock
+	l mutex.SpinLock
 }
 
 // NetServer : Network Server Manager

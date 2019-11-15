@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yamakiller/magicNet/engine/files"
-	"github.com/yamakiller/magicNet/script"
-	"github.com/yamakiller/magicNet/script/stack"
+	"github.com/yamakiller/magicLibs/files"
+	"github.com/yamakiller/magicLibs/script"
+	"github.com/yamakiller/magicLibs/script/stack"
 
 	"github.com/robertkrimen/otto"
 )
@@ -113,8 +113,8 @@ func (slf *HTTPSrvMethodJS) Close() {
 }
 
 func (slf *HTTPSrvMethodJS) runJs(jsfile string, w http.ResponseWriter, r *http.Request) {
-	fileFullPath := files.GetFullPathForFilename(jsfile)
-	if !files.IsFileExist(fileFullPath) {
+	fileFullPath := files.Instance().GetFullPathForFilename(jsfile)
+	if !files.Instance().IsFileExist(fileFullPath) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

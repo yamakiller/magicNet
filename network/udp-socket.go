@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/timer"
-	"github.com/yamakiller/magicNet/util"
 )
 
 type udpSocket struct {
@@ -188,7 +188,7 @@ func (slf *udpSocket) setConnected() bool {
 	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
 }
 
-func (slf *udpSocket) close(lck *util.ReSpinLock) {
+func (slf *udpSocket) close(lck *mutex.ReSpinLock) {
 	if lck != nil {
 		lck.Lock()
 	}

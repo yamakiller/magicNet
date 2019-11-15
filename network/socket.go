@@ -3,8 +3,8 @@ package network
 import (
 	"net"
 
+	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/util"
 )
 
 const (
@@ -83,6 +83,6 @@ type ISocket interface {
 	getProto() string
 	getType() int
 	setConnected() bool
-	close(lck *util.ReSpinLock)
+	close(lck *mutex.ReSpinLock)
 	closewait()
 }

@@ -3,10 +3,18 @@ package overload
 import (
 	"sync"
 
-	"github.com/yamakiller/magicNet/util"
+	"github.com/yamakiller/magicLibs/util"
 )
 
-// Queue : 无上限队列
+//Queue desc
+//@struct Queue desc : Automatic extension queue
+//@member (int) queue cap size
+//@member (int) queue head pos
+//@member (int) queue tail pos
+//@member (int) queue overload of number
+//@member (int) queue overlaod threshold
+//@member ([]interface{}) queue pools
+//@member (sync.Mutex)
 type Queue struct {
 	cap  int
 	head int
@@ -19,7 +27,10 @@ type Queue struct {
 	lock   sync.Mutex
 }
 
-// NewQueue : 新建一个无上限队列
+//NewQueue desc
+//@method NewQueue desc: Create a new Automatic extension queue
+//@param  (int) initial size
+//@return (*Queue)
 func NewQueue(initialSize int) *Queue {
 	return &Queue{cap: initialSize,
 		head:              0,
@@ -29,21 +40,28 @@ func NewQueue(initialSize int) *Queue {
 		buffer:            make([]interface{}, initialSize)}
 }
 
-// Push : 插入一个对象
+//Push desc
+//@method Push desc: Insert an object
+//@param (interface{}) item
 func (q *Queue) Push(item interface{}) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	q.unpush(item)
 }
 
-// Pop : 取出一个对象, If empty return nil
+//Pop desc
+//@method Pop desc: Take an object, If empty return nil
+//@return (interface{}) return object
+//@return (bool)
 func (q *Queue) Pop() (interface{}, bool) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	return q.unpop()
 }
 
-// Overload : 检测队列超出限制的情况[主要用于警告记录]
+//Overload desc
+//@method Overload desc: Detecting queues exceeding the limit [mainly used for warning records]
+//@return (int)
 func (q *Queue) Overload() int {
 	if q.overload != 0 {
 		overload := q.overload
@@ -53,7 +71,9 @@ func (q *Queue) Overload() int {
 	return 0
 }
 
-// Length : 队列的长度
+//Length desc
+//@method Length desc: Length of the queue
+//@return (int) length
 func (q *Queue) Length() int {
 	var (
 		head int
@@ -105,11 +125,8 @@ func (q *Queue) unpop() (interface{}, bool) {
 			q.overload = length
 			q.overloadThreshold *= 2
 		}
-	} /*
-		 ! 这里是否需要这样呢？
-		else {
-		  q.overloadThreshold = q.cap
-		}*/
+	}
+
 	return result, resultSucces
 }
 

@@ -1,8 +1,8 @@
 package mailbox
 
 import (
+	"github.com/yamakiller/magicLibs/st/lists"
 	"github.com/yamakiller/magicNet/engine/overload"
-	"github.com/yamakiller/magicNet/util"
 )
 
 type unboundedMailboxQueue struct {
@@ -33,7 +33,7 @@ func Unbounded(mailboxStats ...Statistics) Make {
 		}
 
 		return &defaultMailbox{
-			sysMailbox:   util.NewQueue(),
+			sysMailbox:   lists.NewQueue(),
 			usrMailbox:   q,
 			mailboxStats: mailboxStats,
 		}

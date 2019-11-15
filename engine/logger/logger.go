@@ -13,23 +13,24 @@ import (
 )
 
 const (
-	// PANICLEVEL 崩溃日志等级
+	// PANICLEVEL Crash log level
 	PANICLEVEL uint32 = iota
-	// FATALLEVEL 严重错误日志等级
+	// FATALLEVEL Critical error log level
 	FATALLEVEL
-	// ERRORLEVEL 错误日志等级
+	// ERRORLEVEL Error log level
 	ERRORLEVEL
-	// WARNLEVEL  警告日志等级
+	// WARNLEVEL  Warning log level
 	WARNLEVEL
-	// INFOLEVEL  普通信息日志等级
+	// INFOLEVEL  General information log level
 	INFOLEVEL
-	// DEBUGLEVEL 调试日志等级
+	// DEBUGLEVEL Debug log level
 	DEBUGLEVEL
-	// TRACELEVEL 跟踪日志等级
+	// TRACELEVEL Trace log level
 	TRACELEVEL
 )
 
-// Logger : 日志模块接口
+//Logger desc
+//@interface Logger desc: Log module interface
 type Logger interface {
 	run() int
 	exit()
@@ -49,7 +50,8 @@ type Logger interface {
 	Trace(owner uint32, fmrt string, args ...interface{})
 }
 
-// LogContext : 日志对象
+//LogContext desc
+//@struct LogContext desc: Log context
 type LogContext struct {
 	FilName    string
 	FilHandle  *os.File
@@ -61,7 +63,8 @@ type LogContext struct {
 	LogWait    sync.WaitGroup
 }
 
-// MakeLogger : 日志制作器
+//MakeLogger desc
+//@method MakeLogger desc: Log object maker
 type MakeLogger func() Logger
 
 var (
@@ -102,12 +105,18 @@ func New(maker MakeLogger) Logger {
 	return r
 }
 
-// WithDefault : 关联
+//WithDefault desc
+//@method WithDefault desc: Set the default log handle
+//@param (Logger) logger object
 func WithDefault(log Logger) {
 	defaultHandle = log
 }
 
-// Error : 输出错误日志
+//Error desc
+//@method Error desc: Output error log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func Error(owner uint32, fmrt string, args ...interface{}) {
 	if defaultHandle == nil {
 		return
@@ -115,7 +124,11 @@ func Error(owner uint32, fmrt string, args ...interface{}) {
 	defaultHandle.Error(owner, fmrt, args...)
 }
 
-// Info : 输出信息日志
+//Info desc
+//@method Info desc: Output information log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func Info(owner uint32, fmrt string, args ...interface{}) {
 	if defaultHandle == nil {
 		return
@@ -123,7 +136,11 @@ func Info(owner uint32, fmrt string, args ...interface{}) {
 	defaultHandle.Info(owner, fmrt, args...)
 }
 
-// Warning : 输出警告日志
+//Warning desc
+//@method Warning desc: Output warning log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func Warning(owner uint32, fmrt string, args ...interface{}) {
 	if defaultHandle == nil {
 		return
@@ -131,7 +148,11 @@ func Warning(owner uint32, fmrt string, args ...interface{}) {
 	defaultHandle.Warning(owner, fmrt, args...)
 }
 
-// Panic : 输出程序崩溃日志
+//Panic desc
+//@method Panic desc: Output program crash log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func Panic(owner uint32, fmrt string, args ...interface{}) {
 	if defaultHandle == nil {
 		return
@@ -139,7 +160,11 @@ func Panic(owner uint32, fmrt string, args ...interface{}) {
 	defaultHandle.Panic(owner, fmrt, args...)
 }
 
-// Fatal : 输出严重错误日志
+//Fatal desc
+//@method Fatal desc: Output critical error log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func Fatal(owner uint32, fmrt string, args ...interface{}) {
 	if defaultHandle == nil {
 		return
@@ -147,7 +172,11 @@ func Fatal(owner uint32, fmrt string, args ...interface{}) {
 	defaultHandle.Fatal(owner, fmrt, args...)
 }
 
-// Debug : 输出Debug日志
+//Debug desc
+//@method Debug desc: Output Debug log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func Debug(owner uint32, fmrt string, args ...interface{}) {
 	if defaultHandle == nil {
 		return
@@ -155,7 +184,11 @@ func Debug(owner uint32, fmrt string, args ...interface{}) {
 	defaultHandle.Debug(owner, fmrt, args...)
 }
 
-// Trace : 输出跟踪日志
+//Trace desc
+//@method Trace desc: Output trace log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func Trace(owner uint32, fmrt string, args ...interface{}) {
 	if defaultHandle == nil {
 		return
@@ -212,7 +245,8 @@ func (log *LogContext) push(data Event) {
 	atomic.AddInt32(&log.LogMailNum, 1)
 }
 
-// Redirect : 重定向日志文件
+//Redirect desc
+//@method Redirect desc: Redirect log file
 func (log *LogContext) Redirect() {
 	if log.FilName == "" {
 		log.LogHandle.SetOutput(os.Stdout)
@@ -227,8 +261,10 @@ func (log *LogContext) Redirect() {
 	log.LogHandle.SetOutput(f)
 }
 
-// Mount : 挂载日志模块
+//Mount desc
+//@method Mount desc: Mount log module
 func (log *LogContext) Mount() {
+	//TODO:需要修改
 	log.LogWait.Add(1)
 	go func(log Logger) {
 		for {
@@ -240,7 +276,8 @@ func (log *LogContext) Mount() {
 	}(log)
 }
 
-// Close : 关闭日志系统
+//Close desc
+//@method Close desc: Turn off the logging system
 func (log *LogContext) Close() {
 	for {
 		if atomic.LoadInt32(&log.LogMailNum) > 0 {
@@ -258,38 +295,66 @@ func (log *LogContext) Close() {
 	}
 }
 
-// Error : 输出错误日志
+//Error desc
+//@method Error desc: Output error log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func (log *LogContext) Error(owner uint32, fmrt string, args ...interface{}) {
 	log.push(Event{level: uint32(logrus.ErrorLevel), prefix: log.getPrefix(owner), message: fmt.Sprintf(fmrt, args...)})
 
 }
 
-// Info : 输出信息日志
+//Info desc
+//@method Info desc: Output information log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func (log *LogContext) Info(owner uint32, fmrt string, args ...interface{}) {
 	log.push(Event{level: uint32(logrus.InfoLevel), prefix: log.getPrefix(owner), message: fmt.Sprintf(fmrt, args...)})
 }
 
-// Warning : 输出警告日志
+//Warning desc
+//@method Warning desc: Output warning log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func (log *LogContext) Warning(owner uint32, fmrt string, args ...interface{}) {
 	log.push(Event{level: uint32(logrus.WarnLevel), prefix: log.getPrefix(owner), message: fmt.Sprintf(fmrt, args...)})
 }
 
-// Panic : 输出程序崩溃日志
+//Panic desc
+//@method Panic desc: Output program crash log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func (log *LogContext) Panic(owner uint32, fmrt string, args ...interface{}) {
 	log.push(Event{level: uint32(logrus.PanicLevel), prefix: log.getPrefix(owner), message: fmt.Sprintf(fmrt, args...)})
 }
 
-// Fatal : 输出严重错误日志
+//Fatal desc
+//@method Fatal desc: Output critical error log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func (log *LogContext) Fatal(owner uint32, fmrt string, args ...interface{}) {
 	log.push(Event{level: uint32(logrus.FatalLevel), prefix: log.getPrefix(owner), message: fmt.Sprintf(fmrt, args...)})
 }
 
-// Debug : 输出Debug日志
+//Debug desc
+//@method Debug desc: Output Debug log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func (log *LogContext) Debug(owner uint32, fmrt string, args ...interface{}) {
 	log.push(Event{level: uint32(logrus.DebugLevel), prefix: log.getPrefix(owner), message: fmt.Sprintf(fmrt, args...)})
 }
 
-// Trace : 输出跟踪日志
+//Trace desc
+//@method Trace desc: Output trace log
+//@param (int32) owner
+//@param (string) format
+//@param (...interface{}) args
 func (log *LogContext) Trace(owner uint32, fmrt string, args ...interface{}) {
 	log.push(Event{level: uint32(logrus.TraceLevel), prefix: log.getPrefix(owner), message: fmt.Sprintf(fmrt, args...)})
 }

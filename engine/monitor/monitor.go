@@ -1,31 +1,32 @@
 package monitor
 
-// Monitor : 监视器模型接口
-type Monitor interface {
-	// IsShutdown : 系统是否已经关闭
+//IMonitor desc
+//@interface IMonitor desc: Monitor model interface
+//@method (IsShutdown() bool) Whether the system has been closed
+//@method (Shutdown()) Shut down system
+//@method (IncService()) Add a service
+//@method (DecService()) Reduce a service
+//@method (WaitService()) Waiting for all services to end
+type IMonitor interface {
 	IsShutdown() bool
-
-	// Shutdown : 关闭系统
 	Shutdown()
-
-	// IncService : 增加一个服务
 	IncService()
-
-	// DecService : 减少一个服务
 	DecService()
-
-	// WaitService : 等待所有服务结束
 	WaitService()
 }
 
-var systemMonitor Monitor
+var systemMonitor IMonitor
 
-// WithMonitor 关联到系统监视器
-func WithMonitor(m Monitor) {
+//WithMonitor desc
+//@method WithMonitor desc: Setting up the system monitor
+//@param (IMonitor) monitor instance
+func WithMonitor(m IMonitor) {
 	systemMonitor = m
 }
 
-// IsShutdown : 系统是否已被终止
+//IsShutdown desc
+//@method IsShutdown desc: Whether the system has been terminated
+//@return (bool)
 func IsShutdown() bool {
 	if systemMonitor == nil {
 		return defMonitor.IsShutdown()
@@ -33,7 +34,8 @@ func IsShutdown() bool {
 	return systemMonitor.IsShutdown()
 }
 
-// Shutdown : 终止系统
+//Shutdown desc
+//@method Shutdown desc: Termination system
 func Shutdown() {
 	if systemMonitor == nil {
 		defMonitor.Shutdown()
@@ -42,7 +44,8 @@ func Shutdown() {
 	systemMonitor.Shutdown()
 }
 
-// IncService : 增加一个服务
+//IncService desc
+//@method IncService desc: Add a service
 func IncService() {
 	if systemMonitor == nil {
 		defMonitor.IncService()
@@ -51,7 +54,8 @@ func IncService() {
 	systemMonitor.IncService()
 }
 
-// DecService : 减少一个服务
+//DecService desc
+//@method DecService desc: Reduce a service
 func DecService() {
 	if systemMonitor == nil {
 		defMonitor.DecService()
@@ -60,7 +64,8 @@ func DecService() {
 	systemMonitor.DecService()
 }
 
-// WaitService : 等待所有服务结束
+//WaitService desc
+//@method WaitService desc: Waiting for all services to end
 func WaitService() {
 	if systemMonitor == nil {
 		defMonitor.WaitService()

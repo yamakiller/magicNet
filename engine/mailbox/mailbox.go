@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"sync/atomic"
 
-	"github.com/yamakiller/magicNet/util"
+	"github.com/yamakiller/magicLibs/st/lists"
 )
 
 // Statistics : 统计接口
@@ -49,7 +49,7 @@ const (
 
 type defaultMailbox struct {
 	usrMailbox      queue
-	sysMailbox      *util.Queue
+	sysMailbox      *lists.Queue
 	schedulerStatus int32
 	usrMessages     int32
 	sysMessages     int32
