@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/engine/logger"
 	"github.com/yamakiller/magicNet/library"
+	"github.com/yamakiller/magicNet/logger"
 	"github.com/yamakiller/magicNet/service"
 )
 

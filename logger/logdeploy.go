@@ -1,5 +1,9 @@
 package logger
 
+const (
+	EnvKey = "log"
+)
+
 //LogDeploy desc
 //@struct LogDeploy desc logger deploy informat [json format]
 type LogDeploy struct {

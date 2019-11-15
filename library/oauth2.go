@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/logger"
 
 	"github.com/dgrijalva/jwt-go"
 	"gopkg.in/oauth2.v3"

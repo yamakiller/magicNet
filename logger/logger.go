@@ -10,6 +10,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
+	"github.com/yamakiller/magicLibs/coroutine"
 )
 
 const (
@@ -264,16 +265,15 @@ func (log *LogContext) Redirect() {
 //Mount desc
 //@method Mount desc: Mount log module
 func (log *LogContext) Mount() {
-	//TODO:需要修改
 	log.LogWait.Add(1)
-	go func(log Logger) {
+	coroutine.Instance().Go(func(args []interface{}) {
 		for {
 			if log.run() != 0 {
 				break
 			}
 		}
 		log.exit()
-	}(log)
+	})
 }
 
 //Close desc

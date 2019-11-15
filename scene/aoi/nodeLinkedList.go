@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/yamakiller/magicNet/util"
+	"github.com/yamakiller/magicLibs/util"
 )
 
 const (

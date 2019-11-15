@@ -13,7 +13,7 @@ import (
 
 	"github.com/emirpasic/gods/stacks/linkedliststack"
 	"github.com/yamakiller/magicLibs/util"
-	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/logger"
 )
 
 type contextState int32

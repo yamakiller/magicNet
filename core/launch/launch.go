@@ -22,12 +22,12 @@ func Launch(f frame.MakeFrame) {
 
 	timer.StartService()
 
-	if err := fme.Init(); err != nil {
+	if err := fme.LoadEnv(); err != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
 
-	if err := fme.LoadEnv(); err != nil {
+	if err := fme.Init(); err != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
@@ -46,7 +46,7 @@ func Launch(f frame.MakeFrame) {
 	}
 
 	fme.CloseService()
-	fme.UnLoadEnv()
 	fme.Destory()
+	fme.UnLoadEnv()
 	timer.StopService()
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/engine/logger"
+	"github.com/yamakiller/magicNet/logger"
 
 	"google.golang.org/grpc"
 )
