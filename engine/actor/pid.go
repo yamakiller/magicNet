@@ -6,8 +6,8 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/yamakiller/magicLibs/logger"
 	"github.com/yamakiller/magicLibs/util"
-	"github.com/yamakiller/magicNet/logger"
 )
 
 /**********************************************************************************

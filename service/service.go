@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/yamakiller/magicLibs/logger"
 	"github.com/yamakiller/magicLibs/util"
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/logger"
 )
 
 //MethodFunc desc

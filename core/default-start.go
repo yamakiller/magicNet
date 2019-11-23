@@ -3,15 +3,15 @@ package core
 import (
 	"runtime"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yamakiller/magicLibs/files"
 
 	"github.com/yamakiller/magicLibs/args"
 
-	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 	"github.com/yamakiller/magicLibs/coroutine"
 	"github.com/yamakiller/magicLibs/envs"
-	"github.com/yamakiller/magicNet/logger"
+	"github.com/yamakiller/magicLibs/logger"
 )
 
 //DefaultStart desc
@@ -32,12 +32,11 @@ func (slf *DefaultStart) Init() error {
 	coroutine.Instance().Start(coDeplay.Max, coDeplay.Min, coDeplay.Task)
 
 	slf.sysLogger = logger.New(func() logger.Logger {
-		l := logger.LogContext{FilName: logDeplay.LogPath,
-			LogHandle:  logrus.New(),
-			LogMailbox: make(chan logger.Event, logDeplay.LogSize),
-			LogStop:    make(chan struct{})}
-
-		l.LogHandle.SetLevel(logrus.Level(logDeplay.LogLevel))
+		l := logger.LogContext{}
+		l.SetFilPath(logDeplay.LogPath)
+		l.SetHandle(logrus.New())
+		l.SetMailMax(logDeplay.LogSize)
+		l.SetLevel(logrus.Level(logDeplay.LogLevel))
 
 		formatter := new(prefixed.TextFormatter)
 		formatter.FullTimestamp = true
@@ -47,7 +46,8 @@ func (slf *DefaultStart) Init() error {
 			formatter.SetColorScheme(&prefixed.ColorScheme{
 				PrefixStyle: "blue+b"})
 		}
-		l.LogHandle.SetFormatter(formatter)
+		l.SetFormatter(formatter)
+		l.Initial()
 		l.Redirect()
 		return &l
 	})

@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/emirpasic/gods/stacks/linkedliststack"
+	"github.com/yamakiller/magicLibs/logger"
 	"github.com/yamakiller/magicLibs/util"
-	"github.com/yamakiller/magicNet/logger"
 )
 
 type contextState int32

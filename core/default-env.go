@@ -4,7 +4,7 @@ import (
 	"github.com/yamakiller/magicLibs/args"
 	"github.com/yamakiller/magicLibs/coroutine"
 	"github.com/yamakiller/magicLibs/envs"
-	"github.com/yamakiller/magicNet/logger"
+	"github.com/yamakiller/magicLibs/logger"
 )
 
 //DefaultEnv desc
