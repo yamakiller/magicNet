@@ -8,47 +8,36 @@ package frame
  * @Description: 主进程框架基类
  */
 
-/* LineOption ->
+/*
 Init ->
-	LoadEnv ->
 		InitService ->
 					Wait ->
 		CloseService ->
-	UnLoadEnv ->
 Destory */
 
-type startPart interface {
-	Init() error
+type bootPart interface {
+	Initial() error
 	Destory()
 }
 
-type commandLinePart interface {
-	Option()
-}
-
-type envPart interface {
-	LoadEnv() error
-	UnLoadEnv()
-}
-
-type servicePart interface {
+type servPart interface {
 	InitService() error
 	CloseService()
 }
 
 type waitPart interface {
-	EnterLoop()
+	Enter()
 	Wait() int
 }
 
-// Framework 主框架接口
+//Framework desc:
+//@interface Framework desc: system frame
 type Framework interface {
-	startPart
-	commandLinePart
-	envPart
+	bootPart
 	waitPart
-	servicePart
+	servPart
 }
 
-// MakeFrame : 框架制造函数
-type MakeFrame func() Framework
+// SpawnFrame desc:
+// @type SpawnFrame desc: create main framework
+type SpawnFrame func() Framework

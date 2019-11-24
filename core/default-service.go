@@ -1,15 +1,19 @@
 package core
 
-// DefaultService : 默认服务系统
+//DefaultService desc
+//@type default Initialization
 type DefaultService struct {
 }
 
-// InitService : 初始化服务模块
-func (ds *DefaultService) InitService() error {
+//InitService desc
+//@method InitService desc
+//@return (error)
+func (slf *DefaultService) InitService() error {
 	return nil
 }
 
-// CloseService : 关闭服务系统
-func (ds *DefaultService) CloseService() {
+//CloseService desc
+//@method CloseService desc
+func (slf *DefaultService) CloseService() {
 
 }
