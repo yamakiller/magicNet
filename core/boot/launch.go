@@ -1,4 +1,4 @@
-package launch
+package boot
 
 import (
 	"fmt"
