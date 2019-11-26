@@ -10,7 +10,7 @@ package implement
 
 //NetHandle : net handle
 type NetHandle struct {
-	value uint64
+	_value uint64
 }
 
 const (
@@ -36,39 +36,39 @@ const (
 
 // Generate : Generate Handle
 func (slf *NetHandle) Generate(serviceID int32, handleID int32, sock int32) {
-	slf.value = ((uint64(serviceID) & constNetHandleServiceIDMask) << constNetHandleServiceIDShift) |
+	slf._value = ((uint64(serviceID) & constNetHandleServiceIDMask) << constNetHandleServiceIDShift) |
 		((uint64(handleID) & constNetHandleIDMask) << constNetHandleIDShift) |
 		(uint64(sock) & constNetHandleSocketIDMask)
 }
 
 // GetServiceID :  Return to the server ID
 func (slf *NetHandle) GetServiceID() int32 {
-	return int32((slf.value >> constNetHandleServiceIDShift) & constNetHandleServiceIDMask)
+	return int32((slf._value >> constNetHandleServiceIDShift) & constNetHandleServiceIDMask)
 }
 
 // GetHandle : Returns the handle ID of the allocated resource
 func (slf *NetHandle) GetHandle() int32 {
-	return int32((slf.value >> constNetHandleSocketIDBit) & constNetHandleIDMask)
+	return int32((slf._value >> constNetHandleSocketIDBit) & constNetHandleIDMask)
 }
 
 // GetSocket : Return socket ID
 func (slf *NetHandle) GetSocket() int32 {
-	return int32(slf.value & constNetHandleSocketIDMask)
+	return int32(slf._value & constNetHandleSocketIDMask)
 }
 
 // GetValue : Get Handle Value
 func (slf *NetHandle) GetValue() uint64 {
-	return slf.value
+	return slf._value
 }
 
 // SetValue : Set Handle Value
 func (slf *NetHandle) SetValue(v uint64) {
-	slf.value = v
+	slf._value = v
 }
 
 // IsEmpty : is empty
 func (slf *NetHandle) IsEmpty() bool {
-	if slf.value == 0 {
+	if slf._value == 0 {
 		return true
 	}
 	return false
@@ -76,5 +76,5 @@ func (slf *NetHandle) IsEmpty() bool {
 
 // Rest :
 func (slf *NetHandle) Rest() {
-	slf.value = 0
+	slf._value = 0
 }

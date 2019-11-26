@@ -5,15 +5,16 @@ import (
 	"github.com/yamakiller/magicNet/service"
 )
 
-//NetClientService 网络客户端服务层
+//NetClientService desc
+//@struct NetClientService desc: network client service
 type NetClientService struct {
 	service.Service
 	NetClient
 }
 
-//Init Client service initialization
-func (slf *NetClientService) Init() {
-	slf.Service.Init()
+//Initial Client service initialization
+func (slf *NetClientService) Initial() {
+	slf.Service.Initial()
 	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)
 }
 

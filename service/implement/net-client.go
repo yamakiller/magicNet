@@ -36,51 +36,51 @@ type INetClient interface {
 
 //NetClient Network client base class
 type NetClient struct {
-	wb   *bytes.Buffer
-	addr string
-	stat NetStat
-	ref  int
+	_recive *bytes.Buffer
+	_addr   string
+	_stat   NetStat
+	_ref    int
 }
 
 //SetAddr Setting client address information
 func (nc *NetClient) SetAddr(adr string) {
-	nc.addr = adr
+	nc._addr = adr
 }
 
 //GetAddr returns client address
 func (nc *NetClient) GetAddr() string {
-	return nc.addr
+	return nc._addr
 }
 
 //GetRecvBuffer Return client read buffer
 func (nc *NetClient) GetRecvBuffer() *bytes.Buffer {
-	return nc.wb
+	return nc._recive
 }
 
 //SetRecvBuffer Setting  the client read buffer
 func (nc *NetClient) SetRecvBuffer(b *bytes.Buffer) {
-	nc.wb = b
+	nc._recive = b
 }
 
 //SetRef Setting the number of citations
 func (nc *NetClient) SetRef(v int) {
-	nc.ref = v
+	nc._ref = v
 }
 
 //IncRef Add a reference
 func (nc *NetClient) IncRef() {
-	nc.ref++
+	nc._ref++
 }
 
 //DecRef Reduce one reference
 func (nc *NetClient) DecRef() int {
-	nc.ref--
-	return nc.ref
+	nc._ref--
+	return nc._ref
 }
 
 //GetStat returns status
 func (nc *NetClient) GetStat() *NetStat {
-	return &nc.stat
+	return &nc._stat
 }
 
 //Shutdown termination client

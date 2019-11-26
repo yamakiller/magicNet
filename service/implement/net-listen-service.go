@@ -34,9 +34,9 @@ type NetListenService struct {
 	ClientKeep uint64
 }
 
-//Init Initialize the network listening service
-func (slf *NetListenService) Init() {
-	slf.Service.Init()
+//Initial Initialize the network listening service
+func (slf *NetListenService) Initial() {
+	slf.Service.Initial()
 	slf.RegisterMethod(&actor.Started{}, slf.Started)
 	slf.RegisterMethod(&actor.Stopping{}, slf.Stopping)
 	slf.RegisterMethod(&network.NetAccept{}, slf.OnAccept)

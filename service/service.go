@@ -66,16 +66,16 @@ type IService interface {
 //@member (*sync.WaitGroup)
 //@member (map[interface{}]MethodFunc) event method map
 type Service struct {
-	pid    *actor.PID
-	name   string
-	wait   *sync.WaitGroup
-	method map[interface{}]MethodFunc
+	_pid    *actor.PID
+	_name   string
+	_wait   *sync.WaitGroup
+	_method map[interface{}]MethodFunc
 }
 
-//Init desc
-//@method Init desc: Initialization service
-func (slf *Service) Init() {
-	slf.method = make(map[interface{}]MethodFunc, 16)
+//Initial desc
+//@method Initial desc: Initialization service
+func (slf *Service) Initial() {
+	slf._method = make(map[interface{}]MethodFunc, 16)
 	slf.RegisterMethod(&actor.Started{}, slf.Started)
 	slf.RegisterMethod(&actor.Stopping{}, slf.Stopping)
 	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)
@@ -88,13 +88,13 @@ func (slf *Service) Init() {
 func (slf *Service) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *actor.MessagePack:
-		f, ok := slf.method[reflect.TypeOf(msg.Message)]
+		f, ok := slf._method[reflect.TypeOf(msg.Message)]
 		if ok {
 			f(context, msg.Sender, msg.Message)
 		}
 		logger.Error(context.Self().ID, "service unknown message:%+v,sender:%+v", msg, msg.Sender)
 	default:
-		f, ok := slf.method[reflect.TypeOf(msg)]
+		f, ok := slf._method[reflect.TypeOf(msg)]
 		if ok {
 			f(context, nil, msg)
 			break
@@ -107,8 +107,8 @@ func (slf *Service) Receive(context actor.Context) {
 //@method WithPID desc: Service initial value association
 //@param (actor.Context) this service context
 func (slf *Service) WithPID(context actor.Context) {
-	slf.pid = context.Self()
-	slf.name = slf.name + "$" + strconv.Itoa(int(slf.pid.ID))
+	slf._pid = context.Self()
+	slf._name = slf._name + "$" + strconv.Itoa(int(slf._pid.ID))
 }
 
 //Started desc
@@ -120,11 +120,11 @@ func (slf *Service) Started(context actor.Context,
 	sender *actor.PID,
 	message interface{}) {
 
-	if slf.pid == nil {
+	if slf._pid == nil {
 		slf.WithPID(context)
 	}
-	if slf.wait != nil {
-		slf.wait.Done()
+	if slf._wait != nil {
+		slf._wait.Done()
 	}
 }
 
@@ -142,12 +142,12 @@ func (slf *Service) Stopping(context actor.Context, sender *actor.PID, message i
 //@param (*actor.PID) sender actor ID
 //@param (interface{}) a message
 func (slf *Service) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
-	for k := range slf.method {
-		delete(slf.method, k)
+	for k := range slf._method {
+		delete(slf._method, k)
 	}
 
-	if slf.wait != nil {
-		slf.wait.Done()
+	if slf._wait != nil {
+		slf._wait.Done()
 	}
 }
 
@@ -163,44 +163,44 @@ func (slf *Service) Terminated(context actor.Context, sender *actor.PID, message
 //Shutdown desc
 //@method Shutdown desc: Shutdown service
 func (slf *Service) Shutdown() {
-	if slf.pid == nil {
+	if slf._pid == nil {
 		return
 	}
-	slf.pid.Stop()
-	slf.wait.Wait()
+	slf._pid.Stop()
+	slf._wait.Wait()
 }
 
 //Name desc
 //@method Name desc: Return the name of the service
 //@return (string) name
 func (slf *Service) Name() string {
-	return slf.name
+	return slf._name
 }
 
 //Key desc
 //@method Key desc: Returns the Key name of the service
 //@return (string) pid=>key
 func (slf *Service) Key() string {
-	ix := strings.IndexByte(slf.name, '$')
+	ix := strings.IndexByte(slf._name, '$')
 	if ix <= 0 {
-		return slf.name
+		return slf._name
 	}
 
-	return util.SubStr2(slf.name, 0, ix)
+	return util.SubStr2(slf._name, 0, ix)
 }
 
 //GetPID desc
 //@method GetPID desc: Return the pid object
 //@return (*actor.PID) actor ID
 func (slf *Service) GetPID() *actor.PID {
-	return slf.pid
+	return slf._pid
 }
 
 //ID desc
 //@method ID desc: Returns this service pid=>id
 //@return (uint32) ID
 func (slf *Service) ID() uint32 {
-	return slf.pid.ID
+	return slf._pid.ID
 }
 
 //RegisterMethod desc
@@ -208,15 +208,15 @@ func (slf *Service) ID() uint32 {
 //@param (interface{}) event map key
 //@param (MethodFunc) Function object
 func (slf *Service) RegisterMethod(key interface{}, method MethodFunc) {
-	slf.method[reflect.TypeOf(key)] = method
+	slf._method[reflect.TypeOf(key)] = method
 }
 
 func (slf *Service) withName(n string) {
-	slf.name = n
+	slf._name = n
 }
 
 func (slf *Service) withWait(wait *sync.WaitGroup) {
-	slf.wait = wait
+	slf._wait = wait
 }
 
 //LogInfo desc
