@@ -1,13 +1,14 @@
 package net
 
 import (
+	"github.com/yamakiller/magicLibs/net"
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/network"
 )
 
 //TCPConnection TCP connection object
 type TCPConnection struct {
-	s int32
+	_s int32
 }
 
 //Name Object name
@@ -17,7 +18,7 @@ func (slf *TCPConnection) Name() string {
 
 //Socket Returns the TCP connection socket
 func (slf *TCPConnection) Socket() int32 {
-	return slf.s
+	return slf._s
 }
 
 //Connection TCP connection remote server returns error message if connection fails
@@ -26,20 +27,21 @@ func (slf *TCPConnection) Connection(context actor.Context, addr string, outChan
 	if err != nil {
 		return err
 	}
-	slf.s = sock
+	slf._s = sock
 	return nil
 }
 
 //Write Send data to a remote server
 func (slf *TCPConnection) Write(wrap []byte, length int) error {
-	return network.OperWrite(slf.s, wrap, length)
+	return network.OperWrite(slf._s, wrap, length)
 }
 
 //Close Close the connection
 func (slf *TCPConnection) Close() {
-	if slf.s == 0 {
+	if net.InvalidSocket(slf._s) {
 		return
 	}
 
-	network.OperClose(slf.s)
+	network.OperClose(slf._s)
+	slf._s = net.INVALIDSOCKET
 }

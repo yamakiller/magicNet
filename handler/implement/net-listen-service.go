@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/handler"
+	"github.com/yamakiller/magicNet/handler/net"
 	"github.com/yamakiller/magicNet/network"
-	"github.com/yamakiller/magicNet/service"
-	"github.com/yamakiller/magicNet/service/net"
 	"github.com/yamakiller/magicNet/timer"
 )
 
@@ -21,7 +21,7 @@ type INetListenDeleate interface {
 
 // NetListenService Network monitoring service
 type NetListenService struct {
-	service.Service
+	handler.Service
 
 	NetListen  net.INetListen
 	NetClients INetClientManager
@@ -50,7 +50,6 @@ func (slf *NetListenService) getDesc() string {
 
 //Started Turn on network monitoring service
 func (slf *NetListenService) Started(context actor.Context, sender *actor.PID, message interface{}) {
-	slf.WithPID(context)
 	slf.LogInfo("Service Startup %s", slf.Addr)
 	err := slf.NetListen.Listen(context, slf.Addr, slf.CCMax)
 	if err != nil {

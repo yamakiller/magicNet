@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/yamakiller/magicNet/library"
+	"github.com/yamakiller/magicLibs/dbs"
 )
 
 func TestMySql(t *testing.T) {
 	dsn := "root:123456@tcp(127.0.0.1:3306)/testGo"
-	handle := library.MySQLDB{}
-	if err := handle.Init(dsn, 10, 1, 3600*1000); err != nil {
+	handle := dbs.MySQLDB{}
+	if err := handle.Initial(dsn, 10, 1, 3600*1000); err != nil {
 		fmt.Println("connect mysql fail:", err)
 		return
 	}
@@ -28,8 +28,7 @@ func TestMySql(t *testing.T) {
 	}
 
 	fmt.Println("no data:", result.GetRow())
-	for result.HashNext() {
-		result.Next()
+	for result.Next() {
 		a, _ := result.GetAsNameValue("c1")
 		fmt.Println(a.ToInt32())
 		b, _ := result.GetAsNameValue("c2")

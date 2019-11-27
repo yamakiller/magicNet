@@ -8,7 +8,7 @@ type IAllocer interface {
 
 //INetClientManager Network client management interface
 type INetClientManager interface {
-	Init()
+	Initial()
 	Size() int
 	Grap(h uint64) INetClient
 	GrapSocket(sock int32) INetClient

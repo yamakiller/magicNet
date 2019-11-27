@@ -40,9 +40,9 @@ func OperWSListen(operator *actor.PID, addr string, outChanSize int) (int32, err
 	s.l.Lock()
 	s.s = &wsServer{}
 	wss, _ := s.s.(*wsServer)
-	wss.h = h
-	wss.operator = operator
-	wss.outChanMax = outChanSize
+	wss._h = h
+	wss._operator = operator
+	wss._outChanMax = outChanSize
 
 	s.b = resAssigned
 	if err := wss.listen(operator, addr); err != nil {
@@ -64,10 +64,10 @@ func OperWSConnect(operator *actor.PID, addr string, outChanSize int) (int32, er
 	}
 
 	client := &wsClient{}
-	client.h = h
-	client.o = operator
-	client.out = make(chan *NetChunk, outChanSize)
-	client.so = s
+	client._h = h
+	client._o = operator
+	client._out = make(chan *NetChunk, outChanSize)
+	client._so = s
 	err := client.connect(operator, addr)
 	if err != nil {
 		atomic.StoreInt32(&s.b, resIdle)
@@ -76,7 +76,7 @@ func OperWSConnect(operator *actor.PID, addr string, outChanSize int) (int32, er
 
 	s.l.Lock()
 	s.s = client
-	client.w.Add(2)
+	client._w.Add(2)
 	go client.recv()
 	go client.write()
 	atomic.StoreInt32(&s.b, resAssigned)
@@ -95,9 +95,9 @@ func OperTCPListen(operator *actor.PID, addr string, outChanSize int) (int32, er
 	s.l.Lock()
 	s.s = &tcpServer{}
 	tps, _ := s.s.(*tcpServer)
-	tps.h = h
-	tps.operator = operator
-	tps.outChanMax = outChanSize
+	tps._h = h
+	tps._operator = operator
+	tps._outChanMax = outChanSize
 
 	s.b = resAssigned
 	if err := tps.listen(operator, addr); err != nil {
@@ -119,11 +119,11 @@ func OperTCPConnect(operator *actor.PID, addr string, outChanSize int) (int32, e
 	}
 
 	client := &tcpClient{}
-	client.h = h
-	client.o = operator
-	client.out = make(chan *NetChunk, outChanSize)
-	client.quit = make(chan int)
-	client.so = s
+	client._h = h
+	client._o = operator
+	client._out = make(chan *NetChunk, outChanSize)
+	client._quit = make(chan int)
+	client._so = s
 	err := client.connect(operator, addr)
 	if err != nil {
 		atomic.StoreInt32(&s.b, resIdle)
@@ -132,7 +132,7 @@ func OperTCPConnect(operator *actor.PID, addr string, outChanSize int) (int32, e
 
 	s.l.Lock()
 	s.s = client
-	client.w.Add(2)
+	client._w.Add(2)
 	go client.recv()
 	go client.write()
 	atomic.StoreInt32(&s.b, resAssigned)
@@ -151,11 +151,11 @@ func OperUDPListen(operator *actor.PID, addr string, outChanSize int) (int32, er
 	s.l.Lock()
 	s.s = &udpSocket{}
 	ups, _ := s.s.(*udpSocket)
-	ups.h = h
-	ups.so = s
-	ups.operator = operator
-	ups.out = make(chan *NetChunk, outChanSize)
-	ups.quit = make(chan int)
+	ups._h = h
+	ups._so = s
+	ups._operator = operator
+	ups._out = make(chan *NetChunk, outChanSize)
+	ups._quit = make(chan int)
 
 	s.b = resAssigned
 	if err := ups.listen(operator, addr); err != nil {
@@ -178,11 +178,11 @@ func OperUDPConnect(operator *actor.PID, srcAddr string, dstAddr string, outChan
 	}
 
 	client := &udpSocket{}
-	client.h = h
-	client.operator = operator
-	client.out = make(chan *NetChunk, outChanSize)
-	client.quit = make(chan int)
-	client.so = s
+	client._h = h
+	client._operator = operator
+	client._out = make(chan *NetChunk, outChanSize)
+	client._quit = make(chan int)
+	client._so = s
 
 	err := client.udpConnect(operator, srcAddr, dstAddr)
 	if err != nil {
@@ -191,7 +191,7 @@ func OperUDPConnect(operator *actor.PID, srcAddr string, dstAddr string, outChan
 	}
 	s.l.Lock()
 	s.s = client
-	client.netWait.Add(2)
+	client._netWait.Add(2)
 	go client.recv()
 	go client.write()
 	atomic.StoreInt32(&s.b, resAssigned)

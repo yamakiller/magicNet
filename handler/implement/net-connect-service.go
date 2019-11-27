@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/yamakiller/magicNet/engine/actor"
+	"github.com/yamakiller/magicNet/handler"
+	"github.com/yamakiller/magicNet/handler/net"
 	"github.com/yamakiller/magicNet/network"
-	"github.com/yamakiller/magicNet/service"
-	"github.com/yamakiller/magicNet/service/net"
 	"github.com/yamakiller/magicNet/timer"
 )
 
@@ -48,7 +48,7 @@ type INetConnectDeleate interface {
 
 //NetConnectService Internet connection service
 type NetConnectService struct {
-	service.Service
+	handler.Service
 	Handle     net.INetConnection
 	Deleate    INetConnectDeleate
 	Target     INetConnectTarget
@@ -68,7 +68,6 @@ func (slf *NetConnectService) Initial() {
 
 //Started Turn on network connect service
 func (slf *NetConnectService) Started(context actor.Context, sender *actor.PID, message interface{}) {
-	slf.WithPID(context)
 	slf.LogInfo("Service Startup address:%s read-buffer-limit:%d chan-buffer-size:%d",
 		slf.Target.GetAddr(),
 		slf.Handle.GetReceiveBufferLimit(),

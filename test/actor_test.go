@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/yamakiller/magicLibs/logger"
 	"github.com/yamakiller/magicNet/engine/actor"
-	"github.com/yamakiller/magicNet/engine/logger"
 )
 
 var wait sync.WaitGroup

@@ -43,7 +43,7 @@ func (slf *wsServer) listen(operator *actor.PID, addr string) error {
 		},
 	}
 
-	slf.maker = slf.wsMakeConn
+	slf._maker = slf.wsMakeConn
 	slf.httpMtx = http.NewServeMux()
 	slf.httpSrv = &http.Server{Addr: addr, Handler: slf.httpMtx}
 	slf.httpMtx.HandleFunc("/ws", slf.wsAccept)
@@ -53,7 +53,7 @@ func (slf *wsServer) listen(operator *actor.PID, addr string) error {
 		return err
 	}
 
-	slf.netWait.Add(1)
+	slf._netWait.Add(1)
 	go slf.serve(ln)
 
 	time.Sleep(time.Millisecond * 1)
@@ -61,14 +61,14 @@ func (slf *wsServer) listen(operator *actor.PID, addr string) error {
 }
 
 func (slf *wsServer) serve(ln net.Listener) {
-	defer slf.netWait.Done()
+	defer slf._netWait.Done()
 	for {
 		slf.httpErr = slf.httpSrv.Serve(wsTCPKeepAliveListener{ln.(*net.TCPListener)})
-		slf.isShutdown = true
+		slf._isShutdown = true
 		break
 	}
 
-	slf.conns.Range(func(handle interface{}, v interface{}) bool {
+	slf._conns.Range(func(handle interface{}, v interface{}) bool {
 		so := operGet(handle.(int32))
 		if so.b == resIdle {
 			return true
@@ -91,37 +91,37 @@ func (slf *wsServer) serve(ln net.Listener) {
 
 func (slf *wsServer) wsAccept(w http.ResponseWriter, r *http.Request) {
 
-	if slf.stat != Connected {
+	if slf._stat != Connected {
 		return
 	}
 
 	s, err := slf.waccept.Upgrade(w, r, nil)
 	if err != nil {
 		//错误日志
-		logger.Fatal(slf.operator.ID, "web socket accept fail:%v", err)
+		logger.Fatal(slf._operator.ID, "web socket accept fail:%v", err)
 		return
 	}
 
 	err = slf.accept(s, s.RemoteAddr().Network(), s.RemoteAddr().String())
 	if err != nil {
-		logger.Fatal(slf.operator.ID, "web socket accept fail:%v", err)
+		logger.Fatal(slf._operator.ID, "web socket accept fail:%v", err)
 	}
 }
 
 func (slf *wsServer) wsMakeConn(handle int32, s interface{}, operator *actor.PID, so *slot, now uint64, stat int32) ISocket {
 	conn := &wsConn{}
-	conn.h = handle
-	conn.s = s
-	conn.o = operator
-	conn.so = so
-	conn.stat = stat
-	conn.rv = wsConnRecv
-	conn.wr = wsConnWrite
-	conn.cls = wsConnClose
-	conn.out = make(chan *NetChunk, slf.outChanMax)
-	conn.quit = make(chan int)
-	conn.i.ReadLastTime = now
-	conn.i.WriteLastTime = now
+	conn._h = handle
+	conn._s = s
+	conn._o = operator
+	conn._so = so
+	conn._stat = stat
+	conn._rv = wsConnRecv
+	conn._wr = wsConnWrite
+	conn._cls = wsConnClose
+	conn._out = make(chan *NetChunk, slf._outChanMax)
+	conn._quit = make(chan int)
+	conn._i.RecvLastTime = now
+	conn._i.WriteLastTime = now
 
 	return conn
 }

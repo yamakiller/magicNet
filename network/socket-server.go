@@ -11,15 +11,15 @@ import (
 )
 
 type sServer struct {
-	h          int32
-	s          interface{}
-	maker      makeConn
-	operator   *actor.PID
-	conns      sync.Map
-	outChanMax int
-	netWait    sync.WaitGroup
-	stat       int32
-	isShutdown bool
+	_h          int32
+	_s          interface{}
+	_maker      makeConn
+	_operator   *actor.PID
+	_conns      sync.Map
+	_outChanMax int
+	_netWait    sync.WaitGroup
+	_stat       int32
+	_isShutdown bool
 }
 
 type makeConn func(handle int32, s interface{}, operator *actor.PID, so *slot, now uint64, stat int32) ISocket
@@ -39,13 +39,13 @@ func (slf *sServer) accept(conn interface{},
 
 	now := timer.Now()
 	so.l.Lock()
-	if slf.isShutdown {
+	if slf._isShutdown {
 		so.b = resIdle
 		so.l.Unlock()
 		return errors.New("server closed")
 	}
 
-	c := slf.maker(handle, conn, slf.operator, so, now, Connecting)
+	c := slf._maker(handle, conn, slf._operator, so, now, Connecting)
 	so.s = c
 
 	go c.recv()
@@ -54,11 +54,11 @@ func (slf *sServer) accept(conn interface{},
 	so.b = resAssigned
 	so.l.Unlock()
 
-	slf.conns.Store(handle, int32(1))
+	slf._conns.Store(handle, int32(1))
 
 	addr, _ := net.ResolveTCPAddr(network, address)
 
-	actor.DefaultSchedulerContext.Send(slf.operator, &NetAccept{Handle: handle, Addr: addr.IP.To16(), Port: addr.Port})
+	actor.DefaultSchedulerContext.Send(slf._operator, &NetAccept{Handle: handle, Addr: addr.IP.To16(), Port: addr.Port})
 
 	return nil
 }
@@ -92,15 +92,15 @@ func (slf *sServer) udpConnect(operator *actor.PID, srcAddr string, dstAddr stri
 }
 
 func (slf *sServer) getStat() int32 {
-	return slf.stat
+	return slf._stat
 }
 
 func (slf *sServer) setConnected() bool {
-	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
+	return atomic.CompareAndSwapInt32(&slf._stat, Connecting, Connected)
 }
 
 func (slf *sServer) closewait() {
-	slf.netWait.Wait()
+	slf._netWait.Wait()
 }
 
 func (slf *sServer) push(data *NetChunk, n int) error {

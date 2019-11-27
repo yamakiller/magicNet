@@ -18,13 +18,13 @@ func (slf *tcpClient) connect(operator *actor.PID, addr string) error {
 	}
 
 	now := timer.Now()
-	slf.s = c
-	slf.stat = Connecting
-	slf.rv = tcpConnRecv
-	slf.wr = tcpConnWrite
-	slf.cls = tcpConnClose
-	slf.i.ReadLastTime = now
-	slf.i.WriteLastTime = now
+	slf._s = c
+	slf._stat = Connecting
+	slf._rv = tcpConnRecv
+	slf._wr = tcpConnWrite
+	slf._cls = tcpConnClose
+	slf._i.RecvLastTime = now
+	slf._i.WriteLastTime = now
 
 	return nil
 }

@@ -14,17 +14,17 @@ import (
 )
 
 type udpSocket struct {
-	h        int32
-	s        *net.UDPConn
-	i        NetInfo
-	so       *slot
-	operator *actor.PID
-	netWait  sync.WaitGroup
-	out      chan *NetChunk
-	quit     chan int
-	outStat  int32
-	mode     int32
-	stat     int32
+	_h        int32
+	_s        *net.UDPConn
+	_i        NetInfo
+	_so       *slot
+	_operator *actor.PID
+	_netWait  sync.WaitGroup
+	_out      chan *NetChunk
+	_quit     chan int
+	_outStat  int32
+	_mode     int32
+	_stat     int32
 }
 
 func (slf *udpSocket) listen(operator *actor.PID, addr string) error {
@@ -38,10 +38,10 @@ func (slf *udpSocket) listen(operator *actor.PID, addr string) error {
 		return err
 	}
 
-	slf.s = ln
-	slf.mode = 0
-	slf.stat = Connecting
-	slf.netWait.Add(2)
+	slf._s = ln
+	slf._mode = 0
+	slf._stat = Connecting
+	slf._netWait.Add(2)
 	go slf.recv()
 	go slf.write()
 
@@ -61,108 +61,111 @@ func (slf *udpSocket) udpConnect(operator *actor.PID, srcAddr string, dstAddr st
 	if err != nil {
 		return err
 	}
-	slf.s = ln
-	slf.mode = 1
-	slf.stat = Connecting
+	slf._s = ln
+	slf._mode = 1
+	slf._stat = Connecting
 
 	return nil
 }
 
 func (slf *udpSocket) recv() {
-	defer slf.netWait.Done()
+	defer slf._netWait.Done()
 	for {
-		if slf.stat != Connecting && slf.stat != Connected {
+		if slf._stat != Connecting &&
+			slf._stat != Connected {
 			goto read_end
 		}
 
 		var inBuf []byte
-		n, addr, err := slf.s.ReadFrom(inBuf)
+		n, addr, err := slf._s.ReadFrom(inBuf)
 		if err != nil {
 			goto read_error
 		}
 
-		if slf.stat != Connected {
+		if slf._stat != Connected {
 			continue
 		}
 
-		slf.i.ReadBytes += uint64(n)
-		slf.i.ReadLastTime = timer.Now()
+		slf._i.RecvBytes += uint64(n)
+		slf._i.RecvLastTime = timer.Now()
 
 		udpAddr, _ := net.ResolveUDPAddr(addr.Network(), addr.String())
 
-		actor.DefaultSchedulerContext.Send(slf.operator, &NetChunk{Handle: slf.h, Data: inBuf, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)})
+		actor.DefaultSchedulerContext.Send(slf._operator, &NetChunk{Handle: slf._h, Data: inBuf, Addr: udpAddr.IP, Port: uint16(udpAddr.Port)})
 	}
 read_error:
-	slf.stat = Closing
-	slf.s.Close()
+	slf._stat = Closing
+	slf._s.Close()
 read_end:
 	var (
 		closeHandle   int32
 		closeOperator *actor.PID
 	)
 
-	slf.so.l.Lock()
-	closeHandle = slf.h
-	closeOperator = slf.operator
-	close(slf.quit)
-	//-----等待写协程结束------
+	slf._so.l.Lock()
+	closeHandle = slf._h
+	closeOperator = slf._operator
+	close(slf._quit)
+	//-----Waiting for the write coroutine to end------
 	for {
-		if atomic.CompareAndSwapInt32(&slf.outStat, 1, 1) {
+		if atomic.CompareAndSwapInt32(&slf._outStat, 1, 1) {
 			break
 		}
 	}
-	close(slf.out)
+	close(slf._out)
 
-	slf.so.s = nil
-	slf.so.b = resIdle
-	slf.so.l.Unlock()
+	slf._so.s = nil
+	slf._so.b = resIdle
+	slf._so.l.Unlock()
 
 	actor.DefaultSchedulerContext.Send(closeOperator, &NetClose{Handle: closeHandle})
 }
 
 func (slf *udpSocket) write() {
 	for {
-		if slf.stat != Connecting && slf.stat != Connected {
+		if slf._stat != Connecting &&
+			slf._stat != Connected {
 			goto write_end
 		}
 
 		select {
-		case msg := <-slf.out:
-			if slf.stat != Connecting && slf.stat != Connected {
+		case msg := <-slf._out:
+			if slf._stat != Connecting &&
+				slf._stat != Connected {
 				goto write_end
 			}
 
 			udpAddr, _ := net.ResolveUDPAddr("udp", fmt.Sprint(msg.Addr.String(), ":", msg.Port))
-			n, err := slf.s.WriteToUDP(msg.Data, udpAddr)
+			n, err := slf._s.WriteToUDP(msg.Data, udpAddr)
 			if err != nil {
-				//?
+				//TODO:  ?
 				goto write_error
 			}
 
-			slf.i.WriteBytes += uint64(n)
-			slf.i.WriteLastTime = timer.Now()
-		case <-slf.quit:
+			slf._i.WriteBytes += uint64(n)
+			slf._i.WriteLastTime = timer.Now()
+		case <-slf._quit:
 			goto write_end
 		}
 	}
 write_error:
-	slf.stat = Closing
+	slf._stat = Closing
 write_end:
-	slf.netWait.Done()
-	slf.outStat = 1
+	slf._netWait.Done()
+	slf._outStat = 1
 }
 
 func (slf *udpSocket) push(data *NetChunk, n int) error {
 	select {
-	case <-slf.quit:
+	case <-slf._quit:
 		return errors.New("conn closed")
 	default:
 	}
 
 	select {
-	case <-slf.quit:
+	case <-slf._quit:
 		return errors.New("conn closed")
-	case slf.out <- data:
+	case slf._out <- data:
 	}
 
 	return nil
@@ -177,15 +180,15 @@ func (slf *udpSocket) getKeepAive() uint64 {
 }
 
 func (slf *udpSocket) getLastActivedTime() uint64 {
-	return slf.i.ReadLastTime
+	return slf._i.RecvLastTime
 }
 
 func (slf *udpSocket) getStat() int32 {
-	return slf.stat
+	return slf._stat
 }
 
 func (slf *udpSocket) setConnected() bool {
-	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
+	return atomic.CompareAndSwapInt32(&slf._stat, Connecting, Connected)
 }
 
 func (slf *udpSocket) close(lck *mutex.ReSpinLock) {
@@ -193,9 +196,9 @@ func (slf *udpSocket) close(lck *mutex.ReSpinLock) {
 		lck.Lock()
 	}
 
-	if slf.stat != Closing {
-		slf.stat = Closing
-		slf.s.Close()
+	if slf._stat != Closing {
+		slf._stat = Closing
+		slf._s.Close()
 	}
 
 	if lck != nil {
@@ -204,7 +207,7 @@ func (slf *udpSocket) close(lck *mutex.ReSpinLock) {
 }
 
 func (slf *udpSocket) closewait() {
-	slf.netWait.Wait()
+	slf._netWait.Wait()
 }
 
 func (slf *udpSocket) getProto() string {
@@ -212,7 +215,7 @@ func (slf *udpSocket) getProto() string {
 }
 
 func (slf *udpSocket) getType() int {
-	if slf.mode == 0 {
+	if slf._mode == 0 {
 		return CListen
 	}
 	return CClient

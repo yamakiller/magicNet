@@ -11,7 +11,7 @@ import (
 
 type tcpServer struct {
 	sServer
-	s *net.TCPListener
+	_s *net.TCPListener
 }
 
 func (slf *tcpServer) listen(operator *actor.PID, addr string) error {
@@ -26,10 +26,10 @@ func (slf *tcpServer) listen(operator *actor.PID, addr string) error {
 		return err
 	}
 
-	slf.s = ln
-	slf.maker = slf.makeConn
+	slf._s = ln
+	slf._maker = slf.makeConn
 
-	slf.netWait.Add(1)
+	slf._netWait.Add(1)
 	go slf.serve(ln)
 
 	time.Sleep(time.Millisecond * 1)
@@ -37,25 +37,25 @@ func (slf *tcpServer) listen(operator *actor.PID, addr string) error {
 }
 
 func (slf *tcpServer) serve(ln net.Listener) {
-	defer slf.netWait.Done()
+	defer slf._netWait.Done()
 	for {
 
-		s, err := slf.s.AcceptTCP()
+		s, err := slf._s.AcceptTCP()
 		if err != nil {
-			logger.Error(slf.operator.ID, "socket accept fail:%s", err.Error())
-			slf.isShutdown = true
+			logger.Error(slf._operator.ID, "socket accept fail:%s", err.Error())
+			slf._isShutdown = true
 			break
 		}
 		s.SetNoDelay(true)
 
 		err = slf.accept(s, s.RemoteAddr().Network(), s.RemoteAddr().String())
 		if err != nil {
-			logger.Fatal(slf.operator.ID, "socket accept fail:%v", err)
+			logger.Fatal(slf._operator.ID, "socket accept fail:%v", err)
 		}
 	}
 
 	//------------------关闭所有连接-----------------------------
-	slf.conns.Range(func(handle interface{}, v interface{}) bool {
+	slf._conns.Range(func(handle interface{}, v interface{}) bool {
 		so := operGet(handle.(int32))
 		if so.b == resIdle {
 			return true
@@ -80,21 +80,27 @@ func (slf *tcpServer) keeploop() {
 
 }
 
-func (slf *tcpServer) makeConn(handle int32, s interface{}, operator *actor.PID, so *slot, now uint64, stat int32) ISocket {
+func (slf *tcpServer) makeConn(handle int32,
+	s interface{},
+	operator *actor.PID,
+	so *slot,
+	now uint64,
+	stat int32) ISocket {
+
 	conn := &tcpConn{}
-	conn.h = handle
-	conn.s = s
-	conn.o = operator
-	conn.so = so
-	conn.stat = stat
-	conn.rv = tcpConnRecv
-	conn.wr = tcpConnWrite
-	conn.cls = tcpConnClose
-	conn.out = make(chan *NetChunk, slf.outChanMax)
-	conn.quit = make(chan int)
-	conn.i.ReadLastTime = now
-	conn.i.WriteLastTime = now
-	conn.w.Add(2)
+	conn._h = handle
+	conn._s = s
+	conn._o = operator
+	conn._so = so
+	conn._stat = stat
+	conn._rv = tcpConnRecv
+	conn._wr = tcpConnWrite
+	conn._cls = tcpConnClose
+	conn._out = make(chan *NetChunk, slf._outChanMax)
+	conn._quit = make(chan int)
+	conn._i.RecvLastTime = now
+	conn._i.WriteLastTime = now
+	conn._w.Add(2)
 	return conn
 }
 
@@ -106,5 +112,5 @@ func (slf *tcpServer) getType() int {
 }
 
 func (slf *tcpServer) close(lck *mutex.ReSpinLock) {
-	slf.s.Close()
+	slf._s.Close()
 }

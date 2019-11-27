@@ -64,8 +64,8 @@ type NetClose struct {
 type NetInfo struct {
 	WriteBytes    uint64
 	WriteLastTime uint64
-	ReadBytes     uint64
-	ReadLastTime  uint64
+	RecvBytes     uint64
+	RecvLastTime  uint64
 }
 
 // ISocket : 套接字接口

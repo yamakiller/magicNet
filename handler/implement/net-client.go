@@ -82,8 +82,3 @@ func (nc *NetClient) DecRef() int {
 func (nc *NetClient) GetStat() *NetStat {
 	return &nc._stat
 }
-
-//Shutdown termination client
-/*func (nc *NetClient) Shutdown() {
-
-}*/

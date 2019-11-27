@@ -11,14 +11,14 @@ type tcpConn struct {
 }
 
 func (slf *tcpConn) setKeepAive(keep uint64) {
-	slf.keepAive = keep
-	if conn, ok := slf.s.(*net.TCPConn); ok {
-		if slf.keepAive > 0 {
+	slf._keepAive = keep
+	if conn, ok := slf._s.(*net.TCPConn); ok {
+		if slf._keepAive > 0 {
 			conn.SetKeepAlive(true)
-			conn.SetKeepAlivePeriod(time.Duration(slf.keepAive) * time.Millisecond)
+			conn.SetKeepAlivePeriod(time.Duration(slf._keepAive) * time.Millisecond)
 		} else {
 			conn.SetKeepAlive(false)
-			conn.SetKeepAlivePeriod(time.Duration(slf.keepAive))
+			conn.SetKeepAlivePeriod(time.Duration(slf._keepAive))
 		}
 	}
 }

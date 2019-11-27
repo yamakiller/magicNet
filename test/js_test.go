@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/yamakiller/magicNet/script"
+	"github.com/yamakiller/magicLibs/script"
 )
 
 // TestJSStack : xxx

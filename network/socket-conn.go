@@ -11,21 +11,21 @@ import (
 )
 
 type sConn struct {
-	h        int32
-	s        interface{}
-	w        sync.WaitGroup
-	o        *actor.PID
-	i        NetInfo
-	rv       recvFunc
-	wr       writeFunc
-	cls      closeFunc
-	so       *slot
-	srv      *sServer
-	out      chan *NetChunk
-	quit     chan int
-	outStat  int32  //out状态
-	keepAive uint64 // 毫秒
-	stat     int32
+	_h        int32
+	_s        interface{}
+	_w        sync.WaitGroup
+	_o        *actor.PID
+	_i        NetInfo
+	_rv       recvFunc
+	_wr       writeFunc
+	_cls      closeFunc
+	_so       *slot
+	_srv      *sServer
+	_out      chan *NetChunk
+	_quit     chan int
+	_outStat  int32  //out状态
+	_keepAive uint64 // 毫秒
+	_stat     int32
 }
 
 type recvFunc func(interface{}) (int, []byte, error)
@@ -45,126 +45,129 @@ func (slf *sConn) udpConnect(operator *actor.PID, srcAddr string, dstAddr string
 }
 
 func (slf *sConn) recv() {
-	defer slf.w.Done()
+	defer slf._w.Done()
 	for {
-		if slf.stat != Connecting && slf.stat != Connected {
+		if slf._stat != Connecting &&
+			slf._stat != Connected {
 			goto read_end
 		}
 
-		n, data, err := slf.rv(slf.s)
+		n, data, err := slf._rv(slf._s)
 		if err != nil {
 			//? Log error log
 			goto read_error
 		}
 
 		// Discard data
-		if slf.stat != Connected {
+		if slf._stat != Connected {
 			continue
 		}
 
-		slf.i.ReadBytes += uint64(n)
-		slf.i.ReadLastTime = timer.Now()
+		slf._i.RecvBytes += uint64(n)
+		slf._i.RecvLastTime = timer.Now()
 		//Forwarding data  message
-		actor.DefaultSchedulerContext.Send(slf.o, &NetChunk{Handle: slf.h, Data: data[:n]})
+		actor.DefaultSchedulerContext.Send(slf._o, &NetChunk{Handle: slf._h, Data: data[:n]})
 	}
 read_error:
-	slf.stat = Closing
-	slf.cls(slf.s)
+	slf._stat = Closing
+	slf._cls(slf._s)
 read_end:
 	var (
 		closeHandle   int32
 		closeOperator *actor.PID
 	)
-	slf.so.l.Lock()
-	closeHandle = slf.h
-	closeOperator = slf.o
-	close(slf.quit)
+	slf._so.l.Lock()
+	closeHandle = slf._h
+	closeOperator = slf._o
+	close(slf._quit)
 
 	//-----Waiting for the end of the write corout------
 	for {
-		if atomic.CompareAndSwapInt32(&slf.outStat, 1, 1) {
+		if atomic.CompareAndSwapInt32(&slf._outStat, 1, 1) {
 			break
 		}
 	}
 
-	close(slf.out)
+	close(slf._out)
 	//----------------------
-	if slf.srv != nil {
-		slf.srv.conns.Delete(slf.h)
+	if slf._srv != nil {
+		slf._srv._conns.Delete(slf._h)
 	}
 
-	slf.so.s = nil
-	slf.so.b = resIdle
-	slf.so.l.Unlock()
+	slf._so.s = nil
+	slf._so.b = resIdle
+	slf._so.l.Unlock()
 
 	actor.DefaultSchedulerContext.Send(closeOperator, &NetClose{Handle: closeHandle})
 }
 
 func (slf *sConn) write() {
-	defer slf.w.Done()
+	defer slf._w.Done()
 	for {
-		if slf.stat != Connecting && slf.stat != Connected {
+		if slf._stat != Connecting &&
+			slf._stat != Connected {
 			goto write_end
 		}
 
 		select {
-		case msg := <-slf.out:
-			if slf.stat != Connecting && slf.stat != Connected {
+		case msg := <-slf._out:
+			if slf._stat != Connecting &&
+				slf._stat != Connected {
 				goto write_end
 			}
 
-			n, err := slf.wr(slf.s, msg.Data)
+			n, err := slf._wr(slf._s, msg.Data)
 			if err != nil {
 				goto write_error
 			}
 
-			slf.i.WriteBytes += uint64(n)
-			slf.i.WriteLastTime = timer.Now()
-		case <-slf.quit:
+			slf._i.WriteBytes += uint64(n)
+			slf._i.WriteLastTime = timer.Now()
+		case <-slf._quit:
 			goto write_end
 		}
 	}
 write_error:
-	slf.stat = Closing
+	slf._stat = Closing
 write_end:
-	slf.outStat = 1
+	slf._outStat = 1
 }
 
 func (slf *sConn) push(data *NetChunk, n int) error {
 	select {
-	case <-slf.quit:
+	case <-slf._quit:
 		return errors.New("conn closed")
 	default:
 	}
 
 	select {
-	case <-slf.quit:
+	case <-slf._quit:
 		return errors.New("conn closed")
-	case slf.out <- data:
+	case slf._out <- data:
 	}
 
 	return nil
 }
 
 func (slf *sConn) setKeepAive(keep uint64) {
-	slf.keepAive = keep
+	slf._keepAive = keep
 }
 
 func (slf *sConn) getKeepAive() uint64 {
 
-	return slf.keepAive
+	return slf._keepAive
 }
 
 func (slf *sConn) getLastActivedTime() uint64 {
-	return slf.i.ReadLastTime
+	return slf._i.RecvLastTime
 }
 
 func (slf *sConn) getStat() int32 {
-	return slf.stat
+	return slf._stat
 }
 
 func (slf *sConn) setConnected() bool {
-	return atomic.CompareAndSwapInt32(&slf.stat, Connecting, Connected)
+	return atomic.CompareAndSwapInt32(&slf._stat, Connecting, Connected)
 }
 
 func (slf *sConn) close(lck *mutex.ReSpinLock) {
@@ -172,9 +175,9 @@ func (slf *sConn) close(lck *mutex.ReSpinLock) {
 		lck.Lock()
 	}
 
-	if slf.stat != Closing {
-		slf.stat = Closing
-		slf.cls(slf.s)
+	if slf._stat != Closing {
+		slf._stat = Closing
+		slf._cls(slf._s)
 	}
 
 	if lck != nil {
@@ -183,5 +186,5 @@ func (slf *sConn) close(lck *mutex.ReSpinLock) {
 }
 
 func (slf *sConn) closewait() {
-	slf.w.Wait()
+	slf._w.Wait()
 }

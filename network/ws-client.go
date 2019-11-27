@@ -18,13 +18,13 @@ func (slf *wsClient) connect(operator *actor.PID, addr string) error {
 	}
 
 	now := timer.Now()
-	slf.s = c
-	slf.stat = Connecting
-	slf.rv = wsConnRecv
-	slf.wr = wsConnWrite
-	slf.cls = wsConnClose
-	slf.i.ReadLastTime = now
-	slf.i.WriteLastTime = now
+	slf._s = c
+	slf._stat = Connecting
+	slf._rv = wsConnRecv
+	slf._wr = wsConnWrite
+	slf._cls = wsConnClose
+	slf._i.RecvLastTime = now
+	slf._i.WriteLastTime = now
 	return nil
 }
 
