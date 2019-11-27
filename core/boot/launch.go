@@ -42,4 +42,5 @@ func Launch(f frame.SpawnFrame) {
 	}
 end:
 	fme.CloseService()
+	fme.Destory()
 }
