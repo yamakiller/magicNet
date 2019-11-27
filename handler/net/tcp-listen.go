@@ -6,17 +6,26 @@ import (
 	"github.com/yamakiller/magicNet/network"
 )
 
-//TCPListen TCP listener
+//TCPListen desc:
+//@struct TCPListen desc: TCP listener
+//@member (int32) TCP listen service socket id
 type TCPListen struct {
 	_s int32
 }
 
-//Name Features
+//Name desc
+//@method Name desc: Features
+//@return (string)
 func (slf *TCPListen) Name() string {
 	return "TCP/IP"
 }
 
-// Listen Start listening
+//Listen desc
+//@method Listen desc: Start listening
+//@param (actor.Context) Service context
+//@param (string) listen address
+//@param (int)    Revice Data Chan size
+//@return (error) listen fail return error
 func (slf *TCPListen) Listen(context actor.Context,
 	addr string,
 	ccmax int) error {
@@ -30,7 +39,8 @@ func (slf *TCPListen) Listen(context actor.Context,
 	return nil
 }
 
-// Close Turn off listening
+//Close desc
+//@method Close desc: Turn off listening
 func (slf *TCPListen) Close() {
 	if net.InvalidSocket(slf._s) {
 		network.OperClose(slf._s)
