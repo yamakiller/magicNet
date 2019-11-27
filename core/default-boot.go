@@ -73,6 +73,7 @@ func (slf *DefaultBoot) Initial() error {
 //Destory desc
 //@method Destory desc: destory system reouse
 func (slf *DefaultBoot) Destory() {
+	logger.Info(0, "Destory")
 	if slf._log != nil {
 		slf._log.Close()
 		slf._log = nil

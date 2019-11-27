@@ -17,8 +17,7 @@ type DefaultWait struct {
 //Enter desc
 //@method Enter desc: enter system
 func (slf *DefaultWait) Enter() {
-
-	if !monitor.IsShutdown() {
+	if monitor.IsShutdown() {
 		return
 	}
 

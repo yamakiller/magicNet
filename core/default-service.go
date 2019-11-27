@@ -15,5 +15,4 @@ func (slf *DefaultService) InitService() error {
 //CloseService desc
 //@method CloseService desc
 func (slf *DefaultService) CloseService() {
-
 }
