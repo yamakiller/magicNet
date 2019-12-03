@@ -3,13 +3,16 @@
 #file="/etc/profile"
 file="/etc/profile_test"
 GOLANG_ENV=$1
+echo "setup golang development environment"
 
 if [ ! -n "$1" ]; then
+    echo "===>Setting environment variables<==="
     sed -i '$a export PATH=$PATH;$GOLANG_ENV/bin' $file
     sed -i '$a export GOPATH=$GOLANG_ENV'
     source /etc/profile
+    echo "===>Environment variable setting completed<==="
 fi
-
+echo "Start installing development library"
 git clone https://github.com/golang/tools  ${GOPATH}/src/golang.org/x/tools
 git clone https://github.com/golang/lint   ${GOPATH}/src/golang.org/x/lint
 git clone https://github.com/golang/crypto ${GOPATH}/src/golang.org/x/crypto
@@ -60,3 +63,6 @@ git clone https://github.com/gorilla/websocket %GOPATH%/src/github.com/gorilla/w
 git clone https://github.com/grpc/grpc-go %GOPATH%/src/google.golang.org/grpc
 git clone https://github.com/google/go-genproto %GOPATH%/src/google.golang.org/genproto
 git clone https://github.com/yamakiller/mgolua  %GOPATH%/src/github.com/yamakiller/mgolua
+
+echo "installation is complete"
+echo "setup golang development environment complate"

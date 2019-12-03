@@ -2,16 +2,16 @@
 
 set envPath = %0
 set envNull = ""
-@echo setup golang development environment
+@echo installing golang development environment
 
 if %envPath% equ %envNull%
-    echo "===>设置环境变量<==="
+    echo "===>Setting environment variables<==="
     set ENV_PATH=%PATH%
     set GO_ENV_BINPATH=%envPath%\bin
     setx /m PATH=%PATH%;%GO_ENV_BINPATH%
     setx /m GOPATH=%envPath%
-    echo "===>环境变量设置完成<==="
-echo "开始安装库"
+    echo "===>Environment variable setting completed<==="
+echo "Start installing development library"
 git clone https://github.com/golang/tools  %GOPATH%\src\golang.org\x\tools
 git clone https://github.com/golang/lint   %GOPATH%\src\golang.org\x\lint
 git clone https://github.com/golang/crypto %GOPATH%\src\golang.org\x\crypto
@@ -63,5 +63,6 @@ git clone https://github.com/grpc/grpc-go %GOPATH%\src\google.golang.org\grpc
 git clone https://github.com/google/go-genproto %GOPATH%\src\google.golang.org\genproto
 git clone https://github.com/yamakiller/mgolua  %GOPATH%\src\github.com\yamakiller\mgolua
 
-echo "安装完成"
+echo "installation is complete"
+@echo installed golang development environment complate
 pause
