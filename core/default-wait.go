@@ -8,14 +8,14 @@ import (
 )
 
 //DefaultWait desc
-//@struct DefaultWait desc: Default main loop body
-//@member (*util.SignalWatch) watch exit signal
+//@Struct DefaultWait desc: Default main loop body
+//@Member (*util.SignalWatch) watch exit signal
 type DefaultWait struct {
 	_sw *util.SignalWatch
 }
 
 //Enter desc
-//@method Enter desc: enter system
+//@Method Enter desc: enter system
 func (slf *DefaultWait) Enter() {
 	if monitor.IsShutdown() {
 		return
@@ -27,8 +27,8 @@ func (slf *DefaultWait) Enter() {
 }
 
 //Wait desc
-//@method Wait desc: Waiting for the system to be terminated
-//@return (int) 0:continue -1:eixt
+//@Method Wait desc: Waiting for the system to be terminated
+//@Return (int) 0:continue -1:eixt
 func (slf *DefaultWait) Wait() int {
 	if !monitor.IsShutdown() {
 		time.Sleep(time.Millisecond * 1000)

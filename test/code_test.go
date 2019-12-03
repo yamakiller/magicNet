@@ -8,7 +8,7 @@ import (
 )
 
 //TestDir Desc:
-//@method TestDir desc: test Getwd()
+//@Method TestDir desc: test Getwd()
 func TestDir(t *testing.T) {
 	dir, err := os.Getwd()
 

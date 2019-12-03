@@ -33,7 +33,7 @@ func init() {
 }
 
 //DeadLetterEvent desc
-//@struct DeadLetterEvent desc:  Death news
+//@Struct DeadLetterEvent desc:  Death news
 type DeadLetterEvent struct {
 	PID     *PID
 	Message interface{}
@@ -41,9 +41,9 @@ type DeadLetterEvent struct {
 }
 
 //SendUsrMessage desc
-//@method SendUsrMessage desc: send a user message to death subscribe
-//@param (PID) dest actor ID
-//@param (interface{}) message
+//@Method SendUsrMessage desc: send a user message to death subscribe
+//@Param (PID) dest actor ID
+//@Param (interface{}) message
 func (*deathLetterProcess) SendUsrMessage(pid *PID, message interface{}) {
 	_, msg, sender := UnWrapPack(message)
 	evtchan.Publish(&DeadLetterEvent{
@@ -54,9 +54,9 @@ func (*deathLetterProcess) SendUsrMessage(pid *PID, message interface{}) {
 }
 
 //SendSysMessage desc
-//@method SendSysMessage desc: send a system message to death subscribe
-//@param (PID) dest actor ID
-//@param (interface{}) message
+//@Method SendSysMessage desc: send a system message to death subscribe
+//@Param (PID) dest actor ID
+//@Param (interface{}) message
 func (*deathLetterProcess) SendSysMessage(pid *PID, message interface{}) {
 	evtchan.Publish(&DeadLetterEvent{
 		PID:     pid,
@@ -65,15 +65,15 @@ func (*deathLetterProcess) SendSysMessage(pid *PID, message interface{}) {
 }
 
 //OverloadUsrMessage desc
-//@method OverloadUsrMessage desc: user mesage queue overload
-//@return (int) user mesage queue overload of number
+//@Method OverloadUsrMessage desc: user mesage queue overload
+//@Return (int) user mesage queue overload of number
 func (*deathLetterProcess) OverloadUsrMessage() int {
 	return 0
 }
 
 //Stop desc
-//@method Stop desc: send stop message
-//@param (PID) dest actor ID
+//@Method Stop desc: send stop message
+//@Param (PID) dest actor ID
 func (slf *deathLetterProcess) Stop(pid *PID) {
 	slf.SendSysMessage(pid, stopMessage)
 }

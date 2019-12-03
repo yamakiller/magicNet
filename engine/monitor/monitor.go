@@ -1,12 +1,12 @@
 package monitor
 
 //IMonitor desc
-//@interface IMonitor desc: Monitor model interface
-//@method (IsShutdown() bool) Whether the system has been closed
-//@method (Shutdown()) Shut down system
-//@method (IncService()) Add a service
-//@method (DecService()) Reduce a service
-//@method (WaitService()) Waiting for all services to end
+//@Interface IMonitor desc: Monitor model interface
+//@Method (IsShutdown() bool) Whether the system has been closed
+//@Method (Shutdown()) Shut down system
+//@Method (IncService()) Add a service
+//@Method (DecService()) Reduce a service
+//@Method (WaitService()) Waiting for all services to end
 type IMonitor interface {
 	IsShutdown() bool
 	Shutdown()
@@ -18,15 +18,15 @@ type IMonitor interface {
 var systemMonitor IMonitor
 
 //WithMonitor desc
-//@method WithMonitor desc: Setting up the system monitor
-//@param (IMonitor) monitor instance
+//@Method WithMonitor desc: Setting up the system monitor
+//@Param (IMonitor) monitor instance
 func WithMonitor(m IMonitor) {
 	systemMonitor = m
 }
 
 //IsShutdown desc
-//@method IsShutdown desc: Whether the system has been terminated
-//@return (bool)
+//@Method IsShutdown desc: Whether the system has been terminated
+//@Return (bool)
 func IsShutdown() bool {
 	if systemMonitor == nil {
 		return defMonitor.IsShutdown()
@@ -35,7 +35,7 @@ func IsShutdown() bool {
 }
 
 //Shutdown desc
-//@method Shutdown desc: Termination system
+//@Method Shutdown desc: Termination system
 func Shutdown() {
 	if systemMonitor == nil {
 		defMonitor.Shutdown()
@@ -45,7 +45,7 @@ func Shutdown() {
 }
 
 //IncService desc
-//@method IncService desc: Add a service
+//@Method IncService desc: Add a service
 func IncService() {
 	if systemMonitor == nil {
 		defMonitor.IncService()
@@ -55,7 +55,7 @@ func IncService() {
 }
 
 //DecService desc
-//@method DecService desc: Reduce a service
+//@Method DecService desc: Reduce a service
 func DecService() {
 	if systemMonitor == nil {
 		defMonitor.DecService()
@@ -65,7 +65,7 @@ func DecService() {
 }
 
 //WaitService desc
-//@method WaitService desc: Waiting for all services to end
+//@Method WaitService desc: Waiting for all services to end
 func WaitService() {
 	if systemMonitor == nil {
 		defMonitor.WaitService()

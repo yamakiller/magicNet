@@ -61,7 +61,10 @@ git clone https://github.com/golang/protobuf %GOPATH%\src\github.com\golang\prot
 git clone https://github.com/gorilla/websocket %GOPATH%\src\github.com\gorilla\websocket
 git clone https://github.com/grpc/grpc-go %GOPATH%\src\google.golang.org\grpc
 git clone https://github.com/google/go-genproto %GOPATH%\src\google.golang.org\genproto
+git clone -b v2 https:/github.com/go-yaml/yaml %GOPATH%\src\gopkg.in\yaml.v2
 git clone https://github.com/yamakiller/mgolua  %GOPATH%\src\github.com\yamakiller\mgolua
+git clone https://github.com/yamakiller/magicLibs %GOPATH%\src\github.com\yamakiller\magicLibs
+git clone https://github.com/yamakiller/magicNet  %GOPATH%\src\github.com\yamakiller\magicNet
 
 echo "installation is complete"
 @echo installed golang development environment complate

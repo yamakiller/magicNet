@@ -6,7 +6,7 @@ import (
 )
 
 //TestChan desc:
-//@method TestChan desc: test channge
+//@Method TestChan desc: test channge
 func TestChan(t *testing.T) {
 	u := make(chan int)
 	go func() {

@@ -45,7 +45,7 @@ func (state *tellerActor) Receive(context actor.Context) {
 }
 
 //TestActorContext desc
-//@method TestActorContext desc: test actor context
+//@Method TestActorContext desc: test actor context
 func TestActorContext(t *testing.T) {
 	schedulerContext := actor.DefaultSchedulerContext
 	wait.Add(100 * 1000)

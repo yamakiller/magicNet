@@ -7,14 +7,14 @@ import (
 )
 
 //Queue desc
-//@struct Queue desc : Automatic extension queue
-//@member (int) queue cap size
-//@member (int) queue head pos
-//@member (int) queue tail pos
-//@member (int) queue overload of number
-//@member (int) queue overlaod threshold
-//@member ([]interface{}) queue pools
-//@member (sync.Mutex)
+//@Struct Queue desc : Automatic extension queue
+//@Member (int) queue cap size
+//@Member (int) queue head pos
+//@Member (int) queue tail pos
+//@Member (int) queue overload of number
+//@Member (int) queue overlaod threshold
+//@Member ([]interface{}) queue pools
+//@Member (sync.Mutex)
 type Queue struct {
 	cap  int
 	head int
@@ -28,9 +28,9 @@ type Queue struct {
 }
 
 //NewQueue desc
-//@method NewQueue desc: Create a new Automatic extension queue
-//@param  (int) initial size
-//@return (*Queue)
+//@Method NewQueue desc: Create a new Automatic extension queue
+//@Param  (int) initial size
+//@Return (*Queue)
 func NewQueue(initialSize int) *Queue {
 	return &Queue{cap: initialSize,
 		head:              0,
@@ -41,8 +41,8 @@ func NewQueue(initialSize int) *Queue {
 }
 
 //Push desc
-//@method Push desc: Insert an object
-//@param (interface{}) item
+//@Method Push desc: Insert an object
+//@Param (interface{}) item
 func (q *Queue) Push(item interface{}) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
@@ -50,9 +50,9 @@ func (q *Queue) Push(item interface{}) {
 }
 
 //Pop desc
-//@method Pop desc: Take an object, If empty return nil
-//@return (interface{}) return object
-//@return (bool)
+//@Method Pop desc: Take an object, If empty return nil
+//@Return (interface{}) return object
+//@Return (bool)
 func (q *Queue) Pop() (interface{}, bool) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
@@ -60,8 +60,8 @@ func (q *Queue) Pop() (interface{}, bool) {
 }
 
 //Overload desc
-//@method Overload desc: Detecting queues exceeding the limit [mainly used for warning records]
-//@return (int)
+//@Method Overload desc: Detecting queues exceeding the limit [mainly used for warning records]
+//@Return (int)
 func (q *Queue) Overload() int {
 	if q.overload != 0 {
 		overload := q.overload
@@ -72,8 +72,8 @@ func (q *Queue) Overload() int {
 }
 
 //Length desc
-//@method Length desc: Length of the queue
-//@return (int) length
+//@Method Length desc: Length of the queue
+//@Return (int) length
 func (q *Queue) Length() int {
 	var (
 		head int

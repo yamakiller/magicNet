@@ -6,13 +6,13 @@ type DefaultService struct {
 }
 
 //InitService desc
-//@method InitService desc
-//@return (error)
+//@Method InitService desc
+//@Return (error)
 func (slf *DefaultService) InitService() error {
 	return nil
 }
 
 //CloseService desc
-//@method CloseService desc
+//@Method CloseService desc
 func (slf *DefaultService) CloseService() {
 }

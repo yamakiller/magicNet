@@ -31,7 +31,7 @@ type waitPart interface {
 }
 
 //Framework desc:
-//@interface Framework desc: system frame
+//@Interface Framework desc: system frame
 type Framework interface {
 	bootPart
 	waitPart

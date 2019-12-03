@@ -10,8 +10,8 @@ import (
 )
 
 //Launch desc
-//@method Launch desc: Start function
-//@param (frame.SpawnFrame) Start framework
+//@Method Launch desc: Start function
+//@Param (frame.SpawnFrame) Start framework
 func Launch(f frame.SpawnFrame) {
 	args.Instance().Parse()
 	dTrace := debug.TraceDebug{}

@@ -3,7 +3,7 @@ package mailbox
 import "github.com/yamakiller/magicLibs/coroutine"
 
 //Dispatcher desc
-//@interface Dispatcher desc: Publisher interface
+//@Interface Dispatcher desc: Publisher interface
 type Dispatcher interface {
 	Schedule(fn func([]interface{}))
 	Throughput() int
@@ -12,8 +12,8 @@ type Dispatcher interface {
 type goroutineDispatcher int
 
 //Schedule desc
-//@method Schedule desc
-//@param (func([]interface{})) Running function
+//@Method Schedule desc
+//@Param (func([]interface{})) Running function
 func (d goroutineDispatcher) Schedule(fn func([]interface{})) {
 	coroutine.Instance().Go(fn)
 }
@@ -23,7 +23,7 @@ func (d goroutineDispatcher) Throughput() int {
 }
 
 //NewGoroutineDispatcher desc
-//@method NewGoroutineDispatcher desc: Create a distributor with a coroutine
+//@Method NewGoroutineDispatcher desc: Create a distributor with a coroutine
 func NewGoroutineDispatcher(throughput int) Dispatcher {
 	return goroutineDispatcher(throughput)
 }
@@ -39,7 +39,7 @@ func (d synchronizedDispatcher) Throughput() int {
 }
 
 //NewSynchronizedDispatcher desc
-//@method NetSynchronizedDispatcher desc: Create a new synchronous distributor
+//@Method NetSynchronizedDispatcher desc: Create a new synchronous distributor
 func NewSynchronizedDispatcher(throughput int) Dispatcher {
 	return synchronizedDispatcher(throughput)
 }

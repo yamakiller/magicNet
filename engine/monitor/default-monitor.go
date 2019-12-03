@@ -1,7 +1,7 @@
 package monitor
 
 //DefaultMonitor desc
-//@struct defaultMonitor desc: Default monitor
+//@Struct defaultMonitor desc: Default monitor
 type defaultMonitor struct {
 	isShutdown bool
 }
