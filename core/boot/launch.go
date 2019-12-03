@@ -9,8 +9,8 @@ import (
 	"github.com/yamakiller/magicNet/timer"
 )
 
-//Launch desc
-//@Method Launch desc: Start function
+//Launch doc
+//@Method Launch @Summary Start function
 //@Param (frame.SpawnFrame) Start framework
 func Launch(f frame.SpawnFrame) {
 	args.Instance().Parse()

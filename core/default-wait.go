@@ -7,15 +7,15 @@ import (
 	"github.com/yamakiller/magicNet/engine/monitor"
 )
 
-//DefaultWait desc
-//@Struct DefaultWait desc: Default main loop body
+//DefaultWait doc
+//@Struct DefaultWait @Summary Default main loop body
 //@Member (*util.SignalWatch) watch exit signal
 type DefaultWait struct {
 	_sw *util.SignalWatch
 }
 
-//Enter desc
-//@Method Enter desc: enter system
+//Enter doc
+//@Method Enter @Summary enter system
 func (slf *DefaultWait) Enter() {
 	if monitor.IsShutdown() {
 		return
@@ -26,8 +26,8 @@ func (slf *DefaultWait) Enter() {
 	slf._sw.Watch()
 }
 
-//Wait desc
-//@Method Wait desc: Waiting for the system to be terminated
+//Wait doc
+//@Method Wait @Summary Waiting for the system to be terminated
 //@Return (int) 0:continue -1:eixt
 func (slf *DefaultWait) Wait() int {
 	if !monitor.IsShutdown() {

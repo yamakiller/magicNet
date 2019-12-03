@@ -1,7 +1,7 @@
 package monitor
 
-//IMonitor desc
-//@Interface IMonitor desc: Monitor model interface
+//IMonitor doc
+//@Interface IMonitor @Summary Monitor model interface
 //@Method (IsShutdown() bool) Whether the system has been closed
 //@Method (Shutdown()) Shut down system
 //@Method (IncService()) Add a service
@@ -17,15 +17,15 @@ type IMonitor interface {
 
 var systemMonitor IMonitor
 
-//WithMonitor desc
-//@Method WithMonitor desc: Setting up the system monitor
+//WithMonitor doc
+//@Method WithMonitor @Summary Setting up the system monitor
 //@Param (IMonitor) monitor instance
 func WithMonitor(m IMonitor) {
 	systemMonitor = m
 }
 
-//IsShutdown desc
-//@Method IsShutdown desc: Whether the system has been terminated
+//IsShutdown doc
+//@Method IsShutdown @Summary Whether the system has been terminated
 //@Return (bool)
 func IsShutdown() bool {
 	if systemMonitor == nil {
@@ -34,8 +34,8 @@ func IsShutdown() bool {
 	return systemMonitor.IsShutdown()
 }
 
-//Shutdown desc
-//@Method Shutdown desc: Termination system
+//Shutdown doc
+//@Method Shutdown @Summary Termination system
 func Shutdown() {
 	if systemMonitor == nil {
 		defMonitor.Shutdown()
@@ -44,8 +44,8 @@ func Shutdown() {
 	systemMonitor.Shutdown()
 }
 
-//IncService desc
-//@Method IncService desc: Add a service
+//IncService doc
+//@Method IncService @Summary Add a service
 func IncService() {
 	if systemMonitor == nil {
 		defMonitor.IncService()
@@ -54,8 +54,8 @@ func IncService() {
 	systemMonitor.IncService()
 }
 
-//DecService desc
-//@Method DecService desc: Reduce a service
+//DecService doc
+//@Method DecService @Summary Reduce a service
 func DecService() {
 	if systemMonitor == nil {
 		defMonitor.DecService()
@@ -64,8 +64,8 @@ func DecService() {
 	systemMonitor.DecService()
 }
 
-//WaitService desc
-//@Method WaitService desc: Waiting for all services to end
+//WaitService doc
+//@Method WaitService @Summary Waiting for all services to end
 func WaitService() {
 	if systemMonitor == nil {
 		defMonitor.WaitService()

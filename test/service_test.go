@@ -31,7 +31,7 @@ type testHandle struct {
 	handler.Service
 }
 
-//Initial desc
+//Initial doc
 func (slf *testHandle) Initial() {
 	slf.Service.Initial()
 	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)

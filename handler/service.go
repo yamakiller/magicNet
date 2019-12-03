@@ -11,15 +11,15 @@ import (
 	"github.com/yamakiller/magicNet/engine/actor"
 )
 
-//MethodFunc desc
-//@type MethodFunc desc: Service method function
+//MethodFunc doc
+//@type MethodFunc @Summary Service method function
 //@Param (actor.Context) a actor context
 //@Param (actor.PID) sender actor ID
 //@Param (interface{}) a message
 type MethodFunc func(self actor.Context, sender *actor.PID, message interface{})
 
-//IService desc
-//@Interface IService desc: Service base class interface
+//IService doc
+//@Interface IService @Summary Service base class interface
 //@Inherit (actor.Actor)
 //@Method (GetPID() *actor.PID ) return this id
 //@Method (Name() string) return this name
@@ -59,8 +59,8 @@ type IService interface {
 	LogWarning(frmt string, args ...interface{})
 }
 
-//Service desc
-//@Struct Service desc: server base class
+//Service doc
+//@Struct Service @Summary server base class
 //@Member (*actor.PID) this id
 //@Member (string) this server name
 //@Member (*sync.WaitGroup)
@@ -72,8 +72,8 @@ type Service struct {
 	_method map[interface{}]MethodFunc
 }
 
-//Initial desc
-//@Method Initial desc: Initialization service
+//Initial doc
+//@Method Initial @Summary Initialization service
 func (slf *Service) Initial() {
 	if slf._method == nil {
 		slf._method = make(map[interface{}]MethodFunc)
@@ -85,8 +85,8 @@ func (slf *Service) Initial() {
 	slf.RegisterMethod(&actor.Terminated{}, slf.Terminated)
 }
 
-//Receive desc
-//@Method Receive desc: Receive message and Scheduling
+//Receive doc
+//@Method Receive @Summary Receive message and Scheduling
 //@Param (actor.Context) source actor context
 func (slf *Service) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
@@ -108,8 +108,8 @@ func (slf *Service) Receive(context actor.Context) {
 	}
 }
 
-//withPID desc
-//@Method withPID desc: Service initial value association
+//withPID doc
+//@Method withPID @Summary Service initial value association
 //@Param (actor.Context) this service context
 func (slf *Service) withPID(msg interface{}, context actor.Context) {
 	if slf._pid == nil {
@@ -123,8 +123,8 @@ func (slf *Service) withPID(msg interface{}, context actor.Context) {
 
 }
 
-//Started desc
-//@Method Started desc: Started Event Call Function
+//Started doc
+//@Method Started @Summary Started Event Call Function
 //@Param (actor.Context) source actor context
 //@Param (*actor.PID) sender actor ID
 //@Param (interface{}) a message
@@ -136,16 +136,16 @@ func (slf *Service) Started(context actor.Context,
 	}
 }
 
-//Stopping desc
-//@Method Stopping desc: Stopping Event Call Function
+//Stopping doc
+//@Method Stopping @Summary Stopping Event Call Function
 //@Param (actor.Context) source actor context
 //@Param (*actor.PID) sender actor ID
 //@Param (interface{}) a message
 func (slf *Service) Stopping(context actor.Context, sender *actor.PID, message interface{}) {
 }
 
-//Stoped desc
-//@Method Stopping desc: Stopped Event Call Function
+//Stoped doc
+//@Method Stopping @Summary Stopped Event Call Function
 //@Param (actor.Context) source actor context
 //@Param (*actor.PID) sender actor ID
 //@Param (interface{}) a message
@@ -162,8 +162,8 @@ func (slf *Service) Stoped(context actor.Context, sender *actor.PID, message int
 	}
 }
 
-//Terminated desc
-//@Method Terminated desc: Terminated Event Call Function
+//Terminated doc
+//@Method Terminated @Summary Terminated Event Call Function
 //@Param (actor.Context) source actor context
 //@Param (*actor.PID) sender actor ID
 //@Param (interface{}) a message
@@ -171,8 +171,8 @@ func (slf *Service) Terminated(context actor.Context, sender *actor.PID, message
 	//slf.Shutdown()
 }
 
-//Shutdown desc
-//@Method Shutdown desc: Shutdown service
+//Shutdown doc
+//@Method Shutdown @Summary Shutdown service
 func (slf *Service) Shutdown() {
 	if slf._pid == nil {
 		return
@@ -181,15 +181,15 @@ func (slf *Service) Shutdown() {
 	slf._wait.Wait()
 }
 
-//Name desc
-//@Method Name desc: Return the name of the service
+//Name doc
+//@Method Name @Summary Return the name of the service
 //@Return (string) name
 func (slf *Service) Name() string {
 	return slf._name
 }
 
-//Key desc
-//@Method Key desc: Returns the Key name of the service
+//Key doc
+//@Method Key @Summary Returns the Key name of the service
 //@Return (string) pid=>key
 func (slf *Service) Key() string {
 	ix := strings.IndexByte(slf._name, '$')
@@ -200,22 +200,22 @@ func (slf *Service) Key() string {
 	return util.SubStr2(slf._name, 0, ix)
 }
 
-//GetPID desc
-//@Method GetPID desc: Return the pid object
+//GetPID doc
+//@Method GetPID @Summary Return the pid object
 //@Return (*actor.PID) actor ID
 func (slf *Service) GetPID() *actor.PID {
 	return slf._pid
 }
 
-//ID desc
-//@Method ID desc: Returns this service pid=>id
+//ID doc
+//@Method ID @Summary Returns this service pid=>id
 //@Return (uint32) ID
 func (slf *Service) ID() uint32 {
 	return slf._pid.ID
 }
 
-//RegisterMethod desc
-//@Method RegisterMethod desc: Registration (convention/agreement) method
+//RegisterMethod doc
+//@Method RegisterMethod @Summary Registration (convention/agreement) method
 //@Param (interface{}) event map key
 //@Param (MethodFunc) Function object
 func (slf *Service) RegisterMethod(key interface{}, method MethodFunc) {
@@ -230,48 +230,48 @@ func (slf *Service) withWait(wait *sync.WaitGroup) {
 	slf._wait = wait
 }
 
-//LogInfo desc
-//@Method LogInfo desc: Log information
+//LogInfo doc
+//@Method LogInfo @Summary Log information
 //@Param  (string) format string
 //@Param  (...interface{}) format args
 func (slf *Service) LogInfo(frmt string, args ...interface{}) {
 	logger.Info(slf.ID(), frmt, args...)
 }
 
-//LogError desc
-//@Method LogError desc: Record error log information
+//LogError doc
+//@Method LogError @Summary Record error log information
 //@Param  (string) format string
 //@Param  (...interface{}) format args
 func (slf *Service) LogError(frmt string, args ...interface{}) {
 	logger.Error(slf.ID(), frmt, args...)
 }
 
-//LogDebug desc
-//@Method LogDebug desc: Record debug log information
+//LogDebug doc
+//@Method LogDebug @Summary Record debug log information
 //@Param  (string) format string
 //@Param  (...interface{}) format args
 func (slf *Service) LogDebug(frmt string, args ...interface{}) {
 	logger.Debug(slf.ID(), frmt, args...)
 }
 
-//LogTrace desc
-//@Method LogTrace desc: Record trace log information
+//LogTrace doc
+//@Method LogTrace @Summary Record trace log information
 //@Param  (string) format string
 //@Param  (...interface{}) format args
 func (slf *Service) LogTrace(frmt string, args ...interface{}) {
 	logger.Trace(slf.ID(), frmt, args...)
 }
 
-//LogWarning desc
-//@Method LogWarning desc: Record warning log information
+//LogWarning doc
+//@Method LogWarning @Summary Record warning log information
 //@Param  (string) format string
 //@Param  (...interface{}) format args
 func (slf *Service) LogWarning(frmt string, args ...interface{}) {
 	logger.Warning(slf.ID(), frmt, args...)
 }
 
-//Spawn desc
-//@Method Spawn desc: Service creator function
+//Spawn doc
+//@Method Spawn @Summary Service creator function
 //@Param (string) service name
 //@Param (func() IService) service maker(function)
 //@Param (IService) service

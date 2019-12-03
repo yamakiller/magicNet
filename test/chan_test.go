@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-//TestChan desc:
-//@Method TestChan desc: test channge
+//TestChan @Summary
+//@Method TestChan @Summary test channge
 func TestChan(t *testing.T) {
 	u := make(chan int)
 	go func() {

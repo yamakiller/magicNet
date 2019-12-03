@@ -30,14 +30,14 @@ type waitPart interface {
 	Wait() int
 }
 
-//Framework desc:
-//@Interface Framework desc: system frame
+//Framework @Summary
+//@Interface Framework @Summary system frame
 type Framework interface {
 	bootPart
 	waitPart
 	servPart
 }
 
-// SpawnFrame desc:
-// @type SpawnFrame desc: create main framework
+// SpawnFrame @Summary
+// @type SpawnFrame @Summary create main framework
 type SpawnFrame func() Framework

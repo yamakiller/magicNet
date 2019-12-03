@@ -2,8 +2,8 @@ package mailbox
 
 import "github.com/yamakiller/magicLibs/coroutine"
 
-//Dispatcher desc
-//@Interface Dispatcher desc: Publisher interface
+//Dispatcher doc
+//@Interface Dispatcher @Summary Publisher interface
 type Dispatcher interface {
 	Schedule(fn func([]interface{}))
 	Throughput() int
@@ -11,8 +11,8 @@ type Dispatcher interface {
 
 type goroutineDispatcher int
 
-//Schedule desc
-//@Method Schedule desc
+//Schedule doc
+//@Method Schedule doc
 //@Param (func([]interface{})) Running function
 func (d goroutineDispatcher) Schedule(fn func([]interface{})) {
 	coroutine.Instance().Go(fn)
@@ -22,8 +22,8 @@ func (d goroutineDispatcher) Throughput() int {
 	return int(d)
 }
 
-//NewGoroutineDispatcher desc
-//@Method NewGoroutineDispatcher desc: Create a distributor with a coroutine
+//NewGoroutineDispatcher doc
+//@Method NewGoroutineDispatcher @Summary Create a distributor with a coroutine
 func NewGoroutineDispatcher(throughput int) Dispatcher {
 	return goroutineDispatcher(throughput)
 }
@@ -38,8 +38,8 @@ func (d synchronizedDispatcher) Throughput() int {
 	return int(d)
 }
 
-//NewSynchronizedDispatcher desc
-//@Method NetSynchronizedDispatcher desc: Create a new synchronous distributor
+//NewSynchronizedDispatcher doc
+//@Method NetSynchronizedDispatcher @Summary Create a new synchronous distributor
 func NewSynchronizedDispatcher(throughput int) Dispatcher {
 	return synchronizedDispatcher(throughput)
 }

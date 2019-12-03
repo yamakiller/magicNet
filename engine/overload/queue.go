@@ -6,8 +6,8 @@ import (
 	"github.com/yamakiller/magicLibs/util"
 )
 
-//Queue desc
-//@Struct Queue desc : Automatic extension queue
+//Queue doc
+//@Struct Queue doc : Automatic extension queue
 //@Member (int) queue cap size
 //@Member (int) queue head pos
 //@Member (int) queue tail pos
@@ -27,8 +27,8 @@ type Queue struct {
 	lock   sync.Mutex
 }
 
-//NewQueue desc
-//@Method NewQueue desc: Create a new Automatic extension queue
+//NewQueue doc
+//@Method NewQueue @Summary Create a new Automatic extension queue
 //@Param  (int) initial size
 //@Return (*Queue)
 func NewQueue(initialSize int) *Queue {
@@ -40,8 +40,8 @@ func NewQueue(initialSize int) *Queue {
 		buffer:            make([]interface{}, initialSize)}
 }
 
-//Push desc
-//@Method Push desc: Insert an object
+//Push doc
+//@Method Push @Summary Insert an object
 //@Param (interface{}) item
 func (q *Queue) Push(item interface{}) {
 	q.lock.Lock()
@@ -49,8 +49,8 @@ func (q *Queue) Push(item interface{}) {
 	q.unpush(item)
 }
 
-//Pop desc
-//@Method Pop desc: Take an object, If empty return nil
+//Pop doc
+//@Method Pop @Summary Take an object, If empty return nil
 //@Return (interface{}) return object
 //@Return (bool)
 func (q *Queue) Pop() (interface{}, bool) {
@@ -59,8 +59,8 @@ func (q *Queue) Pop() (interface{}, bool) {
 	return q.unpop()
 }
 
-//Overload desc
-//@Method Overload desc: Detecting queues exceeding the limit [mainly used for warning records]
+//Overload doc
+//@Method Overload @Summary Detecting queues exceeding the limit [mainly used for warning records]
 //@Return (int)
 func (q *Queue) Overload() int {
 	if q.overload != 0 {
@@ -71,8 +71,8 @@ func (q *Queue) Overload() int {
 	return 0
 }
 
-//Length desc
-//@Method Length desc: Length of the queue
+//Length doc
+//@Method Length @Summary Length of the queue
 //@Return (int) length
 func (q *Queue) Length() int {
 	var (

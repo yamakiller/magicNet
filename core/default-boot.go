@@ -19,8 +19,8 @@ type DefaultBoot struct {
 	_log logger.Logger
 }
 
-//Initial desc
-//@Method Initial desc: Initialization system
+//Initial doc
+//@Method Initial @Summary Initialization system
 //@Return (error) Initialization fail returns error
 func (slf *DefaultBoot) Initial() error {
 	//read log module config
@@ -70,8 +70,8 @@ func (slf *DefaultBoot) Initial() error {
 	return nil
 }
 
-//Destory desc
-//@Method Destory desc: destory system reouse
+//Destory doc
+//@Method Destory @Summary destory system reouse
 func (slf *DefaultBoot) Destory() {
 	logger.Info(0, "Destory")
 	if slf._log != nil {

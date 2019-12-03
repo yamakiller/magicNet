@@ -34,8 +34,8 @@ func idToHex(u uint32) string {
 	return string(str[:8])
 }
 
-//HexToID desc
-//@Method HexToID desc: Hexadecimal string, converted to uint32
+//HexToID doc
+//@Method HexToID @Summary Hexadecimal string, converted to uint32
 //@Param  (string) hex string
 //@Return (uint32)
 func HexToID(hex string) uint32 {
@@ -76,15 +76,15 @@ type PID struct {
 	p  *Process
 }
 
-//Address desc
-//@Method Address desc: Returns address information
+//Address doc
+//@Method Address @Summary Returns address information
 //@Param (uint32)
 func (pid *PID) Address() uint32 {
 	return pid.ID >> pidKeyBit
 }
 
-//Key desc
-//@Method Key desc: Returns unique ID Key without address information
+//Key doc
+//@Method Key @Summary Returns unique ID Key without address information
 //@Param (uint32)
 func (pid *PID) Key() uint32 {
 	return pid.ID & pidMask
@@ -125,22 +125,22 @@ func (pid *PID) String() string {
 	return idToHex(pid.ID)
 }
 
-//Stop desc
-//@Method Stop desc: Stop PID and stop Actor
+//Stop doc
+//@Method Stop @Summary Stop PID and stop Actor
 func (pid *PID) Stop() {
 	pid.ref().Stop(pid)
 }
 
-//Tell desc
-//@Method Tell desc: transfer
+//Tell doc
+//@Method Tell @Summary transfer
 //@Param (interface{})
 func (pid *PID) Tell(message interface{}) {
 	ctx := DefaultSchedulerContext
 	ctx.Send(pid, message)
 }
 
-//Request desc
-//@Method Request desc: Request a custom recovery target PID
+//Request doc
+//@Method Request @Summary Request a custom recovery target PID
 //@Param (interface{}) message
 //@Param (*PID)
 func (pid *PID) Request(message interface{}, responseTo *PID) {
@@ -148,8 +148,8 @@ func (pid *PID) Request(message interface{}, responseTo *PID) {
 	ctx.RequestWithCustomSender(pid, message, responseTo)
 }
 
-//RequestFuture desc
-//@Method RequestFuture desc: Request and wait for a reply [with timeout]
+//RequestFuture doc
+//@Method RequestFuture @Summary Request and wait for a reply [with timeout]
 //@Param (interface{}) message
 //@Param (time.Duration) time out
 func (pid *PID) RequestFuture(message interface{}, timeOut time.Duration) *Future {
@@ -157,8 +157,8 @@ func (pid *PID) RequestFuture(message interface{}, timeOut time.Duration) *Futur
 	return ctx.RequestFuture(pid, message, timeOut)
 }
 
-//StopFuture desc
-//@Method StopFuture desc: Stop the PID and wait for a reply
+//StopFuture doc
+//@Method StopFuture @Summary Stop the PID and wait for a reply
 //@Return (*Future)
 func (pid *PID) StopFuture() *Future {
 	future := NewFuture(10 * time.Second)
@@ -168,8 +168,8 @@ func (pid *PID) StopFuture() *Future {
 	return future
 }
 
-//StopWait desc
-//@Method StopWait desc: Stop and wait
+//StopWait doc
+//@Method StopWait @Summary Stop and wait
 func (pid *PID) StopWait() {
 	pid.StopFuture().Wait()
 }
