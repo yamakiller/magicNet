@@ -40,17 +40,17 @@ go install github.com/sqs/goreturns
 go install github.com/golang/lint/golint
 go install github.com/cweill/gotests/gotests
 go install github.com/newhook/go-symbols
-go get -u -v github.com/nsf/gocode
-go get -u -v github.com/lukehoban/go-find-references
-go get -u -v github.com/tpng/gopkgs
-go get -u -v github.com/newhook/go-symbols
+go get -v github.com/nsf/gocode
+go get -v github.com/lukehoban/go-find-references
+go get -v github.com/tpng/gopkgs
+go get -v github.com/newhook/go-symbols
 go install github.com/dropbox/gogoprotobuf/protoc-gen-gogoslick
 go get github.com/google/uuid
 go get gopkg.in/oauth2.v3
 go get github.com/json-iterator/go
 go get github.com/nats-io/go-nats-streaming
-go get -u github.com/dgrijalva/jwt-go
-go get -u github.com/robertkrimen/otto
+go get -v github.com/dgrijalva/jwt-go
+go get -v github.com/robertkrimen/otto
 cd $curpath
 git clone https://github.com/sirupsen/logrus %GOPATH%/src/github.com/sirupsen/logrus
 git clone https://github.com/x-cray/logrus-prefixed-formatter %GOPATH%/src/github.com/x-cray/logrus-prefixed-formatter
@@ -62,10 +62,10 @@ git clone https://github.com/golang/protobuf %GOPATH%/src/github.com/golang/prot
 git clone https://github.com/gorilla/websocket %GOPATH%/src/github.com/gorilla/websocket
 git clone https://github.com/grpc/grpc-go %GOPATH%/src/google.golang.org/grpc
 git clone https://github.com/google/go-genproto %GOPATH%/src/google.golang.org/genproto
-git clone -b v2 https:/github.com/go-yaml/yaml %GOPATH%\src\gopkg.in\yaml.v2
+git clone -b v2 https:/github.com/go-yaml/yaml %GOPATH%/src/gopkg.in/yaml.v2
 git clone https://github.com/yamakiller/mgolua  %GOPATH%/src/github.com/yamakiller/mgolua
-git clone https://github.com/yamakiller/magicLibs %GOPATH%\src\github.com\yamakiller\magicLibs
-git clone https://github.com/yamakiller/magicNet  %GOPATH%\src\github.com\yamakiller\magicNet
+git clone https://github.com/yamakiller/magicLibs %GOPATH%/src/github.com/yamakiller/magicLibs
+git clone https://github.com/yamakiller/magicNet  %GOPATH%/src/github.com/yamakiller/magicNet
 
 echo "installation is complete"
 echo "setup golang development environment complate"
