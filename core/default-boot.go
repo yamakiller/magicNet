@@ -13,15 +13,16 @@ import (
 )
 
 //DefaultBoot deac
-//@strudt DefaultBoost
-//@Member (logger)
+//@Struct DefaultBoost
+//@Member logger
 type DefaultBoot struct {
 	_log logger.Logger
 }
 
 //Initial doc
-//@Method Initial @Summary Initialization system
-//@Return (error) Initialization fail returns error
+//@Summary Initialization system
+//@Method Initial
+//@Return error Initialization fail returns error
 func (slf *DefaultBoot) Initial() error {
 	//read log module config
 	logEnvPath := args.Instance().GetString("-l", "./config/log.json")
@@ -71,9 +72,9 @@ func (slf *DefaultBoot) Initial() error {
 }
 
 //Destory doc
-//@Method Destory @Summary destory system reouse
+//@Summary destory system reouse
+//@Method Destory
 func (slf *DefaultBoot) Destory() {
-	logger.Info(0, "Destory")
 	if slf._log != nil {
 		slf._log.Close()
 		slf._log = nil
