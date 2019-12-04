@@ -15,7 +15,7 @@ import (
 //INetListenDeleate Network listening commission
 type INetListenDeleate interface {
 	Handshake(c INetClient) error
-	Analysis(context actor.Context, nets *NetListenService, c INetClient) error
+	Decode(context actor.Context, nets *NetListenService, c INetClient) error
 	UnOnlineNotification(h uint64) error
 }
 
@@ -198,7 +198,7 @@ func (slf *NetListenService) OnRecv(context actor.Context,
 
 		for {
 			// Decomposition of Packets
-			err = slf.NetDeleate.Analysis(context, slf, c)
+			err = slf.NetDeleate.Decode(context, slf, c)
 			if err != nil {
 				if err == ErrAnalysisSuccess {
 					continue

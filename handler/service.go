@@ -124,7 +124,8 @@ func (slf *Service) withPID(msg interface{}, context actor.Context) {
 }
 
 //Started doc
-//@Method Started @Summary Started Event Call Function
+//@Summary Started Event Call Function
+//@Method Started
 //@Param (actor.Context) source actor context
 //@Param (*actor.PID) sender actor ID
 //@Param (interface{}) a message
