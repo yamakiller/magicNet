@@ -10,18 +10,18 @@ import (
 	"github.com/yamakiller/magicNet/timer"
 )
 
-//NetConnectEtat Connection Status
-type NetConnectEtat int32
+//NetConnectStatus Connection Status
+type NetConnectStatus int32
 
 var (
 	//UnConnected Not connected or failed to connect
-	UnConnected = NetConnectEtat(0)
+	UnConnected = NetConnectStatus(0)
 	//Connecting Connecting target
-	Connecting = NetConnectEtat(1)
+	Connecting = NetConnectStatus(1)
 	//Verify Performing a certification login
-	Verify = NetConnectEtat(2)
+	Verify = NetConnectStatus(2)
 	//Connected Connection has been completed
-	Connected = NetConnectEtat(3)
+	Connected = NetConnectStatus(3)
 )
 
 //INetConnectTarget Connection target interface
@@ -31,8 +31,8 @@ type INetConnectTarget interface {
 	GetOutSize() int
 	IsTimeout() uint64
 	RestTimeout()
-	SetEtat(stat NetConnectEtat)
-	GetEtat() NetConnectEtat
+	SetStatus(stat NetConnectStatus)
+	GetStatus() NetConnectStatus
 }
 
 //NetConnectEvent Connection event
@@ -43,7 +43,7 @@ type NetConnectEvent struct {
 //INetConnectDeleate Commission
 type INetConnectDeleate interface {
 	Connected(context actor.Context, nets *NetConnectService) error
-	Analysis(context actor.Context, nets *NetConnectService) error
+	Decode(context actor.Context, nets *NetConnectService) error
 }
 
 //NetConnectService Internet connection service
@@ -107,7 +107,7 @@ func (slf *NetConnectService) AutoConnect(context actor.Context) error {
 	}
 	return nil
 unend:
-	slf.Target.SetEtat(UnConnected)
+	slf.Target.SetStatus(UnConnected)
 	return err
 }
 
@@ -167,7 +167,7 @@ func (slf *NetConnectService) onRecv(context actor.Context, sender *actor.PID, m
 
 		for {
 			// Decomposition of Packets
-			err = slf.Deleate.Analysis(context, slf)
+			err = slf.Deleate.Decode(context, slf)
 			if err != nil {
 				if err == ErrAnalysisSuccess {
 					continue
@@ -190,7 +190,7 @@ func (slf *NetConnectService) onRecv(context actor.Context, sender *actor.PID, m
 func (slf *NetConnectService) OnClose(context actor.Context, sender *actor.PID, message interface{}) {
 	//Release buffer resources
 	slf.Handle.GetReceiveBuffer().Reset()
-	slf.Target.SetEtat(UnConnected)
+	slf.Target.SetStatus(UnConnected)
 }
 
 // Shutdown : Proactively shut down the service
