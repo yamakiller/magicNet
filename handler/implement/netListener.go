@@ -12,20 +12,20 @@ import (
 	"github.com/yamakiller/magicNet/timer"
 )
 
-//INetListenDeleate Network listening commission
-type INetListenDeleate interface {
+//INetListenerDeleate Network listening commission
+type INetListenerDeleate interface {
 	Handshake(c INetClient) error
-	Decode(context actor.Context, nets *NetListenService, c INetClient) error
+	Decode(context actor.Context, nets *NetListener, c INetClient) error
 	UnOnlineNotification(h uint64) error
 }
 
 // NetListenService Network monitoring service
-type NetListenService struct {
+type NetListener struct {
 	handler.Service
 
 	NetListen  net.INetListen
 	NetClients INetClientManager
-	NetDeleate INetListenDeleate
+	NetDeleate INetListenerDeleate
 	NetMethod  NetMethodDispatch
 
 	Addr       string //listening address
@@ -35,7 +35,7 @@ type NetListenService struct {
 }
 
 //Initial Initialize the network listening service
-func (slf *NetListenService) Initial() {
+func (slf *NetListener) Initial() {
 	slf.Service.Initial()
 	slf.RegisterMethod(&actor.Started{}, slf.Started)
 	slf.RegisterMethod(&actor.Stopping{}, slf.Stopping)
@@ -44,12 +44,12 @@ func (slf *NetListenService) Initial() {
 	slf.RegisterMethod(&network.NetClose{}, slf.OnClose)
 }
 
-func (slf *NetListenService) getDesc() string {
+func (slf *NetListener) getDesc() string {
 	return fmt.Sprintf("Network Listen [%s] ", slf.NetListen.Name())
 }
 
 //Started Turn on network monitoring service
-func (slf *NetListenService) Started(context actor.Context, sender *actor.PID, message interface{}) {
+func (slf *NetListener) Started(context actor.Context, sender *actor.PID, message interface{}) {
 	slf.LogInfo("Service Startup %s", slf.Addr)
 	err := slf.NetListen.Listen(context, slf.Addr, slf.CCMax)
 	if err != nil {
@@ -62,7 +62,7 @@ func (slf *NetListenService) Started(context actor.Context, sender *actor.PID, m
 }
 
 //Stopping Turn off network monitoring service
-func (slf *NetListenService) Stopping(context actor.Context,
+func (slf *NetListener) Stopping(context actor.Context,
 	sender *actor.PID,
 	message interface{}) {
 
@@ -103,7 +103,7 @@ func (slf *NetListenService) Stopping(context actor.Context,
 }
 
 //OnAccept Receive connection event
-func (slf *NetListenService) OnAccept(context actor.Context,
+func (slf *NetListener) OnAccept(context actor.Context,
 	sender *actor.PID,
 	message interface{}) {
 
@@ -151,7 +151,7 @@ func (slf *NetListenService) OnAccept(context actor.Context,
 }
 
 //OnRecv Receiving data events
-func (slf *NetListenService) OnRecv(context actor.Context,
+func (slf *NetListener) OnRecv(context actor.Context,
 	sender *actor.PID,
 	message interface{}) {
 
@@ -219,7 +219,7 @@ func (slf *NetListenService) OnRecv(context actor.Context,
 }
 
 //OnClose Close connection event
-func (slf *NetListenService) OnClose(context actor.Context,
+func (slf *NetListener) OnClose(context actor.Context,
 	sender *actor.PID,
 	message interface{}) {
 
@@ -245,7 +245,7 @@ func (slf *NetListenService) OnClose(context actor.Context,
 }
 
 //Shutdown Termination of service
-func (slf *NetListenService) Shutdown() {
+func (slf *NetListener) Shutdown() {
 	if slf.NetListen != nil {
 		slf.NetListen.Close()
 	}
@@ -254,26 +254,26 @@ func (slf *NetListenService) Shutdown() {
 }
 
 //LogInfo Log information
-func (slf *NetListenService) LogInfo(frmt string, args ...interface{}) {
+func (slf *NetListener) LogInfo(frmt string, args ...interface{}) {
 	slf.Service.LogInfo(slf.getDesc()+frmt, args...)
 }
 
 //LogError Record error log information
-func (slf *NetListenService) LogError(frmt string, args ...interface{}) {
+func (slf *NetListener) LogError(frmt string, args ...interface{}) {
 	slf.Service.LogError(slf.getDesc()+frmt, args...)
 }
 
 //LogDebug Record debug log information
-func (slf *NetListenService) LogDebug(frmt string, args ...interface{}) {
+func (slf *NetListener) LogDebug(frmt string, args ...interface{}) {
 	slf.Service.LogDebug(slf.getDesc()+frmt, args...)
 }
 
 //LogTrace Record trace log information
-func (slf *NetListenService) LogTrace(frmt string, args ...interface{}) {
+func (slf *NetListener) LogTrace(frmt string, args ...interface{}) {
 	slf.Service.LogTrace(slf.getDesc()+frmt, args...)
 }
 
 //LogWarning Record warning log information
-func (slf *NetListenService) LogWarning(frmt string, args ...interface{}) {
+func (slf *NetListener) LogWarning(frmt string, args ...interface{}) {
 	slf.Service.LogWarning(slf.getDesc()+frmt, args...)
 }
