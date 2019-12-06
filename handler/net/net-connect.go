@@ -1,8 +1,6 @@
 package net
 
 import (
-	"bytes"
-
 	"github.com/yamakiller/magicNet/engine/actor"
 )
 
@@ -16,16 +14,15 @@ type INetConnectionDataStat interface {
 
 //INetConnection Network connection interface
 type INetConnection interface {
-	Name() string
-	Socket() int32
 	Connection(context actor.Context,
 		addr string, /*Connection address*/
 		outChanSize int /*Receive pipe buffer size*/) error
 	Write(wrap []byte, length int) error
-	GetReceiveBufferLimit() int
-	GetReceiveBuffer() *bytes.Buffer
-	GetStat() INetConnectionDataStat
-	GetAuth() uint64
-	SetAuth(auth uint64)
+
+	GetSocket() int32
+
 	Close()
+
+	// GetReceiveBufferLimit() int
+	// GetReceiveBuffer() *bytes.Buffer
 }

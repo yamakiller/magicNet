@@ -11,13 +11,8 @@ type TCPConnection struct {
 	_s int32
 }
 
-//Name Object name
-func (slf *TCPConnection) Name() string {
-	return "TCP/Connection"
-}
-
 //Socket Returns the TCP connection socket
-func (slf *TCPConnection) Socket() int32 {
+func (slf *TCPConnection) GetSocket() int32 {
 	return slf._s
 }
 
