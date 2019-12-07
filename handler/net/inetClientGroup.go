@@ -1,4 +1,4 @@
-package implement
+package net
 
 //IAllocer Distributor interface
 type IAllocer interface {
@@ -6,10 +6,11 @@ type IAllocer interface {
 	Delete(p INetClient)
 }
 
-//INetClientManager Network client management interface
-type INetClientManager interface {
+//INetClientGroup Network client management interface
+type INetClientGroup interface {
 	Initial()
 	Size() int
+	Cap() int
 	Grap(h uint64) INetClient
 	GrapSocket(sock int32) INetClient
 	GetHandles() []uint64
@@ -20,11 +21,11 @@ type INetClientManager interface {
 }
 
 //NetClientManager server client management base class
-type NetClientManager struct {
+/*type NetClientGroup struct {
 	Malloc IAllocer
 }
 
 //Allocer Return to the distributor interface
-func (ncm *NetClientManager) Allocer() IAllocer {
-	return ncm.Malloc
-}
+func (slf *NetClientGroup) Allocer() IAllocer {
+	return slf.Malloc
+}*/

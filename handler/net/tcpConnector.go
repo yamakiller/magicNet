@@ -40,3 +40,11 @@ func (slf *TCPConnection) Close() {
 	network.OperClose(slf._s)
 	slf._s = net.INVALIDSOCKET
 }
+
+//ToString doc
+//@Summary to string
+//@Method ToString
+//@Return  string
+func (slf *TCPConnection) ToString() string {
+	return "TCP/Conn"
+}

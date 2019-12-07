@@ -7,21 +7,23 @@ import (
 )
 
 //TCPListen @Summary
-//@Struct TCPListen @Summary TCP listener
+//@Summary TCP listener
+//@Struct TCPListen
 //@Member (int32) TCP listen service socket id
 type TCPListen struct {
 	_s int32
 }
 
-//Name doc
-//@Method Name @Summary Features
-//@Return (string)
-func (slf *TCPListen) Name() string {
-	return "TCP/IP"
+//GetSocket doc
+//@Summary Return socket id
+//@Return int32 socket
+func (slf *TCPListen) GetSocket() int32 {
+	return slf._s
 }
 
 //Listen doc
-//@Method Listen @Summary Start listening
+//@Summary Start listening
+//@Method Listen
 //@Param (actor.Context) Service context
 //@Param (string) listen address
 //@Param (int)    Revice Data Chan size
@@ -40,10 +42,19 @@ func (slf *TCPListen) Listen(context actor.Context,
 }
 
 //Close doc
-//@Method Close @Summary Turn off listening
+//@Summary Turn off listening
+//@Method Close
 func (slf *TCPListen) Close() {
 	if net.InvalidSocket(slf._s) {
 		network.OperClose(slf._s)
 		slf._s = net.INVALIDSOCKET
 	}
+}
+
+//ToString doc
+//@Summary Features
+//@Method ToString
+//@Return (string)
+func (slf *TCPListen) ToString() string {
+	return "TCP/IP"
 }
