@@ -6,6 +6,8 @@ import (
 	"github.com/yamakiller/magicNet/handler"
 )
 
+//NetSSrvCleint doc
+//@Summary base service network accesser object
 type NetSSrvCleint struct {
 	handler.Service
 	NetSrvClient

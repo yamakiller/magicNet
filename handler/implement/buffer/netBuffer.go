@@ -55,3 +55,15 @@ func (slf *NetBuffer) Clear() {
 func (slf *NetBuffer) Write(d []byte) (int, error) {
 	return slf._data.Write(d)
 }
+
+func (slf *NetBuffer) Trun(n int) {
+	slf._data.Truncate(n)
+}
+
+func (slf *NetBuffer) Bytes() []byte {
+	return slf._data.Bytes()
+}
+
+func (slf *NetBuffer) Read(n int) []byte {
+	return slf._data.Next(n)
+}

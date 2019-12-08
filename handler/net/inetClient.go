@@ -20,9 +20,13 @@ type INetClient interface {
 	GetSocket() int32
 	GetBufferCap() int
 	GetBufferLen() int
+	GetBufferBytes() []byte
 	GetStatistics() (recvBytes int64, recvLastTime int64, sendToBytes int64, sendToLastTime int64, online int64)
 	ClearBuffer()
+	TrunBuffer(n int)
 	WriteBuffer(b []byte) (int, error)
+	ReadBuffer(n int) []byte
+	SendTo(b []byte) error
 
 	UpdateReceive(int64, int64)
 	UpdateSendto(int64, int64)

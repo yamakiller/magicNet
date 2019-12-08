@@ -1,12 +1,17 @@
 package client
 
 import (
+	"errors"
+
+	libnet "github.com/yamakiller/magicLibs/net"
 	"github.com/yamakiller/magicNet/handler/net"
+	"github.com/yamakiller/magicNet/network"
 )
 
+//NetSrvClient doc
+//@Summary network server accesser
 type NetSrvClient struct {
-	Receive net.INetBuffer
-
+	ReceiveBuffer    net.INetBuffer
 	_addr            string
 	_sock            int32
 	_receiveBytes    int64
@@ -17,6 +22,10 @@ type NetSrvClient struct {
 	_ref             int
 }
 
+//WithAddr doc
+//@Summary with accesser address to object
+//@Method WidthAddr
+//@Param string address [ip:port]
 func (slf *NetSrvClient) WithAddr(addr string) {
 	slf._addr = addr
 }
@@ -58,7 +67,7 @@ func (slf *NetSrvClient) GetStatistics() (recvBytes int64,
 //@Method GetBufferCap
 //@Return int
 func (slf *NetSrvClient) GetBufferCap() int {
-	return slf.Receive.Cap()
+	return slf.ReceiveBuffer.Cap()
 }
 
 //GetBufferLen doc
@@ -66,14 +75,30 @@ func (slf *NetSrvClient) GetBufferCap() int {
 //@Method GetBufferLen
 //@Return int
 func (slf *NetSrvClient) GetBufferLen() int {
-	return slf.Receive.Len()
+	return slf.ReceiveBuffer.Len()
+}
+
+//GetBufferBytes doc
+//@Summary Returns Recvice buffer all data
+//@Method GetBufferBytes
+//@Return []byte
+func (slf *NetSrvClient) GetBufferBytes() []byte {
+	return slf.ReceiveBuffer.Bytes()
 }
 
 //ClearBuffer doc
 //@Summary Clear Recvice buffer data
 //@Method ClearBuffer
 func (slf *NetSrvClient) ClearBuffer() {
-	slf.Receive.Clear()
+	slf.ReceiveBuffer.Clear()
+}
+
+//TrunBuffer doc
+//@Summary Clear Recvice buffer n size data
+//@Method TrunBuffer
+//@Param int
+func (slf *NetSrvClient) TrunBuffer(n int) {
+	slf.ReceiveBuffer.Trun(n)
 }
 
 //WriteBuffer doc
@@ -82,7 +107,31 @@ func (slf *NetSrvClient) ClearBuffer() {
 //@Return int
 //@Return error
 func (slf *NetSrvClient) WriteBuffer(b []byte) (int, error) {
-	return slf.Receive.Write(b)
+	return slf.ReceiveBuffer.Write(b)
+}
+
+//ReadBuffer doc
+//@Summary Read Recvice buffer data
+//@Method ReadBuffer
+//@Param int read buffer size
+//@Return []byte
+func (slf *NetSrvClient) ReadBuffer(n int) []byte {
+	return slf.ReceiveBuffer.Read(n)
+}
+
+//SendTo doc
+//@Summary Send data to network
+//@Method SendTo
+//@Param []byte
+//@Return error
+func (slf *NetSSrvCleint) SendTo(b []byte) error {
+	sock := slf.GetSocket()
+
+	if libnet.InvalidSocket(sock) {
+		return errors.New("")
+	}
+
+	return network.OperWrite(slf.GetSocket(), b, len(b))
 }
 
 //UpdateReceive doc
