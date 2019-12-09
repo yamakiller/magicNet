@@ -11,7 +11,7 @@ type TCPConnection struct {
 	_s int32
 }
 
-//Socket Returns the TCP connection socket
+//GetSocket Returns the TCP connection socket
 func (slf *TCPConnection) GetSocket() int32 {
 	return slf._s
 }

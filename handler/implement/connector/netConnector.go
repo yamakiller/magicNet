@@ -30,20 +30,22 @@ var (
 type netConnectEvent struct {
 }
 
+//Options doc
 type Options struct {
 	Sock               net.INetConnection
-	Receive            net.INetBuffer
+	ReceiveBuffer      net.INetBuffer
 	ReceiveDecoder     net.INetDecoder
 	ReceiveOutChanSize int
 	AsyncError         func(error)
 	AsyncComplete      func(int32)
 }
 
-var DefaultOptions = Options{}
+var defaultOptions = Options{}
 
 // Option is a function on the options for a connection.
 type Option func(*Options) error
 
+// Set Socket Handle
 func SetSocket(s net.INetConnection) Option {
 	return func(o *Options) error {
 		o.Sock = s
@@ -51,9 +53,9 @@ func SetSocket(s net.INetConnection) Option {
 	}
 }
 
-func SetReceive(b net.INetBuffer) Option {
+func SetReceiveBuffer(b net.INetBuffer) Option {
 	return func(o *Options) error {
-		o.Receive = b
+		o.ReceiveBuffer = b
 		return nil
 	}
 }
@@ -87,7 +89,7 @@ func SetAsyncComplete(f func(int32)) Option {
 }
 
 func Spawn(options ...Option) (*NetConnector, error) {
-	c := &NetConnector{_opts: DefaultOptions}
+	c := &NetConnector{_opts: defaultOptions}
 	for _, opt := range options {
 		if err := opt(&c._opts); err != nil {
 			return nil, err
@@ -98,7 +100,7 @@ func Spawn(options ...Option) (*NetConnector, error) {
 		return nil, errors.New("NetConnector sock is null")
 	}
 
-	if c._opts.Receive == nil {
+	if c._opts.ReceiveBuffer == nil {
 		return nil, errors.New("NetConnector receive buffer is null")
 	}
 
@@ -240,7 +242,7 @@ func (slf *NetConnector) onRecv(context actor.Context, sender *actor.PID, messag
 
 	for {
 
-		space = slf._opts.Receive.Cap() - slf._opts.Receive.Len()
+		space = slf._opts.ReceiveBuffer.Cap() - slf._opts.ReceiveBuffer.Len()
 		wby = len(wrap.Data) - writed
 
 		if space > 0 && wby > 0 {
@@ -248,7 +250,7 @@ func (slf *NetConnector) onRecv(context actor.Context, sender *actor.PID, messag
 				space = wby
 			}
 
-			_, err = slf._opts.Receive.Write(wrap.Data[pos : pos+space])
+			_, err = slf._opts.ReceiveBuffer.Write(wrap.Data[pos : pos+space])
 			if err != nil {
 				slf._opts.Sock.Close()
 				break
@@ -282,6 +284,63 @@ func (slf *NetConnector) onRecv(context actor.Context, sender *actor.PID, messag
 	}
 }
 
+//GetBufferCap doc
+//@Summary Returns Recvice buffer cap
+//@Method GetBufferCap
+//@Return int
+func (slf *NetConnector) GetBufferCap() int {
+	return slf._opts.ReceiveBuffer.Cap()
+}
+
+//GetBufferLen doc
+//@Summary Returns Recvice buffer data length
+//@Method GetBufferLen
+//@Return int
+func (slf *NetConnector) GetBufferLen() int {
+	return slf._opts.ReceiveBuffer.Len()
+}
+
+//GetBufferBytes doc
+//@Summary Returns Recvice buffer all data
+//@Method GetBufferBytes
+//@Return []byte
+func (slf *NetConnector) GetBufferBytes() []byte {
+	return slf._opts.ReceiveBuffer.Bytes()
+}
+
+//ClearBuffer doc
+//@Summary Clear Recvice buffer data
+//@Method ClearBuffer
+func (slf *NetConnector) ClearBuffer() {
+	slf._opts.ReceiveBuffer.Clear()
+}
+
+//TrunBuffer doc
+//@Summary Clear Recvice buffer n size data
+//@Method TrunBuffer
+//@Param int
+func (slf *NetConnector) TrunBuffer(n int) {
+	slf._opts.ReceiveBuffer.Trun(n)
+}
+
+//WriteBuffer doc
+//@Summary Write Recvice buffer data
+//@Method WriteBuffer
+//@Return int
+//@Return error
+func (slf *NetConnector) WriteBuffer(b []byte) (int, error) {
+	return slf._opts.ReceiveBuffer.Write(b)
+}
+
+//ReadBuffer doc
+//@Summary Read Recvice buffer data
+//@Method ReadBuffer
+//@Param int read buffer size
+//@Return []byte
+func (slf *NetConnector) ReadBuffer(n int) []byte {
+	return slf._opts.ReceiveBuffer.Read(n)
+}
+
 //OnClose doc
 //@Summary  proccess closed connection events
 //@Method OnClose
@@ -289,6 +348,6 @@ func (slf *NetConnector) onRecv(context actor.Context, sender *actor.PID, messag
 //@Param *actor.PID     this message sender pid
 //@Param interface{}    message
 func (slf *NetConnector) OnClose(context actor.Context, sender *actor.PID, message interface{}) {
-	slf._opts.Receive.Clear()
+	slf._opts.ReceiveBuffer.Clear()
 	slf._status = UnConnected
 }

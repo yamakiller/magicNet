@@ -18,14 +18,15 @@ type INetClient interface {
 	WithSocket(sock int32)
 	WithAddr(addr string)
 	GetSocket() int32
-	GetBufferCap() int
+	INetReceiveBuffer
+	/*GetBufferCap() int
 	GetBufferLen() int
-	GetBufferBytes() []byte
+	GetBufferBytes() []byte*/
 	GetStatistics() (recvBytes int64, recvLastTime int64, sendToBytes int64, sendToLastTime int64, online int64)
-	ClearBuffer()
+	/*ClearBuffer()
 	TrunBuffer(n int)
 	WriteBuffer(b []byte) (int, error)
-	ReadBuffer(n int) []byte
+	ReadBuffer(n int) []byte*/
 	SendTo(b []byte) error
 
 	UpdateReceive(int64, int64)
