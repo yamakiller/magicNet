@@ -13,7 +13,7 @@ import (
 
 const (
 	//
-	Idel = 0
+	Idle = 0
 	//UnConnected Not connected or failed to connect
 	UnConnected = 1
 	//Connecting Connecting target
@@ -158,7 +158,7 @@ func (slf *NetConnector) Initial() {
 //@Return error
 func (slf *NetConnector) Connection(addr string) error {
 	ick := 0
-	for slf._status == Idel {
+	for slf._status == Idle {
 		ick++
 		if ick > 8 {
 			ick = 0

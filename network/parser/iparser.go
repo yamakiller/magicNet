@@ -1,9 +1,9 @@
 package parser
 
-import "bytes"
+import "github.com/yamakiller/magicNet/handler/net"
 
 // IParser Parser interface
 type IParser interface {
-	Decoder(keyPair interface{}, data *bytes.Buffer) (IResult, error)
+	Decoder(c net.INetClient) (IResult, error)
 	Encoder(keyPair interface{}, param IParam) []byte
 }
