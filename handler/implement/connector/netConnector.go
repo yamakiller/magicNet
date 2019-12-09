@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	libnet "github.com/yamakiller/magicLibs/net"
 	"github.com/yamakiller/magicNet/engine/actor"
 	"github.com/yamakiller/magicNet/handler"
 	"github.com/yamakiller/magicNet/handler/net"
@@ -32,18 +33,28 @@ type netConnectEvent struct {
 
 //Options doc
 type Options struct {
+	UID                int64
 	Sock               net.INetConnection
 	ReceiveBuffer      net.INetBuffer
 	ReceiveDecoder     net.INetDecoder
 	ReceiveOutChanSize int
 	AsyncError         func(error)
 	AsyncComplete      func(int32)
+	AsyncClosed        func(int64)
 }
 
 var defaultOptions = Options{}
 
 // Option is a function on the options for a connection.
 type Option func(*Options) error
+
+// Set uid
+func SetUID(uid int64) Option {
+	return func(o *Options) error {
+		o.UID = uid
+		return nil
+	}
+}
 
 // Set Socket Handle
 func SetSocket(s net.INetConnection) Option {
@@ -84,6 +95,13 @@ func SetAsyncError(f func(error)) Option {
 func SetAsyncComplete(f func(int32)) Option {
 	return func(o *Options) error {
 		o.AsyncComplete = f
+		return nil
+	}
+}
+
+func SetAsyncClosed(f func(int64)) Option {
+	return func(o *Options) error {
+		o.AsyncClosed = f
 		return nil
 	}
 }
@@ -148,6 +166,7 @@ func (slf *NetConnector) Initial() {
 	slf.RegisterMethod(&netConnectEvent{}, slf.onConnection)
 	slf.RegisterMethod(&network.NetChunk{}, slf.onRecv)
 	slf.RegisterMethod(&actor.Started{}, slf.Started)
+	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)
 }
 
 //Connection doc
@@ -209,6 +228,12 @@ func (slf *NetConnector) Shutdown() {
 func (slf *NetConnector) Started(context actor.Context, sender *actor.PID, message interface{}) {
 	slf.Service.Started(context, sender, message)
 	slf._status = UnConnected
+}
+
+func (slf *NetConnector) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
+	slf.LogDebug("Stoped: Socket-%d", slf._opts.Sock.GetSocket())
+	slf._opts.Sock.WithSocket(libnet.INVALIDSOCKET)
+	slf.Service.Stoped(context, sender, message)
 }
 
 func (slf *NetConnector) onConnection(context actor.Context, sender *actor.PID, message interface{}) {
@@ -341,6 +366,26 @@ func (slf *NetConnector) ReadBuffer(n int) []byte {
 	return slf._opts.ReceiveBuffer.Read(n)
 }
 
+//SendTo doc
+//@Summary Send data to network
+//@Method SendTo
+//@Param []byte send is data
+//@Return error
+func (slf *NetConnector) SendTo(data []byte) error {
+	return network.OperWrite(slf._opts.Sock.GetSocket(), data, len(data))
+}
+
+//IsConnected doc
+//@Summary is connected
+//@Method IsConnected
+//@Return bool
+func (slf *NetConnector) IsConnected() bool {
+	if slf._status == UnConnected {
+		return false
+	}
+	return true
+}
+
 //OnClose doc
 //@Summary  proccess closed connection events
 //@Method OnClose
@@ -350,4 +395,7 @@ func (slf *NetConnector) ReadBuffer(n int) []byte {
 func (slf *NetConnector) OnClose(context actor.Context, sender *actor.PID, message interface{}) {
 	slf._opts.ReceiveBuffer.Clear()
 	slf._status = UnConnected
+	if slf._opts.AsyncClosed != nil {
+		slf._opts.AsyncClosed(slf._opts.UID)
+	}
 }

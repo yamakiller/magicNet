@@ -12,6 +12,7 @@ type INetConnection interface {
 		outChanSize int /*Receive pipe buffer size*/) error
 	Write(wrap []byte, length int) error
 
+	WithSocket(int32)
 	GetSocket() int32
 
 	Close()
