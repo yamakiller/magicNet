@@ -282,6 +282,22 @@ func (slf *NetListener) Shutdown() {
 	slf.Service.Shutdown()
 }
 
+//Grap doc
+//@Summary Grap Client
+//@Method Grap
+//@Param  uint64 client handle
+//@Return net.INetClient
+func (slf *NetListener) Grap(handle uint64) net.INetClient {
+	return slf._opts.CSGroup.Grap(handle)
+}
+
+//Release doc
+//@Summary Return Grap Get Client
+//@Param net.INetCLient
+func (slf *NetListener) Release(c net.INetClient) {
+	slf._opts.CSGroup.Release(c)
+}
+
 //Started doc
 //@Summary Started event
 //@Method Started
