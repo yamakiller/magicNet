@@ -2,7 +2,6 @@ package connector
 
 import (
 	"errors"
-	"runtime"
 	"time"
 
 	libnet "github.com/yamakiller/magicLibs/net"
@@ -208,8 +207,7 @@ func (slf *NetConnector) Connection(addr string) error {
 //@Summary shutdown connector
 //@Method Shutdown
 func (slf *NetConnector) Shutdown() {
-	_, file, inline, _ := runtime.Caller(2)
-	slf.LogInfo("Shutdown:%s,%d", file, inline)
+	slf._opts.Sock.Close()
 	ick := 0
 	for slf._status != UnConnected {
 		ick++
@@ -218,7 +216,6 @@ func (slf *NetConnector) Shutdown() {
 			time.Sleep(time.Duration(2) * time.Millisecond)
 		}
 	}
-	slf._opts.Sock.Close()
 	slf.Service.Shutdown()
 }
 
@@ -249,6 +246,7 @@ func (slf *NetConnector) onConnection(context actor.Context, sender *actor.PID, 
 	if slf._opts.AsyncComplete != nil {
 		slf._opts.AsyncComplete(slf._opts.Sock.GetSocket())
 	}
+	return
 unend:
 	slf._status = UnConnected
 	if err != nil && slf._opts.AsyncError != nil {
