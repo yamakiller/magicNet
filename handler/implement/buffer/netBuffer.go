@@ -56,14 +56,20 @@ func (slf *NetBuffer) Write(d []byte) (int, error) {
 	return slf._data.Write(d)
 }
 
+//Trun doc
+//@Summary delete buffer n bytes
 func (slf *NetBuffer) Trun(n int) {
-	slf._data.Truncate(n)
+	slf._data.Next(n)
 }
 
+//Bytes doc
+//@Summary Return all bytes
 func (slf *NetBuffer) Bytes() []byte {
 	return slf._data.Bytes()
 }
 
+//Read doc
+//@Summary Return n bytes
 func (slf *NetBuffer) Read(n int) []byte {
 	return slf._data.Next(n)
 }

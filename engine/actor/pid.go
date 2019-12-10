@@ -23,7 +23,6 @@ func idToHex(u uint32) string {
 	const (
 		digits = "0123456789ABCDEF"
 	)
-
 	var str [10]byte
 	str[0] = '$'
 	var i uint32
@@ -31,7 +30,7 @@ func idToHex(u uint32) string {
 		str[i+1] = digits[(u>>((7-i)*4))&0xf]
 	}
 
-	return string(str[:8])
+	return string(str[:9])
 }
 
 //HexToID doc

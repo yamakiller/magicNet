@@ -19,7 +19,7 @@ func (slf *tcpClient) connect(operator *actor.PID, addr string) error {
 
 	now := timer.Now()
 	slf._s = c
-	slf._stat = Connecting
+	slf._stat = Connected
 	slf._rv = tcpConnRecv
 	slf._wr = tcpConnWrite
 	slf._cls = tcpConnClose

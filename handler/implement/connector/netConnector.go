@@ -2,6 +2,7 @@ package connector
 
 import (
 	"errors"
+	"runtime"
 	"time"
 
 	libnet "github.com/yamakiller/magicLibs/net"
@@ -164,6 +165,7 @@ type NetConnector struct {
 func (slf *NetConnector) Initial() {
 	slf.Service.Initial()
 	slf.RegisterMethod(&netConnectEvent{}, slf.onConnection)
+	slf.RegisterMethod(&network.NetClose{}, slf.OnClose)
 	slf.RegisterMethod(&network.NetChunk{}, slf.onRecv)
 	slf.RegisterMethod(&actor.Started{}, slf.Started)
 	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)
@@ -192,6 +194,7 @@ func (slf *NetConnector) Connection(addr string) error {
 	}
 
 	now := int64(timer.Now())
+	slf._addr = addr
 	slf._receiveBytes = 0
 	slf._sendoutBytes = 0
 	slf._receiveLastTime = now
@@ -205,7 +208,8 @@ func (slf *NetConnector) Connection(addr string) error {
 //@Summary shutdown connector
 //@Method Shutdown
 func (slf *NetConnector) Shutdown() {
-
+	_, file, inline, _ := runtime.Caller(2)
+	slf.LogInfo("Shutdown:%s,%d", file, inline)
 	ick := 0
 	for slf._status != UnConnected {
 		ick++
@@ -214,7 +218,6 @@ func (slf *NetConnector) Shutdown() {
 			time.Sleep(time.Duration(2) * time.Millisecond)
 		}
 	}
-
 	slf._opts.Sock.Close()
 	slf.Service.Shutdown()
 }
