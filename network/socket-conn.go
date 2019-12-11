@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/yamakiller/magicLibs/mutex"
 	"github.com/yamakiller/magicNet/engine/actor"
@@ -82,9 +83,16 @@ read_end:
 	close(slf._quit)
 
 	//-----Waiting for the end of the write corout------
+	ick := 0
 	for {
 		if atomic.CompareAndSwapInt32(&slf._outStat, 1, 1) {
 			break
+		}
+
+		ick++
+		if ick > 8 {
+			ick = 0
+			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 	}
 
