@@ -1,5 +1,7 @@
 package parser
 
+//Abandoned
+
 //IResult Parser Decoder result
 type IResult interface {
 	GetVersion() int32

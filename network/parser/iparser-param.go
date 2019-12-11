@@ -1,5 +1,7 @@
 package parser
 
+//Abandoned
+
 //IParam Parser Encoder param
 type IParam interface {
 	SetVersion(v int32)

@@ -2,6 +2,8 @@ package parser
 
 import "github.com/yamakiller/magicNet/handler/net"
 
+//Abandoned
+
 // IParser Parser interface
 type IParser interface {
 	Decoder(c net.INetClient) (IResult, error)
