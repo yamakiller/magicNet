@@ -1,6 +1,9 @@
 package core
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 	"github.com/yamakiller/magicLibs/args"
@@ -8,6 +11,7 @@ import (
 	"github.com/yamakiller/magicLibs/envs"
 	"github.com/yamakiller/magicLibs/files"
 	"github.com/yamakiller/magicLibs/logger"
+	"github.com/yamakiller/magicNet/core/version"
 )
 
 //DefaultBoot deac
@@ -41,6 +45,26 @@ func (slf *DefaultBoot) Initial() error {
 
 	//startup coroutine pool
 	coroutine.Instance().Start(coDeploy.Max, coDeploy.Min, coDeploy.Task)
+
+	mode := "debug"
+	if release {
+		mode = "release"
+	}
+	fmt.Println("     へ　　　　　／|")
+	fmt.Println("　  /＼7　　　 ∠＿/")
+	fmt.Println("　 /　│　　 ／　／", "         ", " ", version.BuildName)
+	fmt.Println("　│　Z ＿,＜　／　　 /`ヽ")
+	fmt.Println("　│　　　　　ヽ　　 /　　", "   ", " version:", version.BuildVersion)
+	fmt.Println("   Y　　　　　`　 /　　/")
+	fmt.Println("  ィ●　 ， ●  ? 〈　　/", "   ", "   Commit ID: ", version.CommitID)
+	fmt.Println("　 ()　 へ　　　　|　＼〈")
+	fmt.Println("　 >- ､_　 ィ　 │ ／／", "   ", "    Time: ", version.BuildTime)
+	fmt.Println("  / へ　　 /　?＜| ＼＼")
+	fmt.Println("  ヽ_?　　(_／　 │／／", "     ", "  Run Mode:", mode)
+	fmt.Println("  7　　　　　　　|／")
+	fmt.Println("  ＞―r￣￣`?―＿", "           ", "   Start Time:", time.Now().Format("2006-01-02 15:04:05"))
+	fmt.Println("")
+
 	//startup logger
 	slf._log = logger.New(func() logger.Logger {
 		l := logger.LogContext{}
