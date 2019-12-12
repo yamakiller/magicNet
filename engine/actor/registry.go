@@ -53,8 +53,8 @@ func (r *Registry) Register(pid *PID, process Process) bool {
 				r.localItem[hash].key = key
 				r.localItem[hash].val = process
 				r.localSequence = key + 1
-				r.localItemMutex.Unlock()
 				pid.ID = (key | (r.localAddress << pidKeyBit))
+				r.localItemMutex.Unlock()
 				return true
 			}
 		}
@@ -69,9 +69,6 @@ func (r *Registry) Register(pid *PID, process Process) bool {
 			}
 
 			hash := (r.localItem[i].key & (newNum - 1))
-			if hash == i {
-				continue
-			}
 			newItem[hash] = r.localItem[i]
 		}
 
