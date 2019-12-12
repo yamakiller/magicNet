@@ -28,7 +28,7 @@ func (slf *NetSSrvCleint) Initial() {
 //@Param (*actor.PID)    send id
 //@Param (interface{})   message
 func (slf *NetSSrvCleint) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
-	slf.LogDebug("Stoped: Socket-%d", slf.GetSocket())
+	slf.LogDebug("Stoped Server client: Socket-%d", slf.GetSocket())
 	slf.WithSocket(net.INVALIDSOCKET)
 	slf.Service.Stoped(context, sender, message)
 }

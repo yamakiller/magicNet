@@ -231,7 +231,7 @@ func (slf *NetConnector) Started(context actor.Context, sender *actor.PID, messa
 }
 
 func (slf *NetConnector) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
-	slf.LogDebug("Stoped: Socket-%d", slf._opts.Sock.GetSocket())
+	slf.LogDebug("Stoped Connection: Socket-%d", slf._opts.Sock.GetSocket())
 	slf._opts.Sock.WithSocket(libnet.INVALIDSOCKET)
 	slf.Service.Stoped(context, sender, message)
 }
