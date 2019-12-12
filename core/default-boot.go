@@ -1,8 +1,6 @@
 package core
 
 import (
-	"runtime"
-
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 	"github.com/yamakiller/magicLibs/args"
@@ -25,9 +23,13 @@ type DefaultBoot struct {
 //@Return error Initialization fail returns error
 func (slf *DefaultBoot) Initial() error {
 	//read log module config
-	logEnvPath := args.Instance().GetString("-l", "./config/log.json")
-	logDeploy := logger.NewDefault()
-	envs.Instance().Load(logger.EnvKey, logEnvPath, logDeploy)
+	logPath := args.Instance().GetString("-log", "")
+	logSize := args.Instance().GetInt("-logSize", 128)
+	logLevel := logger.DEBUGLEVEL
+	release := args.Instance().GetBoolean("-release", false)
+	if release {
+		logLevel = logger.INFOLEVEL
+	}
 
 	//read coroutine pool config
 	coEnvPath := args.Instance().GetString("-c", "./config/coroutine_pool.json")
@@ -42,19 +44,17 @@ func (slf *DefaultBoot) Initial() error {
 	//startup logger
 	slf._log = logger.New(func() logger.Logger {
 		l := logger.LogContext{}
-		l.SetFilPath(logDeploy.LogPath)
+		l.SetFilPath(logPath)
 		l.SetHandle(logrus.New())
-		l.SetMailMax(logDeploy.LogSize)
-		l.SetLevel(logrus.Level(logDeploy.LogLevel))
+		l.SetMailMax(logSize)
+		l.SetLevel(logrus.Level(logLevel))
 
 		formatter := new(prefixed.TextFormatter)
 		formatter.FullTimestamp = true
-		if runtime.GOOS == "windows" {
-			formatter.DisableColors = true
-		} else {
-			formatter.SetColorScheme(&prefixed.ColorScheme{
-				PrefixStyle: "blue+b"})
-		}
+		formatter.TimestampFormat = "2006-01-02 15:04:05"
+		formatter.SetColorScheme(&prefixed.ColorScheme{
+			PrefixStyle:    "white+h",
+			TimestampStyle: "black+h"})
 		l.SetFormatter(formatter)
 		l.Initial()
 		l.Redirect()

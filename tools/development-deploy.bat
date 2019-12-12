@@ -50,6 +50,8 @@ go get github.com/json-iterator/go
 go get github.com/nats-io/go-nats-streaming
 go get -v github.com/dgrijalva/jwt-go
 go get -v github.com/robertkrimen/otto
+go get -v github.com/lestrrat/go-file-rotatelogs
+go get -v github.com/rifflock/lfshook
 cd %curPath%
 git clone https://github.com/sirupsen/logrus %GOPATH%/src/github.com/sirupsen/logrus
 git clone https://github.com/x-cray/logrus-prefixed-formatter %GOPATH%/src/github.com/x-cray/logrus-prefixed-formatter
