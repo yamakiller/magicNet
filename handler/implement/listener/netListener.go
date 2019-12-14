@@ -43,7 +43,7 @@ type Options struct {
 	AsyncError    func(error)
 	AsyncComplete func(int32)
 	AsyncAccept   func(net.INetClient) error
-	AsyncClose    func(uint64) error
+	AsyncClosed   func(uint64) error
 }
 
 //DefaultOptions doc
@@ -151,9 +151,9 @@ func SetAsyncAccept(f func(net.INetClient) error) Option {
 //@Method Close
 //@Param  func(uint64) error Callback
 //@Return Option
-func SetAsyncClose(f func(uint64) error) Option {
+func SetAsyncClosed(f func(uint64) error) Option {
 	return func(o *Options) error {
-		o.AsyncClose = f
+		o.AsyncClosed = f
 		return nil
 	}
 }
@@ -477,8 +477,8 @@ func (slf *NetListener) OnClose(context actor.Context,
 
 	slf._opts.CSGroup.Erase(sockHandle)
 
-	if slf._opts.AsyncClose != nil {
-		if err := slf._opts.AsyncClose(sockHandle); err != nil {
+	if slf._opts.AsyncClosed != nil {
+		if err := slf._opts.AsyncClosed(sockHandle); err != nil {
 			slf.LogError("closed client Notification %+v", err)
 		}
 	}
