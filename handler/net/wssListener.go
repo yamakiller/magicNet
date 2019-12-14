@@ -7,21 +7,23 @@ import (
 )
 
 //WSSListen doc
-//@Struct WSSListen @Summary WebSocket Listen
+//@Summary WebSocket Listen
+//@Struct WSSListen
 //@Member (int32) service socket id
 type WSSListen struct {
 	_s int32
 }
 
-//Name doc
-//@Method Name @Summary Features
-//@Param (string)
-func (slf *WSSListen) Name() string {
-	return "WebSocket"
+//GetSocket doc
+//@Summary Return socket id
+//@Return int32 socket
+func (slf *WSSListen) GetSocket() int32 {
+	return slf._s
 }
 
 //Listen doc
-//@Method Listen @Summary Start listening
+//@Summary Start listening
+//@Method Listen
 //@Param (actor.Context) Service context
 //@Param (string) listen address
 //@Param (int)    Revice Data Chan size
@@ -40,10 +42,19 @@ func (slf *WSSListen) Listen(context actor.Context,
 }
 
 //Close doc
-//@Method Close @Summary Turn off listening
+//@Summary Turn off listening
+//@Method Close
 func (slf *WSSListen) Close() {
 	if net.InvalidSocket(slf._s) {
 		network.OperClose(slf._s)
 		slf._s = net.INVALIDSOCKET
 	}
+}
+
+//ToString doc
+//@Summary Features
+//@Method ToString
+//@Param (string)
+func (slf *WSSListen) ToString() string {
+	return "WebSocket"
 }
