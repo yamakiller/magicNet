@@ -7,7 +7,16 @@ import "bytes"
 //@Method New
 //@Param int NetBuffer cap
 //@Return *NetBuffer
-func New(cap int) *NetBuffer {
+func NewBuffer(cap int) *NetBuffer {
+	if (cap & (cap - 1)) != 0 {
+		cap = cap | (cap >> 1)
+		cap = cap | (cap >> 2)
+		cap = cap | (cap >> 4)
+		cap = cap | (cap >> 8)
+		cap = cap | (cap >> 16)
+		cap++
+	}
+
 	r := &NetBuffer{bytes.NewBuffer([]byte{})}
 	if cap > 0 {
 		r._data.Grow(cap)

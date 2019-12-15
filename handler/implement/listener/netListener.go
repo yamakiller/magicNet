@@ -29,6 +29,11 @@ var (
 	ErrNetListened = errors.New("network is listened")
 )
 
+type AsyncErrorFunc func(error)
+type AsyncCompleteFunc func(int32)
+type AsyncAcceptFunc func(net.INetClient) error
+type AsyncClosedFunc func(uint64) error
+
 type netListenEvent struct {
 }
 
@@ -40,10 +45,10 @@ type Options struct {
 	OutCChanSize   int
 	ReceiveDecoder net.INetDecoder
 
-	AsyncError    func(error)
-	AsyncComplete func(int32)
-	AsyncAccept   func(net.INetClient) error
-	AsyncClosed   func(uint64) error
+	AsyncError    AsyncErrorFunc
+	AsyncComplete AsyncCompleteFunc
+	AsyncAccept   AsyncAcceptFunc
+	AsyncClosed   AsyncClosedFunc
 }
 
 //DefaultOptions doc
@@ -115,7 +120,7 @@ func SetClientKeepTime(tm int) Option {
 //@Method SetAsyncError
 //@Param  func(error) Callback
 //@Return Option
-func SetAsyncError(f func(error)) Option {
+func SetAsyncError(f AsyncErrorFunc) Option {
 	return func(o *Options) error {
 		o.AsyncError = f
 		return nil
@@ -127,7 +132,7 @@ func SetAsyncError(f func(error)) Option {
 //@Method SetAsyncComplete
 //@Param  func(int32) Callback
 //@Return Option
-func SetAsyncComplete(f func(int32)) Option {
+func SetAsyncComplete(f AsyncCompleteFunc) Option {
 	return func(o *Options) error {
 		o.AsyncComplete = f
 		return nil
@@ -139,7 +144,7 @@ func SetAsyncComplete(f func(int32)) Option {
 //@Method   SetAsyncAccept
 //@Param    func(net.INetClient) error  Callback
 //@Return   Option
-func SetAsyncAccept(f func(net.INetClient) error) Option {
+func SetAsyncAccept(f AsyncAcceptFunc) Option {
 	return func(o *Options) error {
 		o.AsyncAccept = f
 		return nil
@@ -151,7 +156,7 @@ func SetAsyncAccept(f func(net.INetClient) error) Option {
 //@Method Close
 //@Param  func(uint64) error Callback
 //@Return Option
-func SetAsyncClosed(f func(uint64) error) Option {
+func SetAsyncClosed(f AsyncClosedFunc) Option {
 	return func(o *Options) error {
 		o.AsyncClosed = f
 		return nil
@@ -289,6 +294,14 @@ func (slf *NetListener) Shutdown() {
 //@Return net.INetClient
 func (slf *NetListener) Grap(handle uint64) net.INetClient {
 	return slf._opts.CSGroup.Grap(handle)
+}
+
+//GetClients doc
+//@Summary Return all client handle
+//@Method GetClients
+//@Return []uint64
+func (slf *NetListener) GetClients() []uint64 {
+	return slf._opts.CSGroup.GetHandles()
 }
 
 //Release doc

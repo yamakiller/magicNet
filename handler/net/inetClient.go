@@ -18,6 +18,7 @@ type INetClient interface {
 	WithSocket(sock int32)
 	WithAddr(addr string)
 	GetSocket() int32
+	GetAddr() string 
 	INetReceiveBuffer
 	/*GetBufferCap() int
 	GetBufferLen() int

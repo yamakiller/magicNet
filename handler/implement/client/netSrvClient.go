@@ -46,6 +46,14 @@ func (slf *NetSrvClient) GetSocket() int32 {
 	return slf._sock
 }
 
+//GetAddr doc
+//@Summary Returns the client address
+//@Method GetAddr
+//@Return (string) socket address
+func (slf *NetSrvClient) GetAddr() string {
+	return slf._addr
+}
+
 //GetStatistics doc
 //@Summary Returns the client Statistics informat
 //@Method GetStatistics
