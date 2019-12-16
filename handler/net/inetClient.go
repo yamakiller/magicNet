@@ -13,12 +13,12 @@ var (
 
 //INetClient Network client interface
 type INetClient interface {
-	SetID(uint64)
+	WithID(uint64)
 	GetID() uint64
 	WithSocket(sock int32)
 	WithAddr(addr string)
 	GetSocket() int32
-	GetAddr() string 
+	GetAddr() string
 	INetReceiveBuffer
 	/*GetBufferCap() int
 	GetBufferLen() int

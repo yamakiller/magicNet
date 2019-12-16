@@ -37,5 +37,6 @@ func (slf *NetSSrvCleint) Stoped(context actor.Context, sender *actor.PID, messa
 //@Summary Terminate this client service
 //@Method Shutdown
 func (slf *NetSSrvCleint) Shutdown() {
+	slf.ClearBuffer()
 	slf.Service.Shutdown()
 }

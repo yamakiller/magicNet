@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	//
+	//Idle connection idle status
 	Idle = 0
 	//UnConnected Not connected or failed to connect
 	UnConnected = 1
@@ -48,64 +48,71 @@ var defaultOptions = Options{}
 // Option is a function on the options for a connection.
 type Option func(*Options) error
 
-// Set uid
-func SetUID(uid int64) Option {
+//WithUID Set uid
+func WithUID(uid int64) Option {
 	return func(o *Options) error {
 		o.UID = uid
 		return nil
 	}
 }
 
-// Set Socket Handle
-func SetSocket(s net.INetConnection) Option {
+//WithSocket Set Socket Id
+func WithSocket(s net.INetConnection) Option {
 	return func(o *Options) error {
 		o.Sock = s
 		return nil
 	}
 }
 
-func SetReceiveBuffer(b net.INetBuffer) Option {
+//WithReceiveBuffer Set Receive buffer
+func WithReceiveBuffer(b net.INetBuffer) Option {
 	return func(o *Options) error {
 		o.ReceiveBuffer = b
 		return nil
 	}
 }
 
-func SetReceiveDecoder(d net.INetDecoder) Option {
+//WithReceiveDecoder Set Receive decoder method
+func WithReceiveDecoder(d net.INetDecoder) Option {
 	return func(o *Options) error {
 		o.ReceiveDecoder = d
 		return nil
 	}
 }
 
-func SetReceiveOutChanSize(ocs int) Option {
+//WithReceiveOutChanSize Set Receive out data chan buffer size
+func WithReceiveOutChanSize(ocs int) Option {
 	return func(o *Options) error {
 		o.ReceiveOutChanSize = ocs
 		return nil
 	}
 }
 
-func SetAsyncError(f func(error)) Option {
+//WithAsyncError Set Async Error Callback function
+func WithAsyncError(f func(error)) Option {
 	return func(o *Options) error {
 		o.AsyncError = f
 		return nil
 	}
 }
 
-func SetAsyncComplete(f func(int32)) Option {
+//WithAsyncComplete Set Async complete Callback function
+func WithAsyncComplete(f func(int32)) Option {
 	return func(o *Options) error {
 		o.AsyncComplete = f
 		return nil
 	}
 }
 
-func SetAsyncClosed(f func(int64)) Option {
+//WithAsyncClosed Set Async closed Callback function
+func WithAsyncClosed(f func(int64)) Option {
 	return func(o *Options) error {
 		o.AsyncClosed = f
 		return nil
 	}
 }
 
+//Spawn Create a NetConnector
 func Spawn(options ...Option) (*NetConnector, error) {
 	c := &NetConnector{_opts: defaultOptions}
 	for _, opt := range options {
@@ -216,12 +223,12 @@ func (slf *NetConnector) Shutdown() {
 			time.Sleep(time.Duration(2) * time.Millisecond)
 		}
 	}
+	slf.ClearBuffer()
 	slf.Service.Shutdown()
 }
 
 //Started doc
 //@Summary Started event
-//@Method Started
 //@Param  actor.Context   context
 //@Param  *actor.PID      sender
 //@Param  interface{}     message
@@ -230,6 +237,11 @@ func (slf *NetConnector) Started(context actor.Context, sender *actor.PID, messa
 	slf._status = UnConnected
 }
 
+//Stoped doc
+//@Summary Stoped event
+//@Param actor.Context    context
+//@Param *actor.PID       sender
+//@Param  interface{}     message
 func (slf *NetConnector) Stoped(context actor.Context, sender *actor.PID, message interface{}) {
 	slf.LogDebug("Stoped Connection: Socket-%d", slf._opts.Sock.GetSocket())
 	slf._opts.Sock.WithSocket(libnet.INVALIDSOCKET)
@@ -346,7 +358,7 @@ func (slf *NetConnector) ClearBuffer() {
 //@Method TrunBuffer
 //@Param int
 func (slf *NetConnector) TrunBuffer(n int) {
-	slf._opts.ReceiveBuffer.Trun(n)
+	slf._opts.ReceiveBuffer.Truncated(n)
 }
 
 //WriteBuffer doc

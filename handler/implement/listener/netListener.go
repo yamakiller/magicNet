@@ -29,9 +29,16 @@ var (
 	ErrNetListened = errors.New("network is listened")
 )
 
+//AsyncErrorFunc error Callback function
 type AsyncErrorFunc func(error)
+
+//AsyncCompleteFunc complete Callback function
 type AsyncCompleteFunc func(int32)
+
+//AsyncAcceptFunc client accept Callback
 type AsyncAcceptFunc func(net.INetClient) error
+
+//AsyncClosedFunc client closed Callback
 type AsyncClosedFunc func(uint64) error
 
 type netListenEvent struct {
@@ -57,106 +64,98 @@ var DefaultOptions = Options{}
 //Option is a function on the options for a listen.
 type Option func(*Options) error
 
-//SetListener doc
+//WithListener doc
 //@Summary Set the listener handle object
-//@Method
 //@Param net.INetListener Listening handle/TCP/UDP/KCP/WebSocket
 //@Return Option
-func SetListener(s net.INetListener) Option {
+func WithListener(s net.INetListener) Option {
 	return func(o *Options) error {
 		o.Sock = s
 		return nil
 	}
 }
 
-//SetClientGroups doc
+//WithClientGroups doc
 //@Summary Set up a connection client management group
-//@Method  SetClientGroups
 //@Param   net.INetClientGroup Management Group Object
 //@Return  Option
-func SetClientGroups(b net.INetClientGroup) Option {
+func WithClientGroups(b net.INetClientGroup) Option {
 	return func(o *Options) error {
 		o.CSGroup = b
 		return nil
 	}
 }
 
-//SetClientOutChanSize doc
+//WithClientOutChanSize doc
 //@Summary Set the connection client transaction pipeline buffer size
-//@Method SetClientOutChanSize
 //@Param  int Pipe buffer size
-func SetClientOutChanSize(ch int) Option {
+func WithClientOutChanSize(ch int) Option {
 	return func(o *Options) error {
 		o.OutCChanSize = ch
 		return nil
 	}
 }
 
-//SetClientDecoder doc
+//WithClientDecoder doc
 //@Summary Set the connection client data decoder
-//@Method SetClientDecoder
 //@Param  net.INetDecoder decoder
 //@Return Option
-func SetClientDecoder(d net.INetDecoder) Option {
+func WithClientDecoder(d net.INetDecoder) Option {
 	return func(o *Options) error {
 		o.ReceiveDecoder = d
 		return nil
 	}
 }
 
-//SetClientKeepTime doc
+//WithClientKeepTime doc
 //@Summary Set the heartbeat interval of the connected client in milliseconds
 //@Param   int Interval time in milliseconds
 //@Return  Option
-func SetClientKeepTime(tm int) Option {
+func WithClientKeepTime(tm int) Option {
 	return func(o *Options) error {
 		o.KeepTime = tm
 		return nil
 	}
 }
 
-//SetAsyncError doc
+//WithAsyncError doc
 //@Summary Set the callback function to listen for asynchronous errors
-//@Method SetAsyncError
 //@Param  func(error) Callback
 //@Return Option
-func SetAsyncError(f AsyncErrorFunc) Option {
+func WithAsyncError(f AsyncErrorFunc) Option {
 	return func(o *Options) error {
 		o.AsyncError = f
 		return nil
 	}
 }
 
-//SetAsyncComplete doc
+//WithAsyncComplete doc
 //@Summary Set the callback completion asynchronous callback function
-//@Method SetAsyncComplete
 //@Param  func(int32) Callback
 //@Return Option
-func SetAsyncComplete(f AsyncCompleteFunc) Option {
+func WithAsyncComplete(f AsyncCompleteFunc) Option {
 	return func(o *Options) error {
 		o.AsyncComplete = f
 		return nil
 	}
 }
 
-//SetAsyncAccept doc
+//WithAsyncAccept doc
 //@Summary  Set listen accept asynchronous callback function
-//@Method   SetAsyncAccept
 //@Param    func(net.INetClient) error  Callback
 //@Return   Option
-func SetAsyncAccept(f AsyncAcceptFunc) Option {
+func WithAsyncAccept(f AsyncAcceptFunc) Option {
 	return func(o *Options) error {
 		o.AsyncAccept = f
 		return nil
 	}
 }
 
-//SetAsyncClose doc
+//WithAsyncClosed doc
 //@Summary Set the client to close the asynchronous callback function
-//@Method Close
 //@Param  func(uint64) error Callback
 //@Return Option
-func SetAsyncClosed(f AsyncClosedFunc) Option {
+func WithAsyncClosed(f AsyncClosedFunc) Option {
 	return func(o *Options) error {
 		o.AsyncClosed = f
 		return nil
@@ -165,7 +164,6 @@ func SetAsyncClosed(f AsyncClosedFunc) Option {
 
 //Spawn doc
 //@Summary Create a listening service object
-//@Method Spawn
 //@Param  ...Option Setting parameters
 //@Return *NetListener Listening service object
 //@Return error

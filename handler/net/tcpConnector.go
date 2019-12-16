@@ -11,6 +11,7 @@ type TCPConnection struct {
 	_s int32
 }
 
+//WithSocket Set socket id
 func (slf *TCPConnection) WithSocket(s int32) {
 	slf._s = s
 }

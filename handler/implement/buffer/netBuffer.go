@@ -1,21 +1,18 @@
 package buffer
 
-import "bytes"
+import (
+	"bytes"
 
-//New doc
+	"github.com/yamakiller/magicLibs/mmath"
+)
+
+//NewBuffer doc
 //@Summary new a NetBuffer object
-//@Method New
+//@Method NewBuffer
 //@Param int NetBuffer cap
 //@Return *NetBuffer
 func NewBuffer(cap int) *NetBuffer {
-	if (cap & (cap - 1)) != 0 {
-		cap = cap | (cap >> 1)
-		cap = cap | (cap >> 2)
-		cap = cap | (cap >> 4)
-		cap = cap | (cap >> 8)
-		cap = cap | (cap >> 16)
-		cap++
-	}
+	cap = mmath.Aligned(cap)
 
 	r := &NetBuffer{bytes.NewBuffer([]byte{})}
 	if cap > 0 {
@@ -65,9 +62,10 @@ func (slf *NetBuffer) Write(d []byte) (int, error) {
 	return slf._data.Write(d)
 }
 
-//Trun doc
+//Truncated doc
 //@Summary delete buffer n bytes
-func (slf *NetBuffer) Trun(n int) {
+//@Param truncated data of n size
+func (slf *NetBuffer) Truncated(n int) {
 	slf._data.Next(n)
 }
 

@@ -106,7 +106,7 @@ func (slf *NetSrvClient) ClearBuffer() {
 //@Method TrunBuffer
 //@Param int
 func (slf *NetSrvClient) TrunBuffer(n int) {
-	slf.ReceiveBuffer.Trun(n)
+	slf.ReceiveBuffer.Truncated(n)
 }
 
 //WriteBuffer doc
