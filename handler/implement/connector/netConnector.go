@@ -177,6 +177,11 @@ func (slf *NetConnector) Initial() {
 	slf.RegisterMethod(&actor.Stopped{}, slf.Stoped)
 }
 
+//GetSocket Returns connector socket
+func (slf *NetConnector) GetSocket() int32 {
+	return slf._opts.Sock.GetSocket()
+}
+
 //Connection doc
 //@Summary connection
 //@Method Connection
