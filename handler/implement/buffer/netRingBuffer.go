@@ -1,6 +1,8 @@
 package buffer
 
-import "github.com/yamakiller/magicLibs/mmath"
+import (
+	"github.com/yamakiller/magicLibs/mmath"
+)
 
 //NewRing doc
 //@Summary New a ring buffer
@@ -49,7 +51,9 @@ func (slf *NetRingBuffer) Clear() {
 //@Summary Return buffer all data
 //@Return []byte
 func (slf *NetRingBuffer) Bytes() []byte {
-	return slf._data
+	length := mmath.Min(0, slf._in-slf._out)
+	l := mmath.Min(length, slf._cap-(slf._out&(slf._cap-1)))
+	return slf._data[slf._out&(slf._cap-1) : slf._out&(slf._cap-1)+l]
 }
 
 //Write doc
