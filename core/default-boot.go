@@ -1,24 +1,16 @@
 package core
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/sirupsen/logrus"
-	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 	"github.com/yamakiller/magicLibs/args"
 	"github.com/yamakiller/magicLibs/coroutine"
 	"github.com/yamakiller/magicLibs/envs"
 	"github.com/yamakiller/magicLibs/files"
-	"github.com/yamakiller/magicLibs/logger"
-	"github.com/yamakiller/magicNet/core/version"
 )
 
 //DefaultBoot deac
 //@Struct DefaultBoost
 //@Member logger
 type DefaultBoot struct {
-	_log logger.Logger
 }
 
 //Initial doc
@@ -26,14 +18,6 @@ type DefaultBoot struct {
 //@Method Initial
 //@Return error Initialization fail returns error
 func (slf *DefaultBoot) Initial() error {
-	//read log module config
-	logPath := args.Instance().GetString("-log", "")
-	logSize := args.Instance().GetInt("-logSize", 128)
-	logLevel := logger.DEBUGLEVEL
-	release := args.Instance().GetBoolean("-release", false)
-	if release {
-		logLevel = logger.INFOLEVEL
-	}
 
 	//read coroutine pool config
 	coEnvPath := args.Instance().GetString("-c", "./config/coroutine_pool.json")
@@ -46,48 +30,6 @@ func (slf *DefaultBoot) Initial() error {
 	//startup coroutine pool
 	coroutine.Instance().Start(coDeploy.Max, coDeploy.Min, coDeploy.Task)
 
-	mode := "debug"
-	if release {
-		mode = "release"
-	}
-	fmt.Println("     へ　　　　　／|")
-	fmt.Println("　  /＼7　　　 ∠＿/")
-	fmt.Println("　 /　│　　 ／　／", "         ", " ", version.BuildName)
-	fmt.Println("　│　Z ＿,＜　／　　 /`ヽ")
-	fmt.Println("　│　　　　　ヽ　　 /　　", "   ", " version:", version.BuildVersion)
-	fmt.Println("   Y　　　　　`　 /　　/")
-	fmt.Println("  ィ●　 ， ●  ? 〈　　/", "   ", "   Commit ID: ", version.CommitID)
-	fmt.Println("　 ()　 へ　　　　|　＼〈")
-	fmt.Println("　 >- ､_　 ィ　 │ ／／", "   ", "    Time: ", version.BuildTime)
-	fmt.Println("  / へ　　 /　?＜| ＼＼")
-	fmt.Println("  ヽ_?　　(_／　 │／／", "     ", "  Run Mode:", mode)
-	fmt.Println("  7　　　　　　　|／")
-	fmt.Println("  ＞―r￣￣`?―＿", "           ", "   Start Time:", time.Now().Format("2006-01-02 15:04:05"))
-	fmt.Println("")
-
-	//startup logger
-	slf._log = logger.New(func() logger.Logger {
-		l := logger.LogContext{}
-		l.SetFilPath(logPath)
-		l.SetHandle(logrus.New())
-		l.SetMailMax(logSize)
-		l.SetLevel(logrus.Level(logLevel))
-
-		formatter := new(prefixed.TextFormatter)
-		formatter.FullTimestamp = true
-		formatter.TimestampFormat = "2006-01-02 15:04:05"
-		formatter.SetColorScheme(&prefixed.ColorScheme{
-			PrefixStyle:    "white+h",
-			TimestampStyle: "black+h"})
-		l.SetFormatter(formatter)
-		l.Initial()
-		l.Redirect()
-		return &l
-	})
-
-	logger.WithDefault(slf._log)
-	slf._log.Mount()
-
 	if rootDir != "" {
 		files.Instance().WithRoot(rootDir)
 	}
@@ -99,8 +41,4 @@ func (slf *DefaultBoot) Initial() error {
 //@Summary destory system reouse
 //@Method Destory
 func (slf *DefaultBoot) Destory() {
-	if slf._log != nil {
-		slf._log.Close()
-		slf._log = nil
-	}
 }
