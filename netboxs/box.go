@@ -11,6 +11,8 @@ type NetLBox interface {
 	WithPool(Pool)
 	WithMax(int32)
 	ListenAndServe(addr string) error
+	OpenConn(socket int32) error
+	SendConn(socket int32, data []byte) error
 	CloseConn(socket int32) error
 	CloseConnWait(socket int32) error
 	GetValues() []int32
