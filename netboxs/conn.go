@@ -11,6 +11,7 @@ type Connect interface {
 	Write([]byte) error
 	Ping()
 	Parse() (interface{}, error)
+	Push([]byte) error
 	Pop() chan []byte
 	Close() error
 }
