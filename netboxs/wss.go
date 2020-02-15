@@ -74,6 +74,14 @@ func (slf *WSSBox) ListenAndServe(addr string) error {
 	slf._conns = &table.HashTable{
 		Mask: 0xFFFFFFF,
 		Max:  uint32(float64(slf._max) * 1.2),
+		Comp: func(a, b interface{}) int {
+			ca := a.(*_TBoxConn)
+			cb := b.(uint32)
+			if ca._cn.Socket() == int32(cb) {
+				return 0
+			}
+			return -1
+		},
 	}
 	slf._conns.Initial()
 
@@ -229,25 +237,41 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 		}()
 
 		for {
-			select {
-			case <-cc._closed:
-				goto exit
-			case <-cc._kicker.C:
-				if cc._cn.Keepalive() > 0 {
-					cc._cn.Ping()
-					cc._kicker.Reset(cc._cn.Keepalive())
-				}
-			case msg := <-cc._cn.Pop():
-				state := cc._state
-				if state == stateConnected || state == stateConnecting {
-					if err := cc._cn.Write(msg); err != nil {
-						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
-					}
-
-					if cc._kicker != nil && cc._cn.Keepalive() > 0 {
+			if cc._kicker != nil {
+				select {
+				case <-cc._closed:
+					goto exit
+				case <-cc._kicker.C:
+					if cc._cn.Keepalive() > 0 {
+						cc._cn.Ping()
 						cc._kicker.Reset(cc._cn.Keepalive())
 					}
-					cc._activity = time.Now()
+				case msg := <-cc._cn.Pop():
+					state := cc._state
+					if state == stateConnected || state == stateConnecting {
+						if err := cc._cn.Write(msg); err != nil {
+							slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+						}
+
+						if cc._kicker != nil && cc._cn.Keepalive() > 0 {
+							cc._kicker.Reset(cc._cn.Keepalive())
+						}
+						cc._activity = time.Now()
+					}
+				}
+			} else {
+				select {
+				case <-cc._closed:
+					goto exit
+				case msg := <-cc._cn.Pop():
+					state := cc._state
+					if state == stateConnected || state == stateConnecting {
+						if err := cc._cn.Write(msg); err != nil {
+							slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+						}
+
+						cc._activity = time.Now()
+					}
 				}
 			}
 		}

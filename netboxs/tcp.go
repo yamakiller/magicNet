@@ -1,6 +1,7 @@
 package netboxs
 
 import (
+	"bufio"
 	"errors"
 	"io"
 	"net"
@@ -46,6 +47,14 @@ func (slf *TCPBox) ListenAndServe(addr string) error {
 	slf._conns = &table.HashTable{
 		Mask: 0xFFFFFFF,
 		Max:  uint32(float64(slf._max) * 1.2),
+		Comp: func(a, b interface{}) int {
+			ca := a.(*_TBoxConn)
+			cb := b.(uint32)
+			if ca._cn.Socket() == int32(cb) {
+				return 0
+			}
+			return -1
+		},
 	}
 	slf._conns.Initial()
 
@@ -72,14 +81,50 @@ func (slf *TCPBox) ShutdownWait() {
 	slf.Box.ShutdownWait()
 }
 
+//OpenConn setting connection state connected
+func (slf *TCPBox) OpenConn(socket int32) error {
+	slf._sync.Lock()
+	c := slf._conns.Get(uint32(socket))
+	if c == nil {
+		slf._sync.Unlock()
+		return errors.New("not found socket")
+	}
+	slf._sync.Unlock()
+
+	cc := c.(*_TBoxConn)
+	cc._state = stateConnected
+
+	return nil
+}
+
+//SendConn 发送数据给连接
+func (slf *TCPBox) SendConn(socket int32, data []byte) error {
+	slf._sync.Lock()
+	c := slf._conns.Get(uint32(socket))
+	if c == nil {
+		slf._sync.Unlock()
+		return errors.New("not found socket")
+	}
+	slf._sync.Unlock()
+
+	cc := c.(*_TBoxConn)
+	if cc._state == stateClosed {
+		return errors.New("connection closed")
+	}
+
+	return cc._cn.Push(data)
+}
+
 //CloseConn 关闭一个连接
 func (slf *TCPBox) CloseConn(socket int32) error {
 	slf._sync.Lock()
-	defer slf._sync.Unlock()
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
+		slf._sync.Unlock()
 		return errors.New("not found socket")
 	}
+	slf._conns.Remove(uint32(socket))
+	slf._sync.Unlock()
 	cc := c.(*_TBoxConn)
 	cc._state = stateClosed
 	cc._closed <- true
@@ -95,6 +140,8 @@ func (slf *TCPBox) CloseConnWait(socket int32) error {
 		slf._sync.Unlock()
 		return errors.New("not found socket")
 	}
+	slf._conns.Remove(uint32(socket))
+	slf._sync.Unlock()
 
 	cc := c.(*_TBoxConn)
 	cc._state = stateClosed
@@ -146,10 +193,11 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 	}
 
 	cc := &_TBoxConn{
-		_io:     c,
-		_closed: make(chan bool),
-		_cn:     slf._pools.Get(),
-		_state:  stateInit,
+		_io:       c,
+		_closed:   make(chan bool, 1),
+		_cn:       slf._pools.Get(),
+		_activity: time.Now(),
+		_state:    stateInit,
 	}
 
 	slf._sync.Lock()
@@ -193,6 +241,7 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 			if err != nil {
 				slf.CloseConn(socket)
 				slf.Box.GetPID().Post(&netmsgs.Closed{Sock: socket})
+				break
 			}
 		}
 	}()
@@ -200,29 +249,46 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 	go func() {
 		defer func() {
 			cc._cn.Close()
+			slf._pools.Put(cc._cn)
 			cc._wg.Done()
 		}()
 
 		for {
-			select {
-			case <-cc._closed:
-				goto exit
-			case <-cc._kicker.C:
-				if cc._cn.Keepalive() > 0 {
-					cc._cn.Ping()
-					cc._kicker.Reset(cc._cn.Keepalive())
-				}
-			case msg := <-cc._cn.Pop():
-				state := cc._state
-				if state == stateConnected || state == stateConnecting {
-					if err := cc._cn.Write(msg); err != nil {
-						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
-					}
-
-					if cc._kicker != nil && cc._cn.Keepalive() > 0 {
+			if cc._kicker != nil {
+				select {
+				case <-cc._closed:
+					goto exit
+				case <-cc._kicker.C:
+					if cc._cn.Keepalive() > 0 {
+						cc._cn.Ping()
 						cc._kicker.Reset(cc._cn.Keepalive())
 					}
-					cc._activity = time.Now()
+				case msg := <-cc._cn.Pop():
+					state := cc._state
+					if state == stateConnected || state == stateConnecting {
+						if err := cc._cn.Write(msg); err != nil {
+							slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+						}
+
+						if cc._kicker != nil && cc._cn.Keepalive() > 0 {
+							cc._kicker.Reset(cc._cn.Keepalive())
+						}
+						cc._activity = time.Now()
+					}
+				}
+			} else {
+				select {
+				case <-cc._closed:
+					goto exit
+				case msg := <-cc._cn.Pop():
+					state := cc._state
+					if state == stateConnected || state == stateConnecting {
+						if err := cc._cn.Write(msg); err != nil {
+							slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+						}
+
+						cc._activity = time.Now()
+					}
 				}
 			}
 		}
@@ -242,4 +308,63 @@ type _TBoxConn struct {
 	_closed   chan bool
 	_kicker   *time.Timer
 	_activity time.Time
+}
+
+//BTCPConn TCP base connection
+type BTCPConn struct {
+	ReadBufferSize  int
+	WriteBufferSize int
+	_sock           int32
+	_reader         *bufio.Reader
+	_writer         *bufio.Writer
+}
+
+//Socket Returns socket
+func (slf *BTCPConn) Socket() int32 {
+	return slf._sock
+}
+
+//WithSocket setting socket
+func (slf *BTCPConn) WithSocket(sock int32) {
+	slf._sock = sock
+}
+
+//WithIO setting io interface
+func (slf *BTCPConn) WithIO(c interface{}) {
+	slf._reader = bufio.NewReaderSize(c.(io.ReadWriteCloser), slf.ReadBufferSize)
+	slf._writer = bufio.NewWriterSize(c.(io.ReadWriteCloser), slf.WriteBufferSize)
+}
+
+//Reader Returns reader buffer
+func (slf *BTCPConn) Reader() *bufio.Reader {
+	return slf._reader
+}
+
+func (slf *BTCPConn) Write(b []byte) error {
+	length := len(b)
+	seek := 0
+	for {
+		if slf._writer.Available() == 0 {
+			if err := slf._writer.Flush(); err != nil {
+				return err
+			}
+		}
+
+		n, err := slf._writer.Write(b[seek:])
+		if err != nil {
+			return err
+		}
+
+		seek += n
+		if seek >= length {
+			break
+		}
+	}
+
+	if slf._writer.Buffered() > 0 {
+		if err := slf._writer.Flush(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
