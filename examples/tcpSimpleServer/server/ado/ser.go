@@ -11,7 +11,6 @@ import (
 
 type Conn struct {
 	netboxs.BTCPConn
-	_queue chan []byte
 }
 
 func (slf *Conn) Keepalive() time.Duration {
@@ -19,18 +18,9 @@ func (slf *Conn) Keepalive() time.Duration {
 	return 0
 }
 
-func (slf *Conn) WithIO(c interface{}) {
-	slf.BTCPConn.WithIO(c)
-	slf._queue = make(chan []byte, 32)
-}
-
 func (slf *Conn) Ping() {
 	ping := "examples ping"
-	pingLen := len([]rune(ping))
-	bs := make([]byte, 2)
-	binary.BigEndian.PutUint16(bs, uint16(pingLen))
-	bs = append(bs, ([]byte(ping))...)
-	slf.Write(bs)
+	slf.Push(ping)
 }
 
 func (slf *Conn) Parse() (interface{}, error) {
@@ -63,18 +53,13 @@ func (slf *Conn) Parse() (interface{}, error) {
 	return string(buffer[0:header]), nil
 }
 
-func (slf *Conn) Push(data []byte) error {
-	slf._queue <- data
-	return nil
-}
+func (slf *Conn) UnParse(msg interface{}) error {
+	length := len([]rune(msg.(string)))
+	buffer := make([]byte, 2+length)
+	binary.BigEndian.PutUint16(buffer, uint16(length))
+	copy(buffer[2:], msg.(string))
 
-func (slf *Conn) Pop() chan []byte {
-	return slf._queue
-}
-
-func (slf *Conn) Close() error {
-	close(slf._queue)
-	return nil
+	return netboxs.WriteToBuffer(slf.Writer(), buffer)
 }
 
 type ConnPools struct {
@@ -84,6 +69,7 @@ func (slf *ConnPools) Get() netboxs.Connect {
 	return &Conn{BTCPConn: netboxs.BTCPConn{
 		ReadBufferSize:  8192,
 		WriteBufferSize: 8192,
+		WriteQueueSize:  16,
 	}}
 }
 

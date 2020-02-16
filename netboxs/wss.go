@@ -248,10 +248,11 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 					}
 				case msg := <-cc._cn.Pop():
 					state := cc._state
+					if err := cc._cn.UnParse(msg); err != nil {
+						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+					}
+
 					if state == stateConnected || state == stateConnecting {
-						if err := cc._cn.Write(msg); err != nil {
-							slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
-						}
 
 						if cc._kicker != nil && cc._cn.Keepalive() > 0 {
 							cc._kicker.Reset(cc._cn.Keepalive())
@@ -265,11 +266,10 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 					goto exit
 				case msg := <-cc._cn.Pop():
 					state := cc._state
+					if err := cc._cn.UnParse(msg); err != nil {
+						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+					}
 					if state == stateConnected || state == stateConnecting {
-						if err := cc._cn.Write(msg); err != nil {
-							slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
-						}
-
 						cc._activity = time.Now()
 					}
 				}

@@ -8,10 +8,11 @@ type Connect interface {
 	Keepalive() time.Duration
 	WithSocket(int32)
 	WithIO(interface{})
-	Write([]byte) error
+	//Write([]byte) error
 	Ping()
 	Parse() (interface{}, error)
-	Push([]byte) error
-	Pop() chan []byte
+	UnParse(interface{}) error
+	Push(interface{}) error
+	Pop() chan interface{}
 	Close() error
 }

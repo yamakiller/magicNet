@@ -98,7 +98,7 @@ func (slf *TCPBox) OpenConn(socket int32) error {
 }
 
 //SendConn 发送数据给连接
-func (slf *TCPBox) SendConn(socket int32, data []byte) error {
+func (slf *TCPBox) SendConn(socket int32, msg interface{}) error {
 	slf._sync.Lock()
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -112,7 +112,7 @@ func (slf *TCPBox) SendConn(socket int32, data []byte) error {
 		return errors.New("connection closed")
 	}
 
-	return cc._cn.Push(data)
+	return cc._cn.Push(msg)
 }
 
 //CloseConn 关闭一个连接
@@ -265,11 +265,10 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 					}
 				case msg := <-cc._cn.Pop():
 					state := cc._state
+					if err := cc._cn.UnParse(msg); err != nil {
+						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+					}
 					if state == stateConnected || state == stateConnecting {
-						if err := cc._cn.Write(msg); err != nil {
-							slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
-						}
-
 						if cc._kicker != nil && cc._cn.Keepalive() > 0 {
 							cc._kicker.Reset(cc._cn.Keepalive())
 						}
@@ -282,11 +281,11 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 					goto exit
 				case msg := <-cc._cn.Pop():
 					state := cc._state
-					if state == stateConnected || state == stateConnecting {
-						if err := cc._cn.Write(msg); err != nil {
-							slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
-						}
+					if err := cc._cn.UnParse(msg); err != nil {
+						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+					}
 
+					if state == stateConnected || state == stateConnecting {
 						cc._activity = time.Now()
 					}
 				}
@@ -314,9 +313,11 @@ type _TBoxConn struct {
 type BTCPConn struct {
 	ReadBufferSize  int
 	WriteBufferSize int
+	WriteQueueSize  int
 	_sock           int32
 	_reader         *bufio.Reader
 	_writer         *bufio.Writer
+	_queue          chan interface{}
 }
 
 //Socket Returns socket
@@ -333,6 +334,7 @@ func (slf *BTCPConn) WithSocket(sock int32) {
 func (slf *BTCPConn) WithIO(c interface{}) {
 	slf._reader = bufio.NewReaderSize(c.(io.ReadWriteCloser), slf.ReadBufferSize)
 	slf._writer = bufio.NewWriterSize(c.(io.ReadWriteCloser), slf.WriteBufferSize)
+	slf._queue = make(chan interface{}, slf.WriteQueueSize)
 }
 
 //Reader Returns reader buffer
@@ -340,31 +342,26 @@ func (slf *BTCPConn) Reader() *bufio.Reader {
 	return slf._reader
 }
 
-func (slf *BTCPConn) Write(b []byte) error {
-	length := len(b)
-	seek := 0
-	for {
-		if slf._writer.Available() == 0 {
-			if err := slf._writer.Flush(); err != nil {
-				return err
-			}
-		}
+//Writer Returns writer buffer
+func (slf *BTCPConn) Writer() *bufio.Writer {
+	return slf._writer
+}
 
-		n, err := slf._writer.Write(b[seek:])
-		if err != nil {
-			return err
-		}
+//Push 插入发送数据
+func (slf *BTCPConn) Push(msg interface{}) error {
+	slf._queue <- msg
+	return nil
+}
 
-		seek += n
-		if seek >= length {
-			break
-		}
-	}
+//Pop 弹出需要发送的数据
+func (slf *BTCPConn) Pop() chan interface{} {
+	return slf._queue
+}
 
-	if slf._writer.Buffered() > 0 {
-		if err := slf._writer.Flush(); err != nil {
-			return err
-		}
+//Close 释放连接资源
+func (slf *BTCPConn) Close() error {
+	if slf._queue != nil {
+		close(slf._queue)
 	}
 	return nil
 }

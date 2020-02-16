@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 	"github.com/yamakiller/magicLibs/actors"
+	"github.com/yamakiller/magicLibs/boxs"
 	"github.com/yamakiller/magicLibs/log"
 	"github.com/yamakiller/magicLibs/util"
 	"github.com/yamakiller/magicNet/examples/tcpSimpleServer/server/ado"
@@ -22,18 +23,18 @@ var (
 	tcpBox *netboxs.TCPBox
 )
 
-func onAccept(context *actors.Context) {
+func onAccept(context *boxs.Context) {
 	request := context.Message().(*netmsgs.Accept)
 	tcpBox.OpenConn(request.Sock)
 	context.Info("accept connect socket %d", request.Sock)
 }
 
-func onMessage(context *actors.Context) {
+func onMessage(context *boxs.Context) {
 	request := context.Message().(*netmsgs.Message)
 	context.Info("socket %d message: %+v", request.Sock, request.Data)
 }
 
-func onClosed(context *actors.Context) {
+func onClosed(context *boxs.Context) {
 	request := context.Message().(*netmsgs.Closed)
 	context.Info("closed connect socket %d", request.Sock)
 }
