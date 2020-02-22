@@ -2,7 +2,7 @@ package netboxs
 
 import (
 	"errors"
-	"strconv"
+	"io"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -17,12 +17,17 @@ import (
 
 //WSSBox websocket network box
 type WSSBox struct {
+	ReadBufferSize   int
+	WriteBufferSize  int
+	Handshaketimeout int
+	T                int //消息类型TextMessage ...
+
 	boxs.Box
 	_max    int32
 	_cur    int32
 	_borker *borker.WSSBorker
-	_conns  *table.HashTable
-	_sync   sync.Mutex
+	_conns  *table.HashTable2
+	//_sync   sync.Mutex
 	_closed bool
 	_pools  Pool
 }
@@ -38,49 +43,42 @@ func (slf *WSSBox) WithMax(max int32) {
 }
 
 //ListenAndServe 启动监听服务
-//addr@wspath@readbuffersize@writebuffersize@handshaketimeout(second)
+//addr@wspath
 func (slf *WSSBox) ListenAndServe(addr string) error {
 	slf.Box.StartedWait()
 	wsPath := ""
 	as := strings.Split(addr, "@")
-	rBufferSize := 2048
-	wBufferSize := 2048
 	hTimeOut := time.Second
+	if slf.Handshaketimeout > 0 {
+		hTimeOut = slf._borker.HandshakeTimeout * time.Second
+	}
+
 	if len(as) >= 2 {
 		addr = as[0]
 		wsPath = as[1]
-		if len(as) >= 3 {
-			rBufferSize, _ = strconv.Atoi(as[2])
-		}
-
-		if len(as) >= 4 {
-			wBufferSize, _ = strconv.Atoi(as[2])
-		}
-
-		if len(as) >= 5 {
-			tmpTimeOut, _ := strconv.Atoi(as[2])
-			hTimeOut = time.Duration(tmpTimeOut) * time.Second
-		}
 	}
 
 	slf._borker = &borker.WSSBorker{
 		WSPath:           wsPath,
 		Spawn:            slf.handleConnect,
-		ReadBufferSize:   rBufferSize,
-		WriteBufferSize:  wBufferSize,
+		ReadBufferSize:   slf.ReadBufferSize,
+		WriteBufferSize:  slf.WriteBufferSize,
 		HandshakeTimeout: hTimeOut,
 	}
 
-	slf._conns = &table.HashTable{
+	slf._conns = &table.HashTable2{
 		Mask: 0xFFFFFFF,
-		Max:  uint32(float64(slf._max) * 1.2),
+		Max:  uint32(slf._max),
 		Comp: func(a, b interface{}) int {
-			ca := a.(*_TBoxConn)
+			ca := a.(*_WBoxConn)
 			cb := b.(uint32)
 			if ca._cn.Socket() == int32(cb) {
 				return 0
 			}
 			return -1
+		},
+		GetKey: func(a interface{}) uint32 {
+			return uint32(a.(*_WBoxConn)._cn.Socket())
 		},
 	}
 	slf._conns.Initial()
@@ -108,33 +106,57 @@ func (slf *WSSBox) ShutdownWait() {
 	slf.Box.ShutdownWait()
 }
 
-//CloseConn 关闭一个连接
-func (slf *WSSBox) CloseConn(socket int32) error {
-	slf._sync.Lock()
-	defer slf._sync.Unlock()
+//SendTo 发送数据给连接
+func (slf *WSSBox) SendTo(socket int32, msg interface{}) error {
+	c := slf._conns.Get(uint32(socket))
+	if c == nil {
+		return errors.New("not found socket")
+	}
+
+	cc := c.(*_WBoxConn)
+	if cc._state == stateClosed {
+		return errors.New("connection closed")
+	}
+
+	select {
+	case <-cc._closed:
+	default:
+	}
+
+	return cc._cn.Push(msg)
+}
+
+//CloseTo 关闭一个连接
+func (slf *WSSBox) CloseTo(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
 		return errors.New("not found socket")
 	}
 	cc := c.(*_WBoxConn)
 	cc._state = stateClosed
-	cc._closed <- true
+	select {
+	case <-cc._closed:
+	default:
+		close(cc._closed)
+	}
 	err := cc._io.Close()
 	return err
 }
 
-//CloseConnWait 关闭一个连接并等待连接退出
-func (slf *WSSBox) CloseConnWait(socket int32) error {
-	slf._sync.Lock()
+//CloseToWait 关闭一个连接并等待连接退出
+func (slf *WSSBox) CloseToWait(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
-		slf._sync.Unlock()
 		return errors.New("not found socket")
 	}
 
 	cc := c.(*_WBoxConn)
 	cc._state = stateClosed
-	cc._closed <- true
+	select {
+	case <-cc._closed:
+	default:
+		close(cc._closed)
+	}
 	err := cc._io.Close()
 	cc._wg.Wait()
 
@@ -143,9 +165,6 @@ func (slf *WSSBox) CloseConnWait(socket int32) error {
 
 //GetValues Returns all socket
 func (slf *WSSBox) GetValues() []int32 {
-	slf._sync.Lock()
-	defer slf._sync.Unlock()
-
 	cns := slf._conns.GetValues()
 	res := make([]int32, len(cns))
 	for k, c := range cns {
@@ -159,7 +178,7 @@ func (slf *WSSBox) handleCloseAll() {
 	cs := slf.GetValues()
 	for {
 		for _, socket := range cs {
-			slf.CloseConnWait(socket)
+			slf.CloseToWait(socket)
 		}
 
 		cs = slf.GetValues()
@@ -188,14 +207,11 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 		_state:  stateInit,
 	}
 
-	slf._sync.Lock()
 	s, err := slf._conns.Push(cc)
 	if err != nil {
 		atomic.AddInt32(&slf._cur, -1)
-		slf._sync.Unlock()
 		return err
 	}
-	slf._sync.Unlock()
 	socket := int32(s)
 
 	cc._cn.WithIO(c)
@@ -210,21 +226,30 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 		for {
 			if cc._cn.Keepalive() > 0 {
 				cc._io.Conn.SetReadDeadline(cc._activity.
-					Add(time.Duration(float64(cc._cn.Keepalive()) * 1.5)))
+					Add(time.Duration(float64(cc._cn.Keepalive()) * 2)))
 			}
 
-			msg, err := cc._cn.Parse()
+			msg, err := cc._cn.UnSeria()
 			if cc._state == stateClosed {
 				err = errors.New("error disconnect")
 			}
 
 			if msg != nil {
+				cc._activity = time.Now()
 				slf.Box.GetPID().Post(&netmsgs.Message{Sock: socket,
 					Data: msg})
+				state := cc._state
+				if state == stateConnected || state == stateConnecting {
+
+					if cc._kicker != nil && cc._cn.Keepalive() > 0 {
+						cc._kicker.Reset(cc._cn.Keepalive())
+					}
+					cc._activity = time.Now()
+				}
 			}
 
 			if err != nil {
-				slf.CloseConn(socket)
+				slf.CloseTo(socket)
 				slf.Box.GetPID().Post(&netmsgs.Closed{Sock: socket})
 			}
 		}
@@ -237,6 +262,7 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 		}()
 
 		for {
+		active:
 			if cc._kicker != nil {
 				select {
 				case <-cc._closed:
@@ -246,18 +272,12 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 						cc._cn.Ping()
 						cc._kicker.Reset(cc._cn.Keepalive())
 					}
-				case msg := <-cc._cn.Pop():
-					state := cc._state
-					if err := cc._cn.UnParse(msg); err != nil {
-						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
+				case msg, ok := <-cc._cn.Pop():
+					if !ok {
+						goto active
 					}
-
-					if state == stateConnected || state == stateConnecting {
-
-						if cc._kicker != nil && cc._cn.Keepalive() > 0 {
-							cc._kicker.Reset(cc._cn.Keepalive())
-						}
-						cc._activity = time.Now()
+					if err := cc._cn.Seria(msg); err != nil && cc._state != stateClosed {
+						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
 					}
 				}
 			} else {
@@ -265,12 +285,8 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 				case <-cc._closed:
 					goto exit
 				case msg := <-cc._cn.Pop():
-					state := cc._state
-					if err := cc._cn.UnParse(msg); err != nil {
+					if err := cc._cn.Seria(msg); err != nil && cc._state != stateClosed {
 						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
-					}
-					if state == stateConnected || state == stateConnecting {
-						cc._activity = time.Now()
 					}
 				}
 			}
@@ -291,4 +307,73 @@ type _WBoxConn struct {
 	_closed   chan bool
 	_kicker   *time.Timer
 	_activity time.Time
+}
+
+//BWSSConn WebSocket conn base
+type BWSSConn struct {
+	WriteQueueSize int
+
+	_c     *listener.WSSConn
+	_t     int
+	_sock  int32
+	_queue chan interface{}
+}
+
+//Socket Returns socket
+func (slf *BWSSConn) Socket() int32 {
+	return slf._sock
+}
+
+//WithSocket setting socket
+func (slf *BWSSConn) WithSocket(sock int32) {
+	slf._sock = sock
+}
+
+//WithIO 设置底层ID
+func (slf *BWSSConn) WithIO(c interface{}) {
+	slf._c = c.(*listener.WSSConn)
+	slf._queue = make(chan interface{}, slf.WriteQueueSize)
+}
+
+//Reader Returns reader buffer
+func (slf *BWSSConn) Reader() (io.Reader, error) {
+	t, r, err := slf._c.NextReader()
+	if err != nil {
+		return nil, err
+	}
+
+	if t != slf._t {
+		return nil, errors.New("data format does not match")
+	}
+
+	return r, nil
+}
+
+//Writer Returns writer buffer
+func (slf *BWSSConn) Writer() (io.WriteCloser, error) {
+	w, err := slf._c.NextWriter(slf._t)
+	if err != nil {
+		return nil, err
+	}
+
+	return w, nil
+}
+
+//Push 插入发送数据
+func (slf *BWSSConn) Push(msg interface{}) error {
+	slf._queue <- msg
+	return nil
+}
+
+//Pop 弹出需要发送的数据
+func (slf *BWSSConn) Pop() chan interface{} {
+	return slf._queue
+}
+
+//Close 释放连接资源
+func (slf *BWSSConn) Close() error {
+	if slf._queue != nil {
+		close(slf._queue)
+	}
+	return nil
 }

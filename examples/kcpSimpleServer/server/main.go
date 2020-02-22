@@ -2,30 +2,28 @@ package main
 
 import (
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"reflect"
 
 	_ "github.com/mkevac/debugcharts"
-
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 	"github.com/yamakiller/magicLibs/actors"
 	"github.com/yamakiller/magicLibs/boxs"
 	"github.com/yamakiller/magicLibs/log"
 	"github.com/yamakiller/magicLibs/util"
-	"github.com/yamakiller/magicNet/examples/tcpSimpleServer/server/ado"
+	"github.com/yamakiller/magicNet/examples/kcpSimpleServer/server/ado"
 	"github.com/yamakiller/magicNet/netboxs"
 	"github.com/yamakiller/magicNet/netmsgs"
 )
 
 var (
-	tcpBox *netboxs.TCPBox
+	kcpBox *netboxs.KCPBox
 )
 
 func onAccept(context *boxs.Context) {
 	request := context.Message().(*netmsgs.Accept)
-	tcpBox.OpenTo(request.Sock)
+	kcpBox.OpenTo(request.Sock)
 	context.Info("accept connect socket %d", request.Sock)
 }
 
@@ -37,6 +35,11 @@ func onMessage(context *boxs.Context) {
 func onClosed(context *boxs.Context) {
 	request := context.Message().(*netmsgs.Closed)
 	context.Info("closed connect socket %d", request.Sock)
+}
+
+func onError(context *boxs.Context) {
+	request := context.Message().(*netmsgs.Error)
+	context.Info("closed connect socket %d error %+s", request.Sock, request.Err.Error())
 }
 
 func main() {
@@ -60,14 +63,28 @@ func main() {
 	engine := actors.New(nil)
 	engine.WithLogger(logSystem)
 
-	tcpService, _ := netboxs.Spawn(netboxs.ModeTCPListener, &ado.ConnPools{})
+	kcpSrv := &netboxs.KCPBox{
+		Box:           *boxs.SpawnBox(nil),
+		RecvWndSize:   128,
+		SendWndSize:   128,
+		RecvQueueSize: 32,
+		NoDelay:       1,
+		Interval:      10,
+		Resend:        2,
+		Nc:            1,
+		RxMinRto:      10,
+		FastResend:    1,
+	}
+	kcpSrv.WithPool(&ado.ConnPools{})
+
 	_, err := engine.New(func(pid *actors.PID) actors.Actor {
-		tcpService.(*netboxs.TCPBox).WithPID(pid)
-		tcpService.(*netboxs.TCPBox).WithMax(1024)
-		tcpService.(*netboxs.TCPBox).Register(reflect.TypeOf(&netmsgs.Accept{}), onAccept)
-		tcpService.(*netboxs.TCPBox).Register(reflect.TypeOf(&netmsgs.Message{}), onMessage)
-		tcpService.(*netboxs.TCPBox).Register(reflect.TypeOf(&netmsgs.Closed{}), onClosed)
-		return tcpService
+		kcpSrv.WithPID(pid)
+		kcpSrv.WithMax(1024)
+		kcpSrv.Register(reflect.TypeOf(&netmsgs.Accept{}), onAccept)
+		kcpSrv.Register(reflect.TypeOf(&netmsgs.Message{}), onMessage)
+		kcpSrv.Register(reflect.TypeOf(&netmsgs.Closed{}), onClosed)
+		kcpSrv.Register(reflect.TypeOf(&netmsgs.Error{}), onError)
+		return kcpSrv
 	})
 
 	watch := util.SignalWatch{}
@@ -77,11 +94,8 @@ func main() {
 		logSystem.Error("", "启动TCPBoxs失败")
 		goto exit
 	}
-
-	tcpBox = tcpService.(*netboxs.TCPBox)
-	if err = tcpService.(*netboxs.TCPBox).ListenAndServe("0.0.0.0:12000"); err != nil {
+	if err = kcpSrv.ListenAndServe("0.0.0.0:12000"); err != nil {
 		logSystem.Error("", "监听失败, %s", err.Error())
-		tcpBox = nil
 		goto exit
 	}
 
@@ -102,6 +116,7 @@ func main() {
 
 exit:
 	logSystem.Info("", "退出系统...")
-	tcpService.(*netboxs.TCPBox).ShutdownWait()
+	kcpSrv.ShutdownWait()
 	logSystem.Close()
+
 }

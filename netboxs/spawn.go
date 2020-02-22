@@ -12,8 +12,6 @@ var (
 	ModeTCPListener = "tcp listener"
 	//ModeWSSListener  websocket listener
 	ModeWSSListener = "wss listener"
-	//ModeKCPListener  kcp(udp) listener
-	ModeKCPListener = "kcp listener"
 )
 
 //Spawn create an network box

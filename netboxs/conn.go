@@ -10,8 +10,8 @@ type Connect interface {
 	WithIO(interface{})
 	//Write([]byte) error
 	Ping()
-	Parse() (interface{}, error)
-	UnParse(interface{}) error
+	UnSeria() (interface{}, error)
+	Seria(interface{}) error
 	Push(interface{}) error
 	Pop() chan interface{}
 	Close() error

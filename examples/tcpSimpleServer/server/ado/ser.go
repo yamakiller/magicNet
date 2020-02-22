@@ -23,7 +23,8 @@ func (slf *Conn) Ping() {
 	slf.Push(ping)
 }
 
-func (slf *Conn) Parse() (interface{}, error) {
+//UnSeria　反序列化
+func (slf *Conn) UnSeria() (interface{}, error) {
 	var header uint16
 	if err := binary.Read(slf.Reader(), binary.BigEndian, &header); err != nil {
 		return nil, err
@@ -53,7 +54,8 @@ func (slf *Conn) Parse() (interface{}, error) {
 	return string(buffer[0:header]), nil
 }
 
-func (slf *Conn) UnParse(msg interface{}) error {
+//Seria 序列化
+func (slf *Conn) Seria(msg interface{}) error {
 	length := len([]rune(msg.(string)))
 	buffer := make([]byte, 2+length)
 	binary.BigEndian.PutUint16(buffer, uint16(length))

@@ -21,8 +21,8 @@ type TCPBox struct {
 	_max    int32
 	_cur    int32
 	_borker *borker.TCPBorker
-	_conns  *table.HashTable
-	_sync   sync.Mutex
+	_conns  *table.HashTable2
+	//_sync   sync.Mutex
 	_closed bool
 	_pools  Pool
 }
@@ -44,9 +44,9 @@ func (slf *TCPBox) ListenAndServe(addr string) error {
 		Spawn: slf.handleConnect,
 	}
 
-	slf._conns = &table.HashTable{
+	slf._conns = &table.HashTable2{
 		Mask: 0xFFFFFFF,
-		Max:  uint32(float64(slf._max) * 1.2),
+		Max:  uint32(slf._max),
 		Comp: func(a, b interface{}) int {
 			ca := a.(*_TBoxConn)
 			cb := b.(uint32)
@@ -54,6 +54,9 @@ func (slf *TCPBox) ListenAndServe(addr string) error {
 				return 0
 			}
 			return -1
+		},
+		GetKey: func(a interface{}) uint32 {
+			return uint32(a.(*_TBoxConn)._cn.Socket())
 		},
 	}
 	slf._conns.Initial()
@@ -81,15 +84,12 @@ func (slf *TCPBox) ShutdownWait() {
 	slf.Box.ShutdownWait()
 }
 
-//OpenConn setting connection state connected
-func (slf *TCPBox) OpenConn(socket int32) error {
-	slf._sync.Lock()
+//OpenTo setting connection state connected
+func (slf *TCPBox) OpenTo(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
-		slf._sync.Unlock()
 		return errors.New("not found socket")
 	}
-	slf._sync.Unlock()
 
 	cc := c.(*_TBoxConn)
 	cc._state = stateConnected
@@ -97,55 +97,60 @@ func (slf *TCPBox) OpenConn(socket int32) error {
 	return nil
 }
 
-//SendConn 发送数据给连接
-func (slf *TCPBox) SendConn(socket int32, msg interface{}) error {
-	slf._sync.Lock()
+//SendTo 发送数据给连接
+func (slf *TCPBox) SendTo(socket int32, msg interface{}) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
-		slf._sync.Unlock()
 		return errors.New("not found socket")
 	}
-	slf._sync.Unlock()
 
 	cc := c.(*_TBoxConn)
 	if cc._state == stateClosed {
 		return errors.New("connection closed")
 	}
 
+	select {
+	case <-cc._closed:
+	default:
+	}
+
 	return cc._cn.Push(msg)
 }
 
-//CloseConn 关闭一个连接
-func (slf *TCPBox) CloseConn(socket int32) error {
-	slf._sync.Lock()
+//CloseTo 关闭一个连接
+func (slf *TCPBox) CloseTo(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
-		slf._sync.Unlock()
 		return errors.New("not found socket")
 	}
 	slf._conns.Remove(uint32(socket))
-	slf._sync.Unlock()
 	cc := c.(*_TBoxConn)
 	cc._state = stateClosed
-	cc._closed <- true
+	select {
+	case <-cc._closed:
+	default:
+		close(cc._closed)
+	}
 	err := cc._io.Close()
 	return err
 }
 
-//CloseConnWait 关闭一个连接并等待连接退出
-func (slf *TCPBox) CloseConnWait(socket int32) error {
-	slf._sync.Lock()
+//CloseToWait 关闭一个连接并等待连接退出
+func (slf *TCPBox) CloseToWait(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
-		slf._sync.Unlock()
 		return errors.New("not found socket")
 	}
-	slf._conns.Remove(uint32(socket))
-	slf._sync.Unlock()
 
+	slf._conns.Remove(uint32(socket))
 	cc := c.(*_TBoxConn)
 	cc._state = stateClosed
-	cc._closed <- true
+	select {
+	case <-cc._closed:
+	default:
+		close(cc._closed)
+	}
+
 	err := cc._io.Close()
 	cc._wg.Wait()
 
@@ -154,9 +159,6 @@ func (slf *TCPBox) CloseConnWait(socket int32) error {
 
 //GetValues Returns all socket
 func (slf *TCPBox) GetValues() []int32 {
-	slf._sync.Lock()
-	defer slf._sync.Unlock()
-
 	cns := slf._conns.GetValues()
 	res := make([]int32, len(cns))
 	for k, c := range cns {
@@ -170,7 +172,7 @@ func (slf *TCPBox) handleCloseAll() {
 	cs := slf.GetValues()
 	for {
 		for _, socket := range cs {
-			slf.CloseConnWait(socket)
+			slf.CloseToWait(socket)
 		}
 
 		cs = slf.GetValues()
@@ -200,14 +202,12 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 		_state:    stateInit,
 	}
 
-	slf._sync.Lock()
 	s, err := slf._conns.Push(cc)
 	if err != nil {
 		atomic.AddInt32(&slf._cur, -1)
-		slf._sync.Unlock()
 		return err
 	}
-	slf._sync.Unlock()
+
 	socket := int32(s)
 
 	cc._cn.WithIO(c)
@@ -224,11 +224,11 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 			if cc._cn.Keepalive() > 0 {
 				if cn, ok := cc._io.(net.Conn); ok {
 					cn.SetReadDeadline(cc._activity.
-						Add(time.Duration(float64(cc._cn.Keepalive()) * 1.5)))
+						Add(time.Duration(float64(cc._cn.Keepalive()) * 2.0)))
 				}
 			}
 
-			msg, err := cc._cn.Parse()
+			msg, err := cc._cn.UnSeria()
 			if cc._state == stateClosed {
 				err = errors.New("error disconnect")
 			}
@@ -236,10 +236,19 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 			if msg != nil {
 				slf.Box.GetPID().Post(&netmsgs.Message{Sock: socket,
 					Data: msg})
+
+				state := cc._state
+				if state == stateConnected || state == stateConnecting {
+
+					if cc._kicker != nil && cc._cn.Keepalive() > 0 {
+						cc._kicker.Reset(cc._cn.Keepalive())
+					}
+					cc._activity = time.Now()
+				}
 			}
 
 			if err != nil {
-				slf.CloseConn(socket)
+				slf.CloseTo(socket)
 				slf.Box.GetPID().Post(&netmsgs.Closed{Sock: socket})
 				break
 			}
@@ -254,6 +263,7 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 		}()
 
 		for {
+		active:
 			if cc._kicker != nil {
 				select {
 				case <-cc._closed:
@@ -263,30 +273,23 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 						cc._cn.Ping()
 						cc._kicker.Reset(cc._cn.Keepalive())
 					}
-				case msg := <-cc._cn.Pop():
-					state := cc._state
-					if err := cc._cn.UnParse(msg); err != nil {
+				case msg, ok := <-cc._cn.Pop():
+					if !ok {
+						goto active
+					}
+
+					if err := cc._cn.Seria(msg); err != nil && cc._state != stateClosed {
 						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
 					}
-					if state == stateConnected || state == stateConnecting {
-						if cc._kicker != nil && cc._cn.Keepalive() > 0 {
-							cc._kicker.Reset(cc._cn.Keepalive())
-						}
-						cc._activity = time.Now()
-					}
+
 				}
 			} else {
 				select {
 				case <-cc._closed:
 					goto exit
 				case msg := <-cc._cn.Pop():
-					state := cc._state
-					if err := cc._cn.UnParse(msg); err != nil {
+					if err := cc._cn.Seria(msg); err != nil && cc._state != stateClosed {
 						slf.Box.GetPID().Post(&netmsgs.Error{Sock: socket, Err: err})
-					}
-
-					if state == stateConnected || state == stateConnecting {
-						cc._activity = time.Now()
 					}
 				}
 			}
