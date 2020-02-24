@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/yamakiller/magicLibs/encryption/dh64"
+	"github.com/yamakiller/magicLibs/net/middle"
+
 	"github.com/yamakiller/magicLibs/net/connection"
 	"github.com/yamakiller/mgokcp/mkcp"
 )
@@ -15,12 +18,23 @@ func NewClt(id uint32) *Clt {
 		KCPClient: connection.KCPClient{
 			WriteWaitQueue: 32,
 			ReadWaitQueue:  32,
+			SendWndSize:    128,
+			RecvWndSize:    128,
+			NoDelay:        1,
+			Interval:       10,
+			Resend:         2,
+			Nc:             1,
+			RxMinRto:       10,
+			FastResend:     1,
 			S:              &CltSeria{},
 			E:              &CltExption{},
+			Middleware: &TestMiddleCli{
+				SnkMiddleCli: *middle.SpawnSnkMiddleCli(dh64.DefaultP,
+					dh64.DefaultG),
+			},
 		},
 	}
 
-	c.WithID(id)
 	return c
 }
 

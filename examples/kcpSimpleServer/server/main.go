@@ -4,6 +4,10 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"time"
+
+	"github.com/yamakiller/magicLibs/encryption/dh64"
+	"github.com/yamakiller/magicLibs/net/middle"
 
 	_ "github.com/mkevac/debugcharts"
 	"github.com/sirupsen/logrus"
@@ -33,8 +37,8 @@ func onMessage(context *boxs.Context) {
 }
 
 func onClosed(context *boxs.Context) {
-	request := context.Message().(*netmsgs.Closed)
-	context.Info("closed connect socket %d", request.Sock)
+	//request := context.Message().(*netmsgs.Closed)
+	//context.Info("closed connect socket %d", request.Sock)
 }
 
 func onError(context *boxs.Context) {
@@ -74,6 +78,12 @@ func main() {
 		Nc:            1,
 		RxMinRto:      10,
 		FastResend:    1,
+		Middleware: &ado.TestMiddleServe{
+			SnkMiddleServe: *middle.SpawnSnkMiddleServe(12001,
+				dh64.DefaultP,
+				dh64.DefaultG,
+				time.Second),
+		},
 	}
 	kcpSrv.WithPool(&ado.ConnPools{})
 

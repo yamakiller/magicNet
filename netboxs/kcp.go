@@ -1,10 +1,13 @@
 package netboxs
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/yamakiller/magicLibs/net/middle"
 
 	"github.com/yamakiller/magicLibs/boxs"
 	"github.com/yamakiller/magicLibs/net/borker"
@@ -25,6 +28,7 @@ type KCPBox struct {
 	RxMinRto      int32
 	FastResend    int32
 	Mtu           int
+	Middleware    middle.KSMiddleware
 
 	boxs.Box
 	_max    int32
@@ -60,6 +64,7 @@ func (slf *KCPBox) ListenAndServe(addr string) error {
 		RxMinRto:      slf.RxMinRto,
 		FastResend:    slf.FastResend,
 		Mtu:           slf.Mtu,
+		Middleware:    slf.Middleware,
 		Spawn:         slf.handleConnect,
 	}
 
@@ -113,8 +118,11 @@ func (slf *KCPBox) SendTo(socket int32, msg interface{}) error {
 		return errors.New("connection closed")
 	}
 
+	cc._swg.Add(1)
+	defer cc._swg.Done()
+
 	select {
-	case <-cc._closed:
+	case <-cc._ctx.Done():
 	default:
 	}
 
@@ -130,11 +138,7 @@ func (slf *KCPBox) CloseTo(socket int32) error {
 	slf._conns.Remove(uint32(socket))
 	cc := c.(*_KBoxConn)
 	cc._state = stateClosed
-	select {
-	case <-cc._closed:
-	default:
-		close(cc._closed)
-	}
+	cc._cancel()
 	err := cc._io.Close()
 	return err
 }
@@ -149,11 +153,7 @@ func (slf *KCPBox) CloseToWait(socket int32) error {
 
 	cc := c.(*_KBoxConn)
 	cc._state = stateClosed
-	select {
-	case <-cc._closed:
-	default:
-		close(cc._closed)
-	}
+	cc._cancel()
 
 	err := cc._io.Close()
 	cc._wg.Wait()
@@ -214,9 +214,11 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 		return errors.New("connection is full")
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	cc := &_KBoxConn{
 		_io:       c,
-		_closed:   make(chan bool, 1),
+		_cancel:   cancel,
+		_ctx:      ctx,
 		_cn:       slf._pools.Get(),
 		_activity: time.Now(),
 		_state:    stateInit,
@@ -265,6 +267,7 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 	//数据发送
 	go func() {
 		defer func() {
+			cc._swg.Wait()
 			cc._cn.Close()
 			slf._pools.Put(cc._cn)
 			cc._wg.Done()
@@ -275,7 +278,7 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 			if cc._kicker != nil {
 
 				select {
-				case <-cc._closed:
+				case <-cc._ctx.Done():
 					goto exit
 				case <-cc._kicker.C:
 					if cc._cn.Keepalive() > 0 {
@@ -293,7 +296,7 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 				}
 			} else {
 				select {
-				case <-cc._closed:
+				case <-cc._ctx.Done():
 					goto exit
 				case msg := <-cc._cn.Pop():
 					if err := cc._cn.Seria(msg); err != nil && cc._state != stateClosed {
@@ -312,8 +315,10 @@ type _KBoxConn struct {
 	_io       *listener.KCPConn
 	_cn       Connect
 	_wg       sync.WaitGroup
+	_swg      sync.WaitGroup
 	_state    state
-	_closed   chan bool
+	_cancel   context.CancelFunc
+	_ctx      context.Context
 	_kicker   *time.Timer
 	_activity time.Time
 }

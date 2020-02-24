@@ -1,6 +1,7 @@
 package netboxs
 
 import (
+	"context"
 	"errors"
 	"io"
 	"strings"
@@ -27,7 +28,7 @@ type WSSBox struct {
 	_cur    int32
 	_borker *borker.WSSBorker
 	_conns  *table.HashTable2
-	//_sync   sync.Mutex
+
 	_closed bool
 	_pools  Pool
 }
@@ -118,8 +119,11 @@ func (slf *WSSBox) SendTo(socket int32, msg interface{}) error {
 		return errors.New("connection closed")
 	}
 
+	cc._swg.Add(1)
+	defer cc._swg.Done()
+
 	select {
-	case <-cc._closed:
+	case <-cc._ctx.Done():
 	default:
 	}
 
@@ -134,11 +138,7 @@ func (slf *WSSBox) CloseTo(socket int32) error {
 	}
 	cc := c.(*_WBoxConn)
 	cc._state = stateClosed
-	select {
-	case <-cc._closed:
-	default:
-		close(cc._closed)
-	}
+	cc._cancel()
 	err := cc._io.Close()
 	return err
 }
@@ -152,11 +152,7 @@ func (slf *WSSBox) CloseToWait(socket int32) error {
 
 	cc := c.(*_WBoxConn)
 	cc._state = stateClosed
-	select {
-	case <-cc._closed:
-	default:
-		close(cc._closed)
-	}
+	cc._cancel()
 	err := cc._io.Close()
 	cc._wg.Wait()
 
@@ -200,9 +196,11 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 		return errors.New("connection is full")
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	cc := &_WBoxConn{
 		_io:     c,
-		_closed: make(chan bool),
+		_cancel: cancel,
+		_ctx:    ctx,
 		_cn:     slf._pools.Get(),
 		_state:  stateInit,
 	}
@@ -257,6 +255,7 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 
 	go func() {
 		defer func() {
+			cc._swg.Wait()
 			cc._cn.Close()
 			cc._wg.Done()
 		}()
@@ -265,7 +264,7 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 		active:
 			if cc._kicker != nil {
 				select {
-				case <-cc._closed:
+				case <-cc._ctx.Done():
 					goto exit
 				case <-cc._kicker.C:
 					if cc._cn.Keepalive() > 0 {
@@ -282,7 +281,7 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 				}
 			} else {
 				select {
-				case <-cc._closed:
+				case <-cc._ctx.Done():
 					goto exit
 				case msg := <-cc._cn.Pop():
 					if err := cc._cn.Seria(msg); err != nil && cc._state != stateClosed {
@@ -303,8 +302,10 @@ type _WBoxConn struct {
 	_io       *listener.WSSConn
 	_cn       Connect
 	_wg       sync.WaitGroup
+	_swg      sync.WaitGroup
 	_state    state
-	_closed   chan bool
+	_cancel   context.CancelFunc
+	_ctx      context.Context
 	_kicker   *time.Timer
 	_activity time.Time
 }
