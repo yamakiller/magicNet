@@ -42,19 +42,16 @@ func main() {
 
 	for {
 		curtime := time.Now()
-		//for i, cc := range clients {
 		for i := 0; i < len(clients); {
 			cc := clients[i]
 			diff := curtime.Sub(cc.Timeout)
 			if diff.Milliseconds() >= int64(timeDeply) {
 				if cc.Check >= checkNum {
 					clients = append(clients[0:i], clients[i+1:]...)
-					fmt.Println("s1")
 					cc.Close()
 					continue
 				}
 
-				fmt.Println("发送")
 				if err := cc.SendTo("abcd"); err != nil {
 					failCount++
 					clients = append(clients[0:i], clients[i+1:]...)
@@ -62,14 +59,13 @@ func main() {
 					continue
 				}
 
-				time.Sleep(100 * time.Second)
-
 				sendCount++
 				cc.Timeout = curtime
 				cc.Check++
 			}
 			i++
 		}
+
 		if len(clients) == 0 {
 			break
 		}
