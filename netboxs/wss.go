@@ -159,12 +159,21 @@ func (slf *WSSBox) CloseToWait(socket int32) error {
 	return err
 }
 
+//GetConnect Return connection
+func (slf *WSSBox) GetConnect(socket int32) (interface{}, error) {
+	c := slf._conns.Get(uint32(socket))
+	if c == nil {
+		return nil, errors.New("not found connection")
+	}
+	return c.(*_WBoxConn)._cn, nil
+}
+
 //GetValues Returns all socket
 func (slf *WSSBox) GetValues() []int32 {
 	cns := slf._conns.GetValues()
 	res := make([]int32, len(cns))
 	for k, c := range cns {
-		res[k] = c.(*_TBoxConn)._cn.Socket()
+		res[k] = c.(*_WBoxConn)._cn.Socket()
 	}
 
 	return res

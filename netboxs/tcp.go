@@ -104,7 +104,6 @@ func (slf *TCPBox) SendTo(socket int32, msg interface{}) error {
 	if c == nil {
 		return errors.New("not found socket")
 	}
-
 	cc := c.(*_TBoxConn)
 	if cc._state == stateClosed {
 		return errors.New("connection closed")
@@ -112,13 +111,11 @@ func (slf *TCPBox) SendTo(socket int32, msg interface{}) error {
 
 	cc._swg.Add(1)
 	defer cc._swg.Done()
-
 	select {
 	case <-cc._ctx.Done():
 		return errors.New("connection closed")
 	default:
 	}
-
 	return cc._cn.Push(msg)
 }
 
@@ -152,6 +149,15 @@ func (slf *TCPBox) CloseToWait(socket int32) error {
 	cc._wg.Wait()
 
 	return err
+}
+
+//GetConnect Return connection
+func (slf *TCPBox) GetConnect(socket int32) (interface{}, error) {
+	c := slf._conns.Get(uint32(socket))
+	if c == nil {
+		return nil, errors.New("not found connection")
+	}
+	return c.(*_TBoxConn)._cn, nil
 }
 
 //GetValues Returns all socket

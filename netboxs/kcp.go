@@ -161,6 +161,15 @@ func (slf *KCPBox) CloseToWait(socket int32) error {
 	return err
 }
 
+//GetConnect Return connection
+func (slf *KCPBox) GetConnect(socket int32) (interface{}, error) {
+	c := slf._conns.Get(uint32(socket))
+	if c == nil {
+		return nil, errors.New("not found connection")
+	}
+	return c.(*_KBoxConn)._cn, nil
+}
+
 //GetValues Returns all socket
 func (slf *KCPBox) GetValues() []int32 {
 	cns := slf._conns.GetValues()

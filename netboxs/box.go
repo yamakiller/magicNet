@@ -15,5 +15,6 @@ type NetLBox interface {
 	SendTo(socket int32, data []byte) error
 	CloseTo(socket int32) error
 	CloseToWait(socket int32) error
+	GetConnect(socket int32) (interface{}, error)
 	GetValues() []int32
 }
