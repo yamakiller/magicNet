@@ -136,6 +136,7 @@ func (slf *KCPBox) CloseTo(socket int32) error {
 		return errors.New("not found socket")
 	}
 	slf._conns.Remove(uint32(socket))
+	atomic.AddInt32(&slf._cur, -1)
 	cc := c.(*_KBoxConn)
 	cc._state = stateClosed
 	cc._cancel()
@@ -150,6 +151,7 @@ func (slf *KCPBox) CloseToWait(socket int32) error {
 		return errors.New("not found socket")
 	}
 	slf._conns.Remove(uint32(socket))
+	atomic.AddInt32(&slf._cur, -1)
 
 	cc := c.(*_KBoxConn)
 	cc._state = stateClosed

@@ -136,6 +136,9 @@ func (slf *WSSBox) CloseTo(socket int32) error {
 	if c == nil {
 		return errors.New("not found socket")
 	}
+
+	slf._conns.Remove(uint32(socket))
+	atomic.AddInt32(&slf._cur, -1)
 	cc := c.(*_WBoxConn)
 	cc._state = stateClosed
 	cc._cancel()
@@ -150,6 +153,8 @@ func (slf *WSSBox) CloseToWait(socket int32) error {
 		return errors.New("not found socket")
 	}
 
+	slf._conns.Remove(uint32(socket))
+	atomic.AddInt32(&slf._cur, -1)
 	cc := c.(*_WBoxConn)
 	cc._state = stateClosed
 	cc._cancel()
