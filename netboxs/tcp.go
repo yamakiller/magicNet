@@ -125,8 +125,11 @@ func (slf *TCPBox) CloseTo(socket int32) error {
 	if c == nil {
 		return errors.New("not found socket")
 	}
-	slf._conns.Remove(uint32(socket))
-	atomic.AddInt32(&slf._cur, -1)
+
+	if slf._conns.Remove(uint32(socket)) {
+		atomic.AddInt32(&slf._cur, -1)
+	}
+
 	cc := c.(*_TBoxConn)
 	cc._state = stateClosed
 	cc._cancel()
@@ -141,8 +144,9 @@ func (slf *TCPBox) CloseToWait(socket int32) error {
 		return errors.New("not found socket")
 	}
 
-	slf._conns.Remove(uint32(socket))
-	atomic.AddInt32(&slf._cur, -1)
+	if slf._conns.Remove(uint32(socket)) {
+		atomic.AddInt32(&slf._cur, -1)
+	}
 	cc := c.(*_TBoxConn)
 	cc._state = stateClosed
 	cc._cancel()
