@@ -225,7 +225,9 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 		atomic.AddInt32(&slf._cur, -1)
 		return err
 	}
+
 	socket := int32(s)
+	socketAddr := c.RemoteAddr()
 
 	cc._cn.WithIO(c)
 	cc._cn.WithSocket(socket)
@@ -308,7 +310,7 @@ func (slf *WSSBox) handleConnect(c *listener.WSSConn) error {
 	exit:
 	}()
 
-	slf.Box.GetPID().Post(&netmsgs.Accept{Sock: socket})
+	slf.Box.GetPID().Post(&netmsgs.Accept{Sock: socket, Addr: socketAddr})
 
 	return nil
 }

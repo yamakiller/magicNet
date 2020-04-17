@@ -247,6 +247,8 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 	}
 
 	socket := int32(s)
+	socketAddr := c.RemoteAddr()
+
 	cc._cn.WithIO(c)
 	cc._cn.WithSocket(socket)
 	if cc._cn.Keepalive() > 0 {
@@ -324,6 +326,7 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 	exit:
 	}()
 
+	slf.Box.GetPID().Post(&netmsgs.Accept{Sock: socket, Addr: socketAddr})
 	return nil
 }
 

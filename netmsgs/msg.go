@@ -1,8 +1,11 @@
 package netmsgs
 
+import "net"
+
 //Accept netboxs connection accept message
 type Accept struct {
 	Sock int32
+	Addr net.Addr
 }
 
 //Message netboxs connection recvice message

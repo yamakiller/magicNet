@@ -220,6 +220,7 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 	}
 
 	socket := int32(s)
+	socketAddr := c.RemoteAddr()
 
 	cc._cn.WithIO(c)
 	cc._cn.WithSocket(socket)
@@ -309,7 +310,7 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 	exit:
 	}()
 
-	slf.Box.GetPID().Post(&netmsgs.Accept{Sock: socket})
+	slf.Box.GetPID().Post(&netmsgs.Accept{Sock: socket, Addr: socketAddr})
 
 	return nil
 }
