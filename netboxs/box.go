@@ -11,10 +11,10 @@ type NetLBox interface {
 	WithPool(Pool)
 	WithMax(int32)
 	ListenAndServe(addr string) error
-	OpenTo(socket int32) error
-	SendTo(socket int32, data []byte) error
-	CloseTo(socket int32) error
-	CloseToWait(socket int32) error
-	GetConnect(socket int32) (interface{}, error)
+	OpenTo(int32) error
+	SendTo(interface{}, []byte) error
+	CloseTo(int32) error
+	CloseToWait(int32) error
+	GetConnect(int32) (interface{}, error)
 	GetValues() []int32
 }

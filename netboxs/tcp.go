@@ -98,9 +98,13 @@ func (slf *TCPBox) OpenTo(socket int32) error {
 	return nil
 }
 
-//SendTo 发送数据给连接
-func (slf *TCPBox) SendTo(socket int32, msg interface{}) error {
-	c := slf._conns.Get(uint32(socket))
+//SendTo send data socket
+func (slf *TCPBox) SendTo(socket interface{}, msg interface{}) error {
+	sock, ok := socket.(int32)
+	if !ok {
+		return errors.New("param(1): socket is int32")
+	}
+	c := slf._conns.Get(uint32(sock))
 	if c == nil {
 		return errors.New("not found socket")
 	}
