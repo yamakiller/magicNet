@@ -12,6 +12,8 @@ var (
 	ModeTCPListener = "tcp listener"
 	//ModeWSSListener  websocket listener
 	ModeWSSListener = "wss listener"
+	//ModeUDPListener  udp listener
+	ModeUDPListener = "udp listener"
 )
 
 //Spawn create an network box
@@ -29,6 +31,11 @@ func Spawn(tag string, pool Pool) (actors.Actor, error) {
 		}
 		wss.WithPool(pool)
 		return wss, nil
+	case ModeUDPListener:
+		udp := &UDPBox{
+			Box: *boxs.SpawnBox(nil),
+		}
+		return udp, nil
 	default:
 		return nil, errors.New("undefined")
 	}
