@@ -3,13 +3,13 @@ package netboxs
 import "crypto/tls"
 
 //NetBox network connection or listener server
-type NetBox interface {
+type INetBox interface {
 	Shutdown()
 }
 
 //NetLBox network listener server
-type NetLBox interface {
-	NetBox
+type NetBox interface {
+	INetBox
 	WithPool(Pool)
 	WithMax(int32)
 	ListenAndServe(addr string) error
