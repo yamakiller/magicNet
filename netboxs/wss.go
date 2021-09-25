@@ -2,6 +2,7 @@ package netboxs
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"io"
 	"strings"
@@ -89,6 +90,10 @@ func (slf *WSSBox) ListenAndServe(addr string) error {
 	}
 
 	return nil
+}
+
+func (slf *WSSBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
+	return errors.New("undefined listen tls")
 }
 
 //Shutdown 关闭服务

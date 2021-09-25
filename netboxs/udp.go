@@ -1,6 +1,7 @@
 package netboxs
 
 import (
+	"crypto/tls"
 	"errors"
 	"net"
 
@@ -45,6 +46,10 @@ func (slf *UDPBox) ListenAndServe(addr string) error {
 	}
 
 	return nil
+}
+
+func (slf *UDPBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
+	return errors.New("undefined listen tls")
 }
 
 func (slf *UDPBox) handleConnect(report *listener.UDPReport) error {

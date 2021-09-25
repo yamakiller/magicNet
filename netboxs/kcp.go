@@ -2,7 +2,10 @@ package netboxs
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
+	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -93,6 +96,10 @@ func (slf *KCPBox) ListenAndServe(addr string) error {
 	return nil
 }
 
+func (slf *KCPBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
+	return errors.New("undefined listen tls")
+}
+
 //OpenTo setting connection state connected
 func (slf *KCPBox) OpenTo(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
@@ -100,7 +107,7 @@ func (slf *KCPBox) OpenTo(socket int32) error {
 		return errors.New("not found socket")
 	}
 
-	cc := c.(*_WBoxConn)
+	cc := c.(*_KBoxConn)
 	cc._state = stateConnected
 
 	return nil
@@ -117,7 +124,7 @@ func (slf *KCPBox) SendTo(socket interface{}, msg interface{}) error {
 		return errors.New("not found socket")
 	}
 
-	cc := c.(*_TBoxConn)
+	cc := c.(*_KBoxConn)
 	if cc._state == stateClosed {
 		return errors.New("connection closed")
 	}
@@ -140,6 +147,7 @@ func (slf *KCPBox) CloseTo(socket int32) error {
 		return errors.New("not found socket")
 	}
 
+	fmt.Fprintf(os.Stderr, "cloase 2\n")
 	if slf._conns.Remove(uint32(socket)) {
 		atomic.AddInt32(&slf._cur, -1)
 	}
@@ -158,6 +166,7 @@ func (slf *KCPBox) CloseToWait(socket int32) error {
 		return errors.New("not found socket")
 	}
 
+	fmt.Fprintf(os.Stderr, "cloase 1\n")
 	if slf._conns.Remove(uint32(socket)) {
 		atomic.AddInt32(&slf._cur, -1)
 	}
@@ -272,6 +281,8 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 			if cc._state == stateClosed {
 				err = errors.New("error disconnect")
 			}
+
+			cc._activity = time.Now()
 
 			if msg != nil {
 				slf.Box.GetPID().Post(&netmsgs.Message{Sock: socket,

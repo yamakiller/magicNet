@@ -3,6 +3,7 @@ package netboxs
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"errors"
 	"io"
 	"net"
@@ -63,6 +64,36 @@ func (slf *TCPBox) ListenAndServe(addr string) error {
 	slf._conns.Initial()
 
 	if err := slf._borker.ListenAndServe(addr); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (slf *TCPBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
+	slf.Box.StartedWait()
+	slf._borker = &borker.TCPBorker{
+		Spawn: slf.handleConnect,
+	}
+
+	slf._conns = &table.HashTable2{
+		Mask: 0xFFFFFFF,
+		Max:  uint32(slf._max),
+		Comp: func(a, b interface{}) int {
+			ca := a.(*_TBoxConn)
+			cb := b.(uint32)
+			if ca._cn.Socket() == int32(cb) {
+				return 0
+			}
+			return -1
+		},
+		GetKey: func(a interface{}) uint32 {
+			return uint32(a.(*_TBoxConn)._cn.Socket())
+		},
+	}
+	slf._conns.Initial()
+
+	if err := slf._borker.ListenAndServeTls(addr, ptls); err != nil {
 		return err
 	}
 
