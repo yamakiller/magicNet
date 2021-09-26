@@ -15,7 +15,7 @@ type NetBox interface {
 	ListenAndServe(addr string) error
 	ListenAndServeTls(addr string, ptls *tls.Config) error
 	OpenTo(int32) error
-	SendTo(interface{}, []byte) error
+	SendTo(interface{}, interface{}) error
 	CloseTo(int32) error
 	CloseToWait(int32) error
 	GetConnect(int32) (interface{}, error)
