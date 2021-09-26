@@ -64,7 +64,7 @@ func (slf *UDPBox) handleConnect(report *listener.UDPReport) error {
 }
 
 //OpenTo Disable
-func (slf *UDPBox) OpenTo(socket int32) error {
+func (slf *UDPBox) OpenTo(socket interface{}) error {
 	panic("UDP OpenTo Function is disable")
 }
 

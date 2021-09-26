@@ -117,8 +117,8 @@ func (slf *TCPBox) ShutdownWait() {
 }
 
 //OpenTo setting connection state connected
-func (slf *TCPBox) OpenTo(socket int32) error {
-	c := slf._conns.Get(uint32(socket))
+func (slf *TCPBox) OpenTo(socket interface{}) error {
+	c := slf._conns.Get(uint32(socket.(int32)))
 	if c == nil {
 		return errors.New("not found socket")
 	}

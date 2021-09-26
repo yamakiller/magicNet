@@ -112,6 +112,18 @@ func (slf *WSSBox) ShutdownWait() {
 	slf.Box.ShutdownWait()
 }
 
+func (slf *WSSBox) OpenTo(socket interface{}) error {
+	c := slf._conns.Get(uint32(socket.(int32)))
+	if c == nil {
+		return errors.New("not found socket")
+	}
+
+	cc := c.(*_TBoxConn)
+	cc._state = stateConnected
+
+	return nil
+}
+
 //SendTo 发送数据给连接
 func (slf *WSSBox) SendTo(socket interface{}, msg interface{}) error {
 	sock, ok := socket.(int32)
