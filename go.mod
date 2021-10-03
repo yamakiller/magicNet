@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.16.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	github.com/yamakiller/magicLibs v1.1.0
-	github.com/yamakiller/mgokcp v0.0.0-20200222140718-6b0595df611e
+	github.com/yamakiller/magicLibs v1.2.0
+	github.com/yamakiller/mgokcp v1.2.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 )
