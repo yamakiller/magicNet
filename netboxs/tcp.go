@@ -409,5 +409,9 @@ func (dtc *DefaultTcpConnector) Close() error {
 	if dtc._q != nil {
 		close(dtc._q)
 	}
+
+	dtc._r = nil
+	dtc._w = nil
+
 	return nil
 }
