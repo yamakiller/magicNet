@@ -17,7 +17,7 @@ import (
 	"github.com/yamakiller/magicNet/netmsgs"
 )
 
-//TCPBox tcp network box
+// TCPBox tcp network box
 type TCPBox struct {
 	boxs.Box
 	_max    int32
@@ -29,17 +29,17 @@ type TCPBox struct {
 	_pools  Pool
 }
 
-//WithPool setting connection pools
+// WithPool setting connection pools
 func (slf *TCPBox) WithPool(pool Pool) {
 	slf._pools = pool
 }
 
-//WithMax setting connection max of number
+// WithMax setting connection max of number
 func (slf *TCPBox) WithMax(max int32) {
 	slf._max = max
 }
 
-//ListenAndServe 启动监听服务
+// ListenAndServe 启动监听服务
 func (slf *TCPBox) ListenAndServe(addr string) error {
 	slf.Box.StartedWait()
 	slf._borker = &borker.TCPBorker{
@@ -50,7 +50,7 @@ func (slf *TCPBox) ListenAndServe(addr string) error {
 		Mask: 0xFFFFFFF,
 		Max:  uint32(slf._max),
 		Comp: func(a, b interface{}) int {
-			ca := a.(*_TBoxConn)
+			ca := a.(*_t_connector)
 			cb := b.(uint32)
 			if ca._cn.Socket() == int32(cb) {
 				return 0
@@ -58,7 +58,7 @@ func (slf *TCPBox) ListenAndServe(addr string) error {
 			return -1
 		},
 		GetKey: func(a interface{}) uint32 {
-			return uint32(a.(*_TBoxConn)._cn.Socket())
+			return uint32(a.(*_t_connector)._cn.Socket())
 		},
 	}
 	slf._conns.Initial()
@@ -80,7 +80,7 @@ func (slf *TCPBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
 		Mask: 0xFFFFFFF,
 		Max:  uint32(slf._max),
 		Comp: func(a, b interface{}) int {
-			ca := a.(*_TBoxConn)
+			ca := a.(*_t_connector)
 			cb := b.(uint32)
 			if ca._cn.Socket() == int32(cb) {
 				return 0
@@ -88,7 +88,7 @@ func (slf *TCPBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
 			return -1
 		},
 		GetKey: func(a interface{}) uint32 {
-			return uint32(a.(*_TBoxConn)._cn.Socket())
+			return uint32(a.(*_t_connector)._cn.Socket())
 		},
 	}
 	slf._conns.Initial()
@@ -100,7 +100,7 @@ func (slf *TCPBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
 	return nil
 }
 
-//Shutdown 关闭服务
+// Shutdown 关闭服务
 func (slf *TCPBox) Shutdown() {
 	slf._closed = true
 	slf.handleCloseAll()
@@ -108,7 +108,7 @@ func (slf *TCPBox) Shutdown() {
 	slf.Box.ShutdownWait()
 }
 
-//ShutdownWait 关闭服务并等待结束
+// ShutdownWait 关闭服务并等待结束
 func (slf *TCPBox) ShutdownWait() {
 	slf._closed = true
 	slf.handleCloseAll()
@@ -116,20 +116,20 @@ func (slf *TCPBox) ShutdownWait() {
 	slf.Box.ShutdownWait()
 }
 
-//OpenTo setting connection state connected
+// OpenTo setting connection state connected
 func (slf *TCPBox) OpenTo(socket interface{}) error {
 	c := slf._conns.Get(uint32(socket.(int32)))
 	if c == nil {
 		return errors.New("not found socket")
 	}
 
-	cc := c.(*_TBoxConn)
+	cc := c.(*_t_connector)
 	cc._state = stateConnected
 
 	return nil
 }
 
-//SendTo send data socket
+// SendTo send data socket
 func (slf *TCPBox) SendTo(socket interface{}, msg interface{}) error {
 	sock, ok := socket.(int32)
 	if !ok {
@@ -139,7 +139,7 @@ func (slf *TCPBox) SendTo(socket interface{}, msg interface{}) error {
 	if c == nil {
 		return errors.New("not found socket")
 	}
-	cc := c.(*_TBoxConn)
+	cc := c.(*_t_connector)
 	if cc._state == stateClosed {
 		return errors.New("connection closed")
 	}
@@ -154,7 +154,7 @@ func (slf *TCPBox) SendTo(socket interface{}, msg interface{}) error {
 	return cc._cn.Push(msg)
 }
 
-//CloseTo 关闭一个连接
+// CloseTo 关闭一个连接
 func (slf *TCPBox) CloseTo(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -165,14 +165,14 @@ func (slf *TCPBox) CloseTo(socket int32) error {
 		atomic.AddInt32(&slf._cur, -1)
 	}
 
-	cc := c.(*_TBoxConn)
+	cc := c.(*_t_connector)
 	cc._state = stateClosed
 	cc._cancel()
 	err := cc._io.Close()
 	return err
 }
 
-//CloseToWait 关闭一个连接并等待连接退出
+// CloseToWait 关闭一个连接并等待连接退出
 func (slf *TCPBox) CloseToWait(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -182,7 +182,7 @@ func (slf *TCPBox) CloseToWait(socket int32) error {
 	if slf._conns.Remove(uint32(socket)) {
 		atomic.AddInt32(&slf._cur, -1)
 	}
-	cc := c.(*_TBoxConn)
+	cc := c.(*_t_connector)
 	cc._state = stateClosed
 	cc._cancel()
 
@@ -192,21 +192,21 @@ func (slf *TCPBox) CloseToWait(socket int32) error {
 	return err
 }
 
-//GetConnect Return connection
+// GetConnect Return connection
 func (slf *TCPBox) GetConnect(socket int32) (interface{}, error) {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
 		return nil, errors.New("not found connection")
 	}
-	return c.(*_TBoxConn)._cn, nil
+	return c.(*_t_connector)._cn, nil
 }
 
-//GetValues Returns all socket
+// GetValues Returns all socket
 func (slf *TCPBox) GetValues() []int32 {
 	cns := slf._conns.GetValues()
 	res := make([]int32, len(cns))
 	for k, c := range cns {
-		res[k] = c.(*_TBoxConn)._cn.Socket()
+		res[k] = c.(*_t_connector)._cn.Socket()
 	}
 
 	return res
@@ -239,7 +239,7 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	cc := &_TBoxConn{
+	cc := &_t_connector{
 		_io:       c,
 		_cancel:   cancel,
 		_ctx:      ctx,
@@ -350,7 +350,7 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 	return nil
 }
 
-type _TBoxConn struct {
+type _t_connector struct {
 	_io       io.ReadWriteCloser
 	_cn       Connect
 	_wg       sync.WaitGroup
@@ -362,59 +362,52 @@ type _TBoxConn struct {
 	_activity time.Time
 }
 
-//BTCPConn TCP base connection
-type BTCPConn struct {
-	ReadBufferSize  int
-	WriteBufferSize int
-	WriteQueueSize  int
-	_sock           int32
-	_reader         *bufio.Reader
-	_writer         *bufio.Writer
-	_queue          chan interface{}
+type DefaultTcpConnector struct {
+	_s int32
+	_r *bufio.Reader
+	_w *bufio.Writer
+	_q chan interface{}
 }
 
-//Socket Returns socket
-func (slf *BTCPConn) Socket() int32 {
-	return slf._sock
+func (dtc *DefaultTcpConnector) Socket() int32 {
+	return dtc._s
 }
 
-//WithSocket setting socket
-func (slf *BTCPConn) WithSocket(sock int32) {
-	slf._sock = sock
+func (dtc *DefaultTcpConnector) WithSocket(sock int32) {
+	slf._s = sock
 }
 
-//WithIO setting io interface
-func (slf *BTCPConn) WithIO(c interface{}) {
-	slf._reader = bufio.NewReaderSize(c.(io.ReadWriteCloser), slf.ReadBufferSize)
-	slf._writer = bufio.NewWriterSize(c.(io.ReadWriteCloser), slf.WriteBufferSize)
-	slf._queue = make(chan interface{}, slf.WriteQueueSize)
+// WithIO setting io interface
+func (dtc *DefaultTcpConnector) WithIO(c interface{}) {
+	dtc._r = bufio.NewReaderSize(c.(io.ReadWriteCloser), 1024)
+	dtc._w = bufio.NewWriterSize(c.(io.ReadWriteCloser), 1024)
+	dtc._q = make(chan interface{}, 8)
 }
 
-//Reader Returns reader buffer
-func (slf *BTCPConn) Reader() *bufio.Reader {
-	return slf._reader
+// Reader Returns reader buffer
+func (dtc *DefaultTcpConnector) Reader() *bufio.Reader {
+	return dtc._reader
 }
 
-//Writer Returns writer buffer
-func (slf *BTCPConn) Writer() *bufio.Writer {
+// Writer Returns writer buffer
+func (dtc *DefaultTcpConnector) Writer() *bufio.Writer {
 	return slf._writer
 }
 
-//Push 插入发送数据
-func (slf *BTCPConn) Push(msg interface{}) error {
-	slf._queue <- msg
+// Push 插入发送数据
+func (dtc *DefaultTcpConnector) Push(msg interface{}) error {
+	dtc._q <- msg
 	return nil
 }
 
-//Pop 弹出需要发送的数据
-func (slf *BTCPConn) Pop() chan interface{} {
-	return slf._queue
+// Pop 弹出需要发送的数据
+func (dtc *DefaultTcpConnector) Pop() chan interface{} {
+	return dtc._q
 }
 
-//Close 释放连接资源
-func (slf *BTCPConn) Close() error {
-	if slf._queue != nil {
-		close(slf._queue)
+func (dtc *DefaultTcpConnector) Close() error {
+	if dtc._q != nil {
+		close(dtc._q)
 	}
 	return nil
 }
