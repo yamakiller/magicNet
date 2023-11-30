@@ -386,12 +386,12 @@ func (dtc *DefaultTcpConnector) WithIO(c interface{}) {
 
 // Reader Returns reader buffer
 func (dtc *DefaultTcpConnector) Reader() *bufio.Reader {
-	return dtc._reader
+	return dtc._r
 }
 
 // Writer Returns writer buffer
 func (dtc *DefaultTcpConnector) Writer() *bufio.Writer {
-	return slf._writer
+	return dtc._w
 }
 
 // Push 插入发送数据
