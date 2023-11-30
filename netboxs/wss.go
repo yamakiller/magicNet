@@ -17,7 +17,7 @@ import (
 	"github.com/yamakiller/magicNet/netmsgs"
 )
 
-//WSSBox websocket network box
+// WSSBox websocket network box
 type WSSBox struct {
 	ReadBufferSize   int
 	WriteBufferSize  int
@@ -34,18 +34,18 @@ type WSSBox struct {
 	_pools  Pool
 }
 
-//WithPool setting connection pools
+// WithPool setting connection pools
 func (slf *WSSBox) WithPool(pool Pool) {
 	slf._pools = pool
 }
 
-//WithMax setting connection max of number
+// WithMax setting connection max of number
 func (slf *WSSBox) WithMax(max int32) {
 	slf._max = max
 }
 
-//ListenAndServe 启动监听服务
-//addr@wspath
+// ListenAndServe 启动监听服务
+// addr@wspath
 func (slf *WSSBox) ListenAndServe(addr string) error {
 	slf.Box.StartedWait()
 	wsPath := ""
@@ -96,7 +96,7 @@ func (slf *WSSBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
 	return errors.New("undefined listen tls")
 }
 
-//Shutdown 关闭服务
+// Shutdown 关闭服务
 func (slf *WSSBox) Shutdown() {
 	slf._closed = true
 	slf.handleCloseAll()
@@ -104,7 +104,7 @@ func (slf *WSSBox) Shutdown() {
 	slf.Box.ShutdownWait()
 }
 
-//ShutdownWait 关闭服务并等待结束
+// ShutdownWait 关闭服务并等待结束
 func (slf *WSSBox) ShutdownWait() {
 	slf._closed = true
 	slf.handleCloseAll()
@@ -118,13 +118,13 @@ func (slf *WSSBox) OpenTo(socket interface{}) error {
 		return errors.New("not found socket")
 	}
 
-	cc := c.(*_TBoxConn)
+	cc := c.(*_t_connector)
 	cc._state = stateConnected
 
 	return nil
 }
 
-//SendTo 发送数据给连接
+// SendTo 发送数据给连接
 func (slf *WSSBox) SendTo(socket interface{}, msg interface{}) error {
 	sock, ok := socket.(int32)
 	if !ok {
@@ -151,7 +151,7 @@ func (slf *WSSBox) SendTo(socket interface{}, msg interface{}) error {
 	return cc._cn.Push(msg)
 }
 
-//CloseTo 关闭一个连接
+// CloseTo 关闭一个连接
 func (slf *WSSBox) CloseTo(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -167,7 +167,7 @@ func (slf *WSSBox) CloseTo(socket int32) error {
 	return err
 }
 
-//CloseToWait 关闭一个连接并等待连接退出
+// CloseToWait 关闭一个连接并等待连接退出
 func (slf *WSSBox) CloseToWait(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -186,7 +186,7 @@ func (slf *WSSBox) CloseToWait(socket int32) error {
 	return err
 }
 
-//GetConnect Return connection
+// GetConnect Return connection
 func (slf *WSSBox) GetConnect(socket int32) (interface{}, error) {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -195,7 +195,7 @@ func (slf *WSSBox) GetConnect(socket int32) (interface{}, error) {
 	return c.(*_WBoxConn)._cn, nil
 }
 
-//GetValues Returns all socket
+// GetValues Returns all socket
 func (slf *WSSBox) GetValues() []int32 {
 	cns := slf._conns.GetValues()
 	res := make([]int32, len(cns))
@@ -348,7 +348,7 @@ type _WBoxConn struct {
 	_activity time.Time
 }
 
-//BWSSConn WebSocket conn base
+// BWSSConn WebSocket conn base
 type BWSSConn struct {
 	WriteQueueSize int
 
@@ -358,23 +358,23 @@ type BWSSConn struct {
 	_queue chan interface{}
 }
 
-//Socket Returns socket
+// Socket Returns socket
 func (slf *BWSSConn) Socket() int32 {
 	return slf._sock
 }
 
-//WithSocket setting socket
+// WithSocket setting socket
 func (slf *BWSSConn) WithSocket(sock int32) {
 	slf._sock = sock
 }
 
-//WithIO 设置底层ID
+// WithIO 设置底层ID
 func (slf *BWSSConn) WithIO(c interface{}) {
 	slf._c = c.(*listener.WSSConn)
 	slf._queue = make(chan interface{}, slf.WriteQueueSize)
 }
 
-//Reader Returns reader buffer
+// Reader Returns reader buffer
 func (slf *BWSSConn) Reader() (io.Reader, error) {
 	t, r, err := slf._c.NextReader()
 	if err != nil {
@@ -388,7 +388,7 @@ func (slf *BWSSConn) Reader() (io.Reader, error) {
 	return r, nil
 }
 
-//Writer Returns writer buffer
+// Writer Returns writer buffer
 func (slf *BWSSConn) Writer() (io.WriteCloser, error) {
 	w, err := slf._c.NextWriter(slf._t)
 	if err != nil {
@@ -398,18 +398,18 @@ func (slf *BWSSConn) Writer() (io.WriteCloser, error) {
 	return w, nil
 }
 
-//Push 插入发送数据
+// Push 插入发送数据
 func (slf *BWSSConn) Push(msg interface{}) error {
 	slf._queue <- msg
 	return nil
 }
 
-//Pop 弹出需要发送的数据
+// Pop 弹出需要发送的数据
 func (slf *BWSSConn) Pop() chan interface{} {
 	return slf._queue
 }
 
-//Close 释放连接资源
+// Close 释放连接资源
 func (slf *BWSSConn) Close() error {
 	if slf._queue != nil {
 		close(slf._queue)
