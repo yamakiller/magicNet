@@ -374,7 +374,7 @@ func (dtc *DefaultTcpConnector) Socket() int32 {
 }
 
 func (dtc *DefaultTcpConnector) WithSocket(sock int32) {
-	slf._s = sock
+	dtc._s = sock
 }
 
 // WithIO setting io interface
