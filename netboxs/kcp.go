@@ -19,7 +19,7 @@ import (
 	"github.com/yamakiller/magicNet/netmsgs"
 )
 
-//KCPBox kcp network box
+// KCPBox kcp network box
 type KCPBox struct {
 	RecvWndSize   int32
 	SendWndSize   int32
@@ -43,17 +43,17 @@ type KCPBox struct {
 	_pools  Pool
 }
 
-//WithPool setting connection pools
+// WithPool setting connection pools
 func (slf *KCPBox) WithPool(pool Pool) {
 	slf._pools = pool
 }
 
-//WithMax setting connection max of number
+// WithMax setting connection max of number
 func (slf *KCPBox) WithMax(max int32) {
 	slf._max = max
 }
 
-//ListenAndServe 启动监听服务
+// ListenAndServe 启动监听服务
 func (slf *KCPBox) ListenAndServe(addr string) error {
 	slf.Box.StartedWait()
 	slf._borker = &borker.KCPBorker{
@@ -100,7 +100,7 @@ func (slf *KCPBox) ListenAndServeTls(addr string, ptls *tls.Config) error {
 	return errors.New("undefined listen tls")
 }
 
-//OpenTo setting connection state connected
+// OpenTo setting connection state connected
 func (slf *KCPBox) OpenTo(socket interface{}) error {
 	c := slf._conns.Get(uint32(socket.(int32)))
 	if c == nil {
@@ -113,7 +113,7 @@ func (slf *KCPBox) OpenTo(socket interface{}) error {
 	return nil
 }
 
-//SendTo 发送数据给连接
+// SendTo 发送数据给连接
 func (slf *KCPBox) SendTo(socket interface{}, msg interface{}) error {
 	sock, ok := socket.(int32)
 	if !ok {
@@ -140,7 +140,7 @@ func (slf *KCPBox) SendTo(socket interface{}, msg interface{}) error {
 	return cc._cn.Push(msg)
 }
 
-//CloseTo 关闭一个连接
+// CloseTo 关闭一个连接
 func (slf *KCPBox) CloseTo(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -159,7 +159,7 @@ func (slf *KCPBox) CloseTo(socket int32) error {
 	return err
 }
 
-//CloseToWait 关闭一个连接并等待连接退出
+// CloseToWait 关闭一个连接并等待连接退出
 func (slf *KCPBox) CloseToWait(socket int32) error {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -181,7 +181,7 @@ func (slf *KCPBox) CloseToWait(socket int32) error {
 	return err
 }
 
-//GetConnect Return connection
+// GetConnect Return connection
 func (slf *KCPBox) GetConnect(socket int32) (interface{}, error) {
 	c := slf._conns.Get(uint32(socket))
 	if c == nil {
@@ -190,7 +190,7 @@ func (slf *KCPBox) GetConnect(socket int32) (interface{}, error) {
 	return c.(*_KBoxConn)._cn, nil
 }
 
-//GetValues Returns all socket
+// GetValues Returns all socket
 func (slf *KCPBox) GetValues() []int32 {
 	cns := slf._conns.GetValues()
 	res := make([]int32, len(cns))
@@ -201,7 +201,7 @@ func (slf *KCPBox) GetValues() []int32 {
 	return res
 }
 
-//Shutdown 关闭服务
+// Shutdown 关闭服务
 func (slf *KCPBox) Shutdown() {
 	slf._closed = true
 	slf.handleCloseAll()
@@ -209,7 +209,7 @@ func (slf *KCPBox) Shutdown() {
 	slf.Box.ShutdownWait()
 }
 
-//ShutdownWait 关闭服务并等待结束
+// ShutdownWait 关闭服务并等待结束
 func (slf *KCPBox) ShutdownWait() {
 	slf._closed = true
 	slf.handleCloseAll()
@@ -315,7 +315,9 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 					goto exit
 				case <-cc._kicker.C:
 					if cc._cn.Keepalive() > 0 {
-						cc._cn.Ping()
+						if cc._cn.Ping() {
+							slf.Box.GetPID().Post(&netmsgs.Ping{Sock: socket})
+						}
 						cc._kicker.Reset(cc._cn.Keepalive())
 					}
 				case msg, ok := <-cc._cn.Pop():
@@ -357,7 +359,7 @@ type _KBoxConn struct {
 	_activity time.Time
 }
 
-//BKCPConn KCP base connection
+// BKCPConn KCP base connection
 type BKCPConn struct {
 	WriteQueueSize int
 	_readWriter    *listener.KCPConn
@@ -365,44 +367,44 @@ type BKCPConn struct {
 	_queue         chan interface{}
 }
 
-//Socket Returns socket
+// Socket Returns socket
 func (slf *BKCPConn) Socket() int32 {
 	return slf._sock
 }
 
-//WithSocket setting socket
+// WithSocket setting socket
 func (slf *BKCPConn) WithSocket(sock int32) {
 	slf._sock = sock
 }
 
-//WithIO setting io interface
+// WithIO setting io interface
 func (slf *BKCPConn) WithIO(c interface{}) {
 	slf._readWriter = c.(*listener.KCPConn)
 	slf._queue = make(chan interface{}, slf.WriteQueueSize)
 }
 
-//Reader Returns reader buffer
+// Reader Returns reader buffer
 func (slf *BKCPConn) Reader() *listener.KCPConn {
 	return slf._readWriter
 }
 
-//Writer Returns writer buffer
+// Writer Returns writer buffer
 func (slf *BKCPConn) Writer() *listener.KCPConn {
 	return slf._readWriter
 }
 
-//Push 插入发送数据
+// Push 插入发送数据
 func (slf *BKCPConn) Push(msg interface{}) error {
 	slf._queue <- msg
 	return nil
 }
 
-//Pop 弹出需要发送的数据
+// Pop 弹出需要发送的数据
 func (slf *BKCPConn) Pop() chan interface{} {
 	return slf._queue
 }
 
-//Close 释放连接资源
+// Close 释放连接资源
 func (slf *BKCPConn) Close() error {
 	if slf._queue != nil {
 		close(slf._queue)

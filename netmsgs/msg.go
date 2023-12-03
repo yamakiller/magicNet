@@ -14,6 +14,11 @@ type Message struct {
 	Data interface{}
 }
 
+//Ping netboxs ping connection message
+type Ping struct {
+	Sock interface{}
+}
+
 //Closed netboxs connection closed message
 type Closed struct {
 	Sock int32

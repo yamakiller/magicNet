@@ -318,7 +318,9 @@ func (slf *TCPBox) handleConnect(c net.Conn) error {
 					goto exit
 				case <-cc._kicker.C:
 					if cc._cn.Keepalive() > 0 {
-						cc._cn.Ping()
+						if cc._cn.Ping() {
+							slf.Box.GetPID().Post(&netmsgs.Ping{Sock: socket})
+						}
 						cc._kicker.Reset(cc._cn.Keepalive())
 					}
 				case msg, ok := <-cc._cn.Pop():
@@ -394,7 +396,7 @@ func (dtc *DefaultTcpConnector) Writer() *bufio.Writer {
 	return dtc._w
 }
 
-// Push 插入发送数据
+// Push 插入发送数据(私有没有保护, 严禁外部调用)
 func (dtc *DefaultTcpConnector) Push(msg interface{}) error {
 	dtc._q <- msg
 	return nil

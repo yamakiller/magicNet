@@ -9,7 +9,7 @@ type Connect interface {
 	WithSocket(int32)
 	WithIO(interface{})
 	//Write([]byte) error
-	Ping()
+	Ping() bool
 	UnSeria() (interface{}, error)
 	Seria(interface{}) error
 	Push(interface{}) error
