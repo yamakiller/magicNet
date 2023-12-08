@@ -410,6 +410,7 @@ func (dtc *DefaultTcpConnector) Pop() chan interface{} {
 func (dtc *DefaultTcpConnector) Close() error {
 	if dtc._q != nil {
 		close(dtc._q)
+		dtc._q = nil
 	}
 
 	dtc._r = nil
