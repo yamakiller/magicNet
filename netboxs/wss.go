@@ -101,16 +101,16 @@ func (slf *WSSBox) Shutdown() {
 	slf._closed = true
 	slf.handleCloseAll()
 	slf._borker.Shutdown()
-	slf.Box.ShutdownWait()
+	//slf.Box.ShutdownWait()
 }
 
 // ShutdownWait 关闭服务并等待结束
-func (slf *WSSBox) ShutdownWait() {
+/*func (slf *WSSBox) ShutdownWait() {
 	slf._closed = true
 	slf.handleCloseAll()
 	slf._borker.Shutdown()
-	slf.Box.ShutdownWait()
-}
+	//slf.Box.ShutdownWait()
+}*/
 
 func (slf *WSSBox) OpenTo(socket interface{}) error {
 	c := slf._conns.Get(uint32(socket.(int32)))

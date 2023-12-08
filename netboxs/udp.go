@@ -11,7 +11,7 @@ import (
 	"github.com/yamakiller/magicNet/netmsgs"
 )
 
-//UDPBox udp network box
+// UDPBox udp network box
 type UDPBox struct {
 	Mtu        int
 	OutQueue   int
@@ -22,17 +22,17 @@ type UDPBox struct {
 	_borker *borker.UDPBorker
 }
 
-//WithPool Disable
+// WithPool Disable
 func (slf *UDPBox) WithPool(pool Pool) {
 	panic("UDP WithPool Function is disable")
 }
 
-//WithMax Disable
+// WithMax Disable
 func (slf *UDPBox) WithMax(max int32) {
 	panic("UDP WithMax Function is disable")
 }
 
-//ListenAndServe 启动监听服务
+// ListenAndServe 启动监听服务
 func (slf *UDPBox) ListenAndServe(addr string) error {
 	slf.Box.StartedWait()
 	slf._borker = &borker.UDPBorker{
@@ -63,14 +63,14 @@ func (slf *UDPBox) handleConnect(report *listener.UDPReport) error {
 	return nil
 }
 
-//OpenTo Disable
+// OpenTo Disable
 func (slf *UDPBox) OpenTo(socket interface{}) error {
 	panic("UDP OpenTo Function is disable")
 }
 
-//SendTo send data to address
-//Param UDPAddr
-//Param []byte/interface{}
+// SendTo send data to address
+// Param UDPAddr
+// Param []byte/interface{}
 func (slf *UDPBox) SendTo(addrs interface{}, msg interface{}) error {
 	var (
 		err error
@@ -97,34 +97,34 @@ func (slf *UDPBox) SendTo(addrs interface{}, msg interface{}) error {
 	return nil
 }
 
-//CloseTo Disable
+// CloseTo Disable
 func (slf *UDPBox) CloseTo(socket int32) error {
 	panic("UDP CloseTo Function is disable")
 }
 
-//CloseToWait Disable
+// CloseToWait Disable
 func (slf *UDPBox) CloseToWait(socket int32) error {
 	panic("UDP CloseToWait Function is disable")
 }
 
-//GetConnect Disable
+// GetConnect Disable
 func (slf *UDPBox) GetConnect(socket int32) (interface{}, error) {
 	panic("UDP GetConnect Function is disable")
 }
 
-//GetValues Disable
+// GetValues Disable
 func (slf *UDPBox) GetValues() []int32 {
 	panic("UDP GetValues Function is disable")
 }
 
-//Shutdown 关闭服务
+// Shutdown 关闭服务
 func (slf *UDPBox) Shutdown() {
 	slf._borker.Shutdown()
-	slf.Box.ShutdownWait()
+	//slf.Box.ShutdownWait()
 }
 
-//ShutdownWait ...
-func (slf *UDPBox) ShutdownWait() {
+// ShutdownWait ...
+/*func (slf *UDPBox) ShutdownWait() {
 	slf._borker.Shutdown()
-	slf.Box.ShutdownWait()
-}
+	//slf.Box.ShutdownWait()
+}*/

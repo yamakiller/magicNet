@@ -75,7 +75,7 @@ func (slf *KCPBox) ListenAndServe(addr string) error {
 		Mask: 0xFFFFFFF,
 		Max:  uint32(slf._max),
 		Comp: func(a, b interface{}) int {
-			ca := a.(*_KBoxConn)
+			ca := a.(*_k_connector)
 			cb := b.(uint32)
 			if ca._cn.Socket() == int32(cb) {
 				return 0
@@ -83,7 +83,7 @@ func (slf *KCPBox) ListenAndServe(addr string) error {
 			return -1
 		},
 		GetKey: func(a interface{}) uint32 {
-			return uint32(a.(*_KBoxConn)._cn.Socket())
+			return uint32(a.(*_k_connector)._cn.Socket())
 		},
 	}
 
@@ -107,7 +107,7 @@ func (slf *KCPBox) OpenTo(socket interface{}) error {
 		return errors.New("not found socket")
 	}
 
-	cc := c.(*_KBoxConn)
+	cc := c.(*_k_connector)
 	cc._state = stateConnected
 
 	return nil
@@ -124,7 +124,7 @@ func (slf *KCPBox) SendTo(socket interface{}, msg interface{}) error {
 		return errors.New("not found socket")
 	}
 
-	cc := c.(*_KBoxConn)
+	cc := c.(*_k_connector)
 	if cc._state == stateClosed {
 		return errors.New("connection closed")
 	}
@@ -152,7 +152,7 @@ func (slf *KCPBox) CloseTo(socket int32) error {
 		atomic.AddInt32(&slf._cur, -1)
 	}
 
-	cc := c.(*_KBoxConn)
+	cc := c.(*_k_connector)
 	cc._state = stateClosed
 	cc._cancel()
 	err := cc._io.Close()
@@ -171,7 +171,7 @@ func (slf *KCPBox) CloseToWait(socket int32) error {
 		atomic.AddInt32(&slf._cur, -1)
 	}
 
-	cc := c.(*_KBoxConn)
+	cc := c.(*_k_connector)
 	cc._state = stateClosed
 	cc._cancel()
 
@@ -187,7 +187,7 @@ func (slf *KCPBox) GetConnect(socket int32) (interface{}, error) {
 	if c == nil {
 		return nil, errors.New("not found connection")
 	}
-	return c.(*_KBoxConn)._cn, nil
+	return c.(*_k_connector)._cn, nil
 }
 
 // GetValues Returns all socket
@@ -195,7 +195,7 @@ func (slf *KCPBox) GetValues() []int32 {
 	cns := slf._conns.GetValues()
 	res := make([]int32, len(cns))
 	for k, c := range cns {
-		res[k] = c.(*_KBoxConn)._cn.Socket()
+		res[k] = c.(*_k_connector)._cn.Socket()
 	}
 
 	return res
@@ -206,16 +206,16 @@ func (slf *KCPBox) Shutdown() {
 	slf._closed = true
 	slf.handleCloseAll()
 	slf._borker.Shutdown()
-	slf.Box.ShutdownWait()
+	//slf.Box.ShutdownWait()
 }
 
 // ShutdownWait 关闭服务并等待结束
-func (slf *KCPBox) ShutdownWait() {
+/*func (slf *KCPBox) ShutdownWait() {
 	slf._closed = true
 	slf.handleCloseAll()
 	slf._borker.Shutdown()
-	slf.Box.ShutdownWait()
-}
+	//slf.Box.ShutdownWait()
+}*/
 
 func (slf *KCPBox) handleCloseAll() {
 	cs := slf.GetValues()
@@ -244,7 +244,7 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	cc := &_KBoxConn{
+	cc := &_k_connector{
 		_io:       c,
 		_cancel:   cancel,
 		_ctx:      ctx,
@@ -347,7 +347,7 @@ func (slf *KCPBox) handleConnect(c *listener.KCPConn) error {
 	return nil
 }
 
-type _KBoxConn struct {
+type _k_connector struct {
 	_io       *listener.KCPConn
 	_cn       Connect
 	_wg       sync.WaitGroup
@@ -359,8 +359,8 @@ type _KBoxConn struct {
 	_activity time.Time
 }
 
-// BKCPConn KCP base connection
-type BKCPConn struct {
+// DefaultKcpConnector KCP base connection
+type DefaultKcpConnector struct {
 	WriteQueueSize int
 	_readWriter    *listener.KCPConn
 	_sock          int32
@@ -368,44 +368,44 @@ type BKCPConn struct {
 }
 
 // Socket Returns socket
-func (slf *BKCPConn) Socket() int32 {
+func (slf *DefaultKcpConnector) Socket() int32 {
 	return slf._sock
 }
 
 // WithSocket setting socket
-func (slf *BKCPConn) WithSocket(sock int32) {
+func (slf *DefaultKcpConnector) WithSocket(sock int32) {
 	slf._sock = sock
 }
 
 // WithIO setting io interface
-func (slf *BKCPConn) WithIO(c interface{}) {
+func (slf *DefaultKcpConnector) WithIO(c interface{}) {
 	slf._readWriter = c.(*listener.KCPConn)
 	slf._queue = make(chan interface{}, slf.WriteQueueSize)
 }
 
 // Reader Returns reader buffer
-func (slf *BKCPConn) Reader() *listener.KCPConn {
+func (slf *DefaultKcpConnector) Reader() *listener.KCPConn {
 	return slf._readWriter
 }
 
 // Writer Returns writer buffer
-func (slf *BKCPConn) Writer() *listener.KCPConn {
+func (slf *DefaultKcpConnector) Writer() *listener.KCPConn {
 	return slf._readWriter
 }
 
 // Push 插入发送数据
-func (slf *BKCPConn) Push(msg interface{}) error {
+func (slf *DefaultKcpConnector) Push(msg interface{}) error {
 	slf._queue <- msg
 	return nil
 }
 
 // Pop 弹出需要发送的数据
-func (slf *BKCPConn) Pop() chan interface{} {
+func (slf *DefaultKcpConnector) Pop() chan interface{} {
 	return slf._queue
 }
 
 // Close 释放连接资源
-func (slf *BKCPConn) Close() error {
+func (slf *DefaultKcpConnector) Close() error {
 	if slf._queue != nil {
 		close(slf._queue)
 	}

@@ -105,16 +105,16 @@ func (slf *TCPBox) Shutdown() {
 	slf._closed = true
 	slf.handleCloseAll()
 	slf._borker.Shutdown()
-	slf.Box.ShutdownWait()
+	//slf.Box.ShutdownWait()
 }
 
 // ShutdownWait 关闭服务并等待结束
-func (slf *TCPBox) ShutdownWait() {
+/*func (slf *TCPBox) ShutdownWait() {
 	slf._closed = true
 	slf.handleCloseAll()
 	slf._borker.Shutdown()
-	slf.Box.ShutdownWait()
-}
+	//slf.Box.ShutdownWait()
+}*/
 
 // OpenTo setting connection state connected
 func (slf *TCPBox) OpenTo(socket interface{}) error {
