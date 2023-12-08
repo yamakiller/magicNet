@@ -120,11 +120,6 @@ func (slf *UDPBox) GetValues() []int32 {
 // Shutdown 关闭服务
 func (slf *UDPBox) Shutdown() {
 	slf._borker.Shutdown()
-	//slf.Box.ShutdownWait()
+	slf.Box.Shutdown()
+	slf.Box.StoppedWait()
 }
-
-// ShutdownWait ...
-/*func (slf *UDPBox) ShutdownWait() {
-	slf._borker.Shutdown()
-	//slf.Box.ShutdownWait()
-}*/

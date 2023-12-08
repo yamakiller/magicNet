@@ -206,16 +206,9 @@ func (slf *KCPBox) Shutdown() {
 	slf._closed = true
 	slf.handleCloseAll()
 	slf._borker.Shutdown()
-	//slf.Box.ShutdownWait()
+	slf.Box.Shutdown()
+	slf.Box.StoppedWait()
 }
-
-// ShutdownWait 关闭服务并等待结束
-/*func (slf *KCPBox) ShutdownWait() {
-	slf._closed = true
-	slf.handleCloseAll()
-	slf._borker.Shutdown()
-	//slf.Box.ShutdownWait()
-}*/
 
 func (slf *KCPBox) handleCloseAll() {
 	cs := slf.GetValues()
