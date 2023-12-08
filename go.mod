@@ -11,6 +11,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/onsi/gomega v1.16.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/yamakiller/magicLibs v1.3.7-0.20231208151536-aeeb37487486
+	github.com/yamakiller/magicLibs v1.3.7-0.20231208164320-7c203c00e584
 	golang.org/x/net v0.19.0 // indirect
 )
